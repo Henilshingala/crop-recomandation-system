@@ -2,21 +2,17 @@ import joblib
 import numpy as np
 import pandas as pd
 
-# Load trained assets
-model = joblib.load("model_rf.joblib")
-label_encoder = joblib.load("label_encoder.joblib")
+model = joblib.load("D:\downloads\CRS\AiMl\model_rf.joblib")
+label_encoder = joblib.load("D:\downloads\CRS\AiMl\label_encoder.joblib")
 
-# -------------------------------
-# INPUT (change values anytime)
-# -------------------------------
 input_data = {
-    "N" : 100,
-    "P" : 50,
-    "K" : 50,
-    "temperature" : 26,
-    "humidity" : 88,
-    "ph" : 6.5,
-    "rainfall" : 260
+    "N" : 32,
+    "P" : 32,
+    "K" : 243,
+    "temperature" : 43,
+    "humidity" : 14,
+    "ph" : 4,
+    "rainfall" : 0
 }
 
 # Convert to DataFrame
@@ -32,9 +28,6 @@ top3_idx = np.argsort(proba)[-3:][::-1]
 top3_labels = label_encoder.inverse_transform(top3_idx)
 top3_scores = proba[top3_idx]
 
-# -------------------------------
-# OUTPUT
-# -------------------------------
 print("=" * 50)
 print("TOP 3 CROP RECOMMENDATIONS")
 print("=" * 50)

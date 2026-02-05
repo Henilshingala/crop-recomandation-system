@@ -2,13 +2,84 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
-import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge } from "lucide-react";
+import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface InputFormProps {
   onSubmit: (e: React.FormEvent) => void;
+  isLoading?: boolean;
 }
 
-export function InputForm({ onSubmit }: InputFormProps) {
+// Validation ranges
+const VALIDATION_RANGES = {
+  nitrogen: { min: 0, max: 150, unit: "kg/ha" },
+  phosphorus: { min: 0, max: 150, unit: "kg/ha" },
+  potassium: { min: 0, max: 300, unit: "kg/ha" },
+  temperature: { min: 0, max: 50, unit: "°C" },
+  humidity: { min: 0, max: 100, unit: "%" },
+  ph: { min: 3.5, max: 9.5, unit: "pH" },
+  rainfall: { min: 0, max: 3000, unit: "mm" },
+};
+
+export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateField = (name: string, value: string) => {
+    const numValue = parseFloat(value);
+    const range = VALIDATION_RANGES[name as keyof typeof VALIDATION_RANGES];
+    
+    if (!range) return "";
+    
+    if (isNaN(numValue)) {
+      return `Please enter a valid number`;
+    }
+    
+    if (numValue < range.min) {
+      return `Value must be greater than or equal to ${range.min} ${range.unit}`;
+    }
+    
+    if (numValue > range.max) {
+      return `Value must be less than or equal to ${range.max} ${range.unit}`;
+    }
+    
+    return "";
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate all fields
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const newErrors: Record<string, string> = {};
+    let hasError = false;
+    
+    Object.keys(VALIDATION_RANGES).forEach(fieldName => {
+      const value = formData.get(fieldName) as string;
+      const error = validateField(fieldName, value);
+      if (error) {
+        newErrors[fieldName] = error;
+        hasError = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    
+    if (!hasError) {
+      onSubmit(e);
+    }
+  };
+
   return (
     <Card className="shadow-lg border-green-100">
       <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
@@ -18,7 +89,7 @@ export function InputForm({ onSubmit }: InputFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* NPK Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
@@ -37,14 +108,18 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     name="nitrogen"
                     type="number"
                     step="0.01"
-                    placeholder="0-140"
+                    placeholder="0-150"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.nitrogen ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     kg/ha
                   </span>
                 </div>
+                {errors.nitrogen && (
+                  <p className="text-xs text-red-600 mt-1">{errors.nitrogen}</p>
+                )}
               </div>
 
               {/* Phosphorus */}
@@ -59,14 +134,18 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     name="phosphorus"
                     type="number"
                     step="0.01"
-                    placeholder="0-145"
+                    placeholder="0-150"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.phosphorus ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     kg/ha
                   </span>
                 </div>
+                {errors.phosphorus && (
+                  <p className="text-xs text-red-600 mt-1">{errors.phosphorus}</p>
+                )}
               </div>
 
               {/* Potassium */}
@@ -81,14 +160,18 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     name="potassium"
                     type="number"
                     step="0.01"
-                    placeholder="0-205"
+                    placeholder="0-300"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.potassium ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     kg/ha
                   </span>
                 </div>
+                {errors.potassium && (
+                  <p className="text-xs text-red-600 mt-1">{errors.potassium}</p>
+                )}
               </div>
             </div>
           </div>
@@ -113,12 +196,16 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     step="0.1"
                     placeholder="0-50"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.temperature ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     °C
                   </span>
                 </div>
+                {errors.temperature && (
+                  <p className="text-xs text-red-600 mt-1">{errors.temperature}</p>
+                )}
               </div>
 
               {/* Humidity */}
@@ -135,12 +222,16 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     step="0.1"
                     placeholder="0-100"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.humidity ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     %
                   </span>
                 </div>
+                {errors.humidity && (
+                  <p className="text-xs text-red-600 mt-1">{errors.humidity}</p>
+                )}
               </div>
 
               {/* pH */}
@@ -155,14 +246,18 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     name="ph"
                     type="number"
                     step="0.1"
-                    placeholder="3.0-10.0"
+                    placeholder="3.5-9.5"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.ph ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     pH
                   </span>
                 </div>
+                {errors.ph && (
+                  <p className="text-xs text-red-600 mt-1">{errors.ph}</p>
+                )}
               </div>
 
               {/* Rainfall */}
@@ -177,14 +272,18 @@ export function InputForm({ onSubmit }: InputFormProps) {
                     name="rainfall"
                     type="number"
                     step="0.1"
-                    placeholder="0-300"
+                    placeholder="0-3000"
                     required
-                    className="rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                    onBlur={handleInputBlur}
+                    className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors.rainfall ? 'border-red-500' : ''}`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                     mm
                   </span>
                 </div>
+                {errors.rainfall && (
+                  <p className="text-xs text-red-600 mt-1">{errors.rainfall}</p>
+                )}
               </div>
             </div>
           </div>
@@ -192,9 +291,17 @@ export function InputForm({ onSubmit }: InputFormProps) {
           {/* Submit Button */}
           <Button 
             type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-6 rounded-lg text-lg font-semibold shadow-lg transition-all hover:shadow-xl"
+            disabled={isLoading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-6 rounded-lg text-lg font-semibold shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Get Crop Recommendation
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              'Get Crop Recommendation'
+            )}
           </Button>
         </form>
       </CardContent>
