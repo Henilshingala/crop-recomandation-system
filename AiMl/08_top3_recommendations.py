@@ -6,16 +6,15 @@ model = joblib.load("D:\downloads\CRS\AiMl\model_rf.joblib")
 label_encoder = joblib.load("D:\downloads\CRS\AiMl\label_encoder.joblib")
 
 input_data = {
-    "N" : 32,
-    "P" : 32,
-    "K" : 243,
-    "temperature" : 43,
-    "humidity" : 14,
-    "ph" : 4,
-    "rainfall" : 0
+    "N" : 23,
+    "P" : 43,
+    "K" : 43,
+    "temperature" : 32,
+    "humidity" : 32,
+    "ph" : 5,
+    "rainfall" : 2355
 }
 
-# Convert to DataFrame
 X = pd.DataFrame([input_data])
 
 # Predict probabilities

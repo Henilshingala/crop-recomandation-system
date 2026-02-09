@@ -51,20 +51,18 @@ class CropPredictor:
     def _get_model_path(self) -> Path:
         """
         Get the path to AiMl directory containing model files.
-        
-        Structure: D:/downloads/CRS/
-        ├── AiMl/               <- Model files here
-        │   ├── model_rf.joblib
-        │   └── label_encoder.joblib
-        └── Backend/
-            └── app/            <- Django app here
+        Checks AI_ML_DIR environment variable first, then uses default relative path.
         """
-        # Navigate from Backend/app to AiMl
-        base_dir = Path(settings.BASE_DIR)  # D:/downloads/CRS/Backend/app
-        aiml_dir = base_dir.parent.parent / 'AiMl'  # D:/downloads/CRS/AiMl
+        env_path = os.environ.get("AI_ML_DIR")
+        if env_path:
+            aiml_dir = Path(env_path)
+        else:
+            # Navigate from Backend/app to AiMl
+            base_dir = Path(settings.BASE_DIR)  # D:/downloads/CRS/Backend/app
+            aiml_dir = base_dir.parent.parent / 'AiMl'  # D:/downloads/CRS/AiMl
         
         if not aiml_dir.exists():
-            raise FileNotFoundError(f"AiMl directory not found at: {aiml_dir}")
+            raise FileNotFoundError(f"AiMl directory not found at: {aiml_dir}. Set AI_ML_DIR env var if it's located elsewhere.")
         
         return aiml_dir
     

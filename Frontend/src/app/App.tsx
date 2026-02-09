@@ -78,7 +78,7 @@ export default function App() {
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
               <p className="font-semibold">Error</p>
               <p>{error}</p>
-              <p className="text-sm mt-2">Make sure the backend server is running at http://127.0.0.1:8000</p>
+              <p className="text-sm mt-2">Make sure the backend server is reachable. If you're running locally, ensure Django is started.</p>
             </div>
           )}
 

@@ -64,6 +64,8 @@ function AutoCarousel({ images, alt }: { images: string[], alt: string }) {
 }
 
 export function ResultsSection({ recommendations }: ResultsSectionProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   if (!recommendations || recommendations.length === 0) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
@@ -72,7 +74,7 @@ export function ResultsSection({ recommendations }: ResultsSectionProps) {
     );
   }
 
-  const topCrop = recommendations[0];
+  const topCrop = recommendations[selectedIndex];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -81,7 +83,7 @@ export function ResultsSection({ recommendations }: ResultsSectionProps) {
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-8">
           <div className="flex items-center gap-3 mb-2">
             <Sprout className="w-8 h-8" />
-            <h2 className="text-2xl font-bold">Recommended Crop</h2>
+            <h2 className="text-2xl font-bold">{selectedIndex === 0 ? "Top Recommendation" : "Selected Crop Details"}</h2>
           </div>
           <div className="flex items-baseline gap-3">
             <p className="text-5xl font-bold capitalize">{topCrop.crop}</p>
@@ -96,10 +98,15 @@ export function ResultsSection({ recommendations }: ResultsSectionProps) {
             {/* Crop Image Carousel - Square */}
             <div className="rounded-lg overflow-hidden shadow-md bg-gray-100 max-w-sm mx-auto lg:mx-0">
               {topCrop.image_urls && topCrop.image_urls.length > 0 ? (
-                <AutoCarousel images={topCrop.image_urls} alt={topCrop.crop} />
+                <AutoCarousel 
+                  key={topCrop.crop} 
+                  images={topCrop.image_urls} 
+                  alt={topCrop.crop} 
+                />
               ) : (
                 <div className="aspect-square">
                   <img
+                    key={topCrop.crop}
                     src={topCrop.image_url}
                     alt={topCrop.crop}
                     className="w-full h-full object-cover"
@@ -225,13 +232,22 @@ export function ResultsSection({ recommendations }: ResultsSectionProps) {
             <TrendingUp className="w-6 h-6" />
             Top 3 Recommended Crops
           </CardTitle>
+          <p className="text-sm text-green-700 mt-1">Click on a crop to view detailed information above.</p>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {recommendations.map((crop, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {recommendations.slice(0, 3).map((crop, index) => (
               <Card 
                 key={crop.crop} 
-                className={`border-2 transition-colors ${index === 0 ? 'border-green-400 bg-green-50' : 'hover:border-green-300'}`}
+                className={`border-2 transition-all duration-300 cursor-pointer hover:shadow-md transform hover:-translate-y-1 ${
+                  index === selectedIndex 
+                    ? 'border-green-500 bg-green-50 ring-2 ring-green-200' 
+                    : 'border-transparent hover:border-green-200'
+                }`}
+                onClick={() => {
+                  setSelectedIndex(index);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
               >
                 <CardContent className="p-4">
                   {/* Crop Image */}
