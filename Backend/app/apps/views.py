@@ -32,7 +32,12 @@ def get_nutrition_data(crop_name: str) -> dict:
     Returns nutrition information or None if not found.
     """
     try:
-        csv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'AiMl', 'Nutrient.csv')
+        aiml_dir = os.environ.get("AI_ML_DIR")
+        if aiml_dir:
+            csv_path = os.path.join(aiml_dir, 'Nutrient.csv')
+        else:
+            from django.conf import settings
+            csv_path = os.path.join(settings.BASE_DIR.parent.parent, 'AiMl', 'Nutrient.csv')
         
         with open(csv_path, 'r', encoding='utf-8') as file:
             reader = csv.DictReader(file)

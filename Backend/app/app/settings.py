@@ -54,6 +54,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -124,6 +125,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# WhiteNoise configuration for static files
+# Documentation: http://whitenoise.evans.io/en/stable/
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # =============================================================================
 # MEDIA FILES (User uploads - crop images)
@@ -145,13 +150,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # =============================================================================
 # Documentation: https://github.com/adamchainz/django-cors-headers
 
-# Allow React dev server
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",      # Vite dev server
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",      # CRA dev server (if used)
-    "http://127.0.0.1:3000",
-]
+# Allow React dev server and production domains from environment
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS", 
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
+).split(",")
 
 # Allow credentials (cookies, authorization headers)
 CORS_ALLOW_CREDENTIALS = True
@@ -209,6 +212,25 @@ if DEBUG:
         "rest_framework.renderers.BrowsableAPIRenderer"
     )
 
+
+# =============================================================================
+# SITE SECURITY SETTINGS (Production)
+# =============================================================================
+
+if not DEBUG:
+    # SSL/HTTPS settings
+    SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "False").lower() == "true"
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # HSTS settings
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Extra security headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # =============================================================================
 # LOGGING CONFIGURATION
