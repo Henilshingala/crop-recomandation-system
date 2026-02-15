@@ -23,7 +23,9 @@ wheels/
 *.egg
 .vscode/
 .idea/
-*.joblib
-*.csv
-*.json
+# AI/ML Files (Removing exclusions to allow deployment)
+# Note: model_rf.joblib might require Git LFS if > 100MB
+# *.joblib
+# *.csv
+# *.json
 .DS_Store
