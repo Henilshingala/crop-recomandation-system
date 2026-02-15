@@ -31,3 +31,6 @@ whitenoise>=6.6.0
 
 # HTTP requests
 requests>=2.31.0
+
+# Cloud Media Storage
+django-cloudinary-storage>=0.3.0
