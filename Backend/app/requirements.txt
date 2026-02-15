@@ -26,4 +26,8 @@ gunicorn>=21.0
 python-dotenv>=1.0
 
 # Static file serving (production)
+# Static file serving (production)
 whitenoise>=6.6.0
+
+# HTTP requests
+requests>=2.31.0
