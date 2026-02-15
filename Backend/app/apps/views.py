@@ -320,4 +320,3 @@ class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PredictionLog.objects.all()
     serializer_class = PredictionLogSerializer
     permission_classes = [IsAuthenticated]
-
