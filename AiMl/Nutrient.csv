@@ -1,0 +1,53 @@
+food_name,category,protein_g_per_kg,fat_g_per_kg,carbs_g_per_kg,fiber_g_per_kg,iron_mg_per_kg,calcium_mg_per_kg,vitamin_a_mcg_per_kg,vitamin_c_mg_per_kg,energy_kcal_per_kg,water_g_per_kg
+apple,fruit,2.6,1.7,140,24,1.2,60,30,46,520,860
+bajra,millet,116,50,630,80,80,420,0,0,3610,124
+banana,fruit,11.0,3.0,230,26,2.6,50,640,87,890,740
+barley,grain,120,20,730,170,36,290,0,0,3540,100
+ber (jujube),fruit,8.0,2.0,170,40,13,200,200,700,800,800
+blackgram,pulse,252,16.4,590,70,76,1380,0,0,3410,100
+brinjal (eggplant),vegetable,10.0,2.0,60,30,2,90,200,22,250,920
+carrot,vegetable,9.3,2.4,958,28,3,330,5000,59,410,880
+castor,seed,180,500,150,50,50,1000,0,0,5700,120
+chickpea,legume,190,60,610,170,43,1050,0,21,3780,100
+citrus (orange),fruit,9.4,1.2,118,24,1,400,450,530,470,870
+coconut,fruit,33.0,330,150,90,24,140,0,33,3540,470
+coffee,seed,120,2.0,0,500,10,100,0,0,3000,0
+cole_crop,vegetable,13.0,1.0,60,25,5,400,40,360,250,920
+cotton (seed),seed,230,200,520,130,90,2000,0,0,5000,100
+cucumber,vegetable,6.5,1.1,36.3,5,2.8,160,210,28,150,950
+custard_apple,fruit,13.0,10.0,230,33,6,300,0,50,940,620
+date_palm (dates),fruit,18.0,2.0,750,70,9,650,1490,0,2770,200
+gourd (bottle),vegetable,6.0,2.0,42,10,5,260,2000,40,200,950
+grapes,fruit,7.2,1.6,180,9,4,100,660,32,690,810
+green_chilli,vegetable,20.0,3.0,90,15,12,180,5900,1430,400,790
+groundnut,nut,260,490,160,90,46,920,0,0,5670,70
+guava,fruit,26.0,9.0,140,50,3,180,6240,2280,680,800
+jowar (sorghum),grain,110,34,720,60,34,130,0,0,3290,120
+jute (leaf),vegetable,40.0,5.0,45,15,8,1830,35000,140,380,920
+kidney_bean,legume,240,11.0,600,250,67,1430,0,40,3370,80
+lentil,legume,260,11.0,600,310,65,350,0,45,3520,110
+maize (corn),grain,94.0,47.0,740,73,27.1,70,10,0,3650,100
+mango,fruit,8.2,3.8,150,16,1.6,110,540,360,600,830
+mothbeans,pulse,240,5.0,630,170,87,780,0,0,3430,80
+mustard (seed),oilseed,260,360,280,130,92,2660,0,0,5080,10
+muskmelon,fruit,8.4,1.9,82,9,2,90,1690,367,340,900
+orange,fruit,9.4,1.2,120,24,1,400,2250,530,470,870
+papaya,fruit,4.7,2.6,110,17,1,200,470,600,430,880
+pigeonpeas (toor dal),pulse,220,15.0,610,130,51,1830,0,0,3430,70
+pomegranate,fruit,16.7,11.7,187,40,3,100,0,100,830,800
+potato,vegetable,20.0,1.0,170,22,8.1,90,20,197,770,790
+pumpkin,vegetable,10.0,1.0,70,5,8,210,4260,90,260,920
+raddish,vegetable,6.8,1.0,40,16,3.4,250,70,180,160,930
+rapeseed,seed,230,440,290,90,37,980,0,0,5910,30
+rice (white),grain,70.0,6.6,800,6,8,70,0,0,3650,120
+ridge_gourd,vegetable,6.0,1.0,35,28,3.2,220,810,40,170,900
+sesame (seed),seed,180,500,230,110,146,9750,0,0,5730,50
+sorghum (jowar),grain,110,34,720,60,34,130,0,0,3290,120
+soybean,legume,360,200,300,90,157,2770,0,60,4460,120
+spinach,vegetable,29.0,4.0,36,22,27,990,4690,280,230,910
+sugarcane,stalk,2.0,1.0,137,0,3,300,0,15,500,720
+sweet_potato,vegetable,16.0,0.5,200,30,6,300,7090,24,860,750
+tomato,vegetable,9.0,2.0,39,12,3,100,420,130,180,950
+turnip,vegetable,9.0,1.0,62,18,3,300,0,210,280,920
+watermelon,fruit,6.0,2.0,76,4,2,70,280,81,300,910
+wheat,grain,132,25,712,122,38,290,0,0,3270,90
