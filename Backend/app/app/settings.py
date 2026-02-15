@@ -127,7 +127,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # WhiteNoise configuration for static files
 # Documentation: http://whitenoise.evans.io/en/stable/
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# "CompressedStaticFilesStorage" is safer than "CompressedManifestStaticFilesStorage"
+# because it doesn't crash if a file is missing from the manifest.
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 
 # =============================================================================
