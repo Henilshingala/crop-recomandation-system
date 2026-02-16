@@ -21,9 +21,9 @@ class Command(BaseCommand):
             )
             
             # Update image URLs
-            banana.image_url = 'https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/crops/banana1.webp'
-            banana.image_2_url = 'https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/crops/banana2.jpg'
-            banana.image_3_url = 'https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/crops/banana3.jpg'
+            banana.image_url = 'https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/crops/b1.webp'
+            banana.image_2_url = 'https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/crops/b2.jpg'
+            banana.image_3_url = 'https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/crops/b3.jpg'
             
             banana.save()
             
