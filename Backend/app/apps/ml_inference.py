@@ -41,7 +41,10 @@ class CropPredictor:
         if not self._api_url.endswith("/predict"):
             self._api_url = f"{self._api_url.rstrip('/')}/predict"
             
-        logger.info(f"CropPredictor initialized with API: {self._api_url}")
+        # Get Access Token for private Spaces
+        self._token = os.environ.get("HF_TOKEN")
+            
+        logger.info(f"CropPredictor initialized with API: {self._api_url} (Token: {'Yes' if self._token else 'No'})")
     
     def predict_top_crops(
         self,
@@ -76,6 +79,9 @@ class CropPredictor:
             "Origin": "https://huggingface.co"
         }
         
+        if self._token:
+            headers["Authorization"] = f"Bearer {self._token}"
+        
         try:
             logger.info(f"Calling ML API for prediction: {self._api_url}")
             response = requests.post(self._api_url, json=payload, headers=headers, timeout=15, allow_redirects=True)
@@ -103,6 +109,9 @@ class CropPredictor:
             "Referer": "https://huggingface.co/",
             "Origin": "https://huggingface.co"
         }
+        
+        if self._token:
+            headers["Authorization"] = f"Bearer {self._token}"
         
         base_url = self._api_url.replace("/predict", "").rstrip("/")
         urls_to_try = [f"{base_url}/", base_url]
