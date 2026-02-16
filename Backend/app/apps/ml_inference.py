@@ -37,7 +37,7 @@ class CropPredictor:
     def __init__(self):
         """Initialize with API configuration."""
         # Use Hugging Face Space URL from environment
-        self._api_url = os.environ.get("HF_API_URL", "https://shingala-crs.hf.space")
+        self._api_url = os.environ.get("HF_API_URL", "https://shingala-crs.hf.space/")
         if not self._api_url.endswith("/predict"):
             self._api_url = f"{self._api_url.rstrip('/')}/predict"
             
