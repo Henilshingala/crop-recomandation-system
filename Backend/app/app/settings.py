@@ -41,10 +41,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     
-    # Cloudinary
-    'cloudinary_storage',
-    'cloudinary',
-    
     # Third-party apps
     "rest_framework",           # Django REST Framework
     "corsheaders",              # CORS handling for React frontend
@@ -143,16 +139,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Cloudinary Configuration
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-}
-
-# Only use Cloudinary in production (or if keys are present)
-if not DEBUG or os.environ.get('CLOUDINARY_CLOUD_NAME'):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Media files are served from GitHub Raw content in production via model logic
 
 
 # =============================================================================

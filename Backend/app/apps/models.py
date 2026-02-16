@@ -104,27 +104,40 @@ class Crop(models.Model):
     def get_image_url(self, image_number=1):
         """
         Returns the appropriate image URL based on priority:
-        1. Uploaded image file (if exists)
+        1. Uploaded image file (if exists) - Pointed to GitHub in production
         2. External image URL (if provided)
         3. Placeholder image URL
         """
-        if image_number == 1:
-            if self.image and hasattr(self.image, 'url'):
-                return self.image.url
-            elif self.image_url:
-                return self.image_url
-        elif image_number == 2:
-            if self.image_2 and hasattr(self.image_2, 'url'):
-                return self.image_2.url
-            elif self.image_2_url:
-                return self.image_2_url
-        elif image_number == 3:
-            if self.image_3 and hasattr(self.image_3, 'url'):
-                return self.image_3.url
-            elif self.image_3_url:
-                return self.image_3_url
+        from django.conf import settings
         
-        # Return a placeholder image
+        # Base URL for GitHub Raw content
+        GITHUB_RAW_BASE = "https://raw.githubusercontent.com/Henilshingala/crop-recomandation-system/main/Backend/app/media/"
+        
+        image_field = None
+        external_url = None
+        
+        if image_number == 1:
+            image_field = self.image
+            external_url = self.image_url
+        elif image_number == 2:
+            image_field = self.image_2
+            external_url = self.image_2_url
+        elif image_number == 3:
+            image_field = self.image_3
+            external_url = self.image_3_url
+            
+        # 1. Check for uploaded image
+        if image_field and hasattr(image_field, 'name') and image_field.name:
+            # If not in DEBUG mode (production), serve from GitHub
+            if not settings.DEBUG:
+                return f"{GITHUB_RAW_BASE}{image_field.name}"
+            return image_field.url
+            
+        # 2. Check for external URL
+        if external_url:
+            return external_url
+            
+        # 3. Return a placeholder image
         return f"https://via.placeholder.com/300x200?text={self.name}+{image_number}"
     
     def clean(self):
