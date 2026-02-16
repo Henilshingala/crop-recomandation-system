@@ -88,14 +88,17 @@ class CropPredictor:
             raise RuntimeError(f"ML Model API Error: {str(e)}")
     
     def get_available_crops(self) -> List[str]:
-        """Check if API is live."""
+        """Check if API is live and return available crops."""
         try:
             health_url = self._api_url.replace("/predict", "/")
-            response = requests.get(health_url, timeout=5)
+            response = requests.get(health_url, timeout=10)
             response.raise_for_status()
-            return ["API is active"]
-        except:
-            return ["API is unreachable"]
+            data = response.json()
+            # Return the actual crop list from the API
+            return data.get('available_crops', ["API is active"])
+        except Exception as e:
+            logger.error(f"Failed to get available crops from API: {e}")
+            return [f"API is unreachable: {str(e)}"]
 
     def reload_models(self):
         """No-op for remote API."""
