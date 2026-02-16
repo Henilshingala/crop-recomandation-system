@@ -67,7 +67,8 @@ class CropPredictor:
             'temperature': temperature,
             'humidity': humidity,
             'ph': ph,
-            'rainfall': rainfall
+            'rainfall': rainfall,
+            'top_n': top_n  # Pass top_n to the API
         }
         
         # Add headers to avoid bot detection
@@ -82,19 +83,48 @@ class CropPredictor:
         if self._token:
             headers["Authorization"] = f"Bearer {self._token}"
         
+        
         try:
-            logger.info(f"Calling ML API for prediction: {self._api_url}")
+            logger.info(f"Calling ML API for top {top_n} predictions: {self._api_url}")
+            logger.info(f"Payload: {payload}")
             response = requests.post(self._api_url, json=payload, headers=headers, timeout=15, allow_redirects=True)
+            
+            logger.info(f"Response status: {response.status_code}")
+            logger.info(f"Response headers: {response.headers}")
+            
             response.raise_for_status()
             
             data = response.json()
+            logger.info(f"ML API Response: {data}")
             
-            # Return the API response with crop, confidence, and nutrition
-            return [{
-                'crop': data['crop'],
-                'confidence': round(data['confidence'] * 100, 2),
-                'nutrition': data.get('nutrition')  # Include nutrition from API
-            }]
+            # Check if API returns multiple predictions or just one
+            if 'predictions' in data and isinstance(data['predictions'], list):
+                # API returns multiple predictions
+                logger.info(f"Processing {len(data['predictions'])} predictions from API")
+                results = []
+                for pred in data['predictions'][:top_n]:
+                    try:
+                        results.append({
+                            'crop': pred['crop'],
+                            'confidence': round(pred['confidence'] * 100, 2) if pred['confidence'] <= 1 else pred['confidence'],
+                            'nutrition': pred.get('nutrition')
+                        })
+                    except KeyError as e:
+                        logger.error(f"Missing key in prediction: {e}, pred: {pred}")
+                        raise
+                return results
+            elif 'crop' in data:
+                # API returns single prediction - return it as a list
+                logger.warning(f"API returned single prediction instead of {top_n}. Returning single result.")
+                return [{
+                    'crop': data['crop'],
+                    'confidence': round(data['confidence'] * 100, 2) if data['confidence'] <= 1 else data['confidence'],
+                    'nutrition': data.get('nutrition')
+                }]
+            else:
+                error_msg = f"Unexpected API response format. Keys in response: {list(data.keys())}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
             
         except Exception as e:
             logger.error(f"Prediction API call failed: {e}")
