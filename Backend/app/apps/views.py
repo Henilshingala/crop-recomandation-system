@@ -235,6 +235,37 @@ class CropPredictionView(APIView):
             logger.warning(f"Failed to log prediction: {e}")
 
 
+from django.shortcuts import redirect
+from django.http import HttpResponse, JsonResponse
+
+def media_crops_list(request):
+    """List all crop images as a 'directory'."""
+    crops = Crop.objects.all()
+    html = "<h1>Index of /media/crops/</h1><hr><ul>"
+    for crop in crops:
+        for i in range(1, 4):
+            url = crop.get_image_url(i)
+            if url and not url.startswith('http'): # Local path
+                 html += f'<li><a href="/media/crops/{url.split("/")[-1]}">{url.split("/")[-1]}</a></li>'
+            elif url: # Remote Cloudinary path
+                 name = url.split("/")[-1]
+                 html += f'<li><a href="{url}">{name} (Cloudinary)</a></li>'
+    html += "</ul>"
+    return HttpResponse(html)
+
+def media_crops_redirect(request, filename):
+    """Redirect local media requests to Cloudinary."""
+    # Find the crop that has an image matching this filename
+    # This is a bit expensive but works for a small number of crops
+    crops = Crop.objects.all()
+    for crop in crops:
+        for i in range(1, 4):
+            url = crop.get_image_url(i)
+            if url and filename in url:
+                return redirect(url)
+    
+    return HttpResponse("File not found", status=404)
+
 class CropViewSet(viewsets.ModelViewSet):
     """
     CRUD operations for Crop model.
