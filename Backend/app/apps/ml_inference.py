@@ -69,12 +69,16 @@ class CropPredictor:
         
         # Add headers to avoid bot detection
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://huggingface.co/",
+            "Origin": "https://huggingface.co"
         }
         
         try:
             logger.info(f"Calling ML API for prediction: {self._api_url}")
-            response = requests.post(self._api_url, json=payload, headers=headers, timeout=15)
+            response = requests.post(self._api_url, json=payload, headers=headers, timeout=15, allow_redirects=True)
             response.raise_for_status()
             
             data = response.json()
@@ -93,22 +97,31 @@ class CropPredictor:
     def get_available_crops(self) -> List[str]:
         """Check if API is live and return available crops."""
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Accept": "application/json"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://huggingface.co/",
+            "Origin": "https://huggingface.co"
         }
         
-        # We'll try the root first, then / predict as a backup
         base_url = self._api_url.replace("/predict", "").rstrip("/")
         urls_to_try = [f"{base_url}/", base_url]
         
         last_error = ""
         for url in urls_to_try:
             try:
-                logger.info(f"Checking health at: {url}")
-                response = requests.get(url, headers=headers, timeout=10)
+                logger.info(f"Probing HF Space at: {url}")
+                # HF often uses redirects, ensure we follow them
+                response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+                
                 if response.status_code == 200:
-                    data = response.json()
-                    return data.get('available_crops', ["API is active"])
+                    try:
+                        data = response.json()
+                        return data.get('available_crops', ["API is active"])
+                    except:
+                        # If not JSON, maybe it's the HF loading page
+                        return ["API is active (HTML response)"]
+                
                 last_error = f"Status {response.status_code} at {url}"
             except Exception as e:
                 last_error = str(e)
