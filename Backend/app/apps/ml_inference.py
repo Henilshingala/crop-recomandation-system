@@ -67,9 +67,14 @@ class CropPredictor:
             'rainfall': rainfall
         }
         
+        # Add headers to avoid bot detection
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        
         try:
             logger.info(f"Calling ML API for prediction: {self._api_url}")
-            response = requests.post(self._api_url, json=payload, timeout=15)
+            response = requests.post(self._api_url, json=payload, headers=headers, timeout=15)
             response.raise_for_status()
             
             data = response.json()
@@ -83,15 +88,21 @@ class CropPredictor:
             
         except Exception as e:
             logger.error(f"Prediction API call failed: {e}")
-            # Return a graceful fallback or raise depending on preference
-            # For now, we raise to let the view handle the error
             raise RuntimeError(f"ML Model API Error: {str(e)}")
     
     def get_available_crops(self) -> List[str]:
         """Check if API is live and return available crops."""
+        # Add headers to avoid bot detection
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
         try:
+            # Ensure we are hitting the root health check
             health_url = self._api_url.replace("/predict", "/")
-            response = requests.get(health_url, timeout=10)
+            if not health_url.endswith("/"):
+                health_url += "/"
+                
+            response = requests.get(health_url, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
             # Return the actual crop list from the API
