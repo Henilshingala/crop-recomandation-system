@@ -132,6 +132,7 @@ class CropPredictionView(APIView):
             for pred in predictions:
                 crop_name = pred['crop']
                 confidence = pred['confidence']
+                nutrition = pred.get('nutrition')  # Get nutrition from API response
                 
                 # Try to find crop in database for additional metadata
                 try:
@@ -149,7 +150,7 @@ class CropPredictionView(APIView):
                         'image_urls': image_urls,    # All 3 images for carousel
                         'expected_yield': crop.expected_yield,
                         'season': crop.season,
-                        'nutrition': get_nutrition_data(crop_name)
+                        'nutrition': nutrition  # From API
                     }
                 except Crop.DoesNotExist:
                     # Crop not in database - return basic info with placeholder
@@ -162,10 +163,11 @@ class CropPredictionView(APIView):
                         'image_urls': [placeholder_url, placeholder_url, placeholder_url],
                         'expected_yield': None,
                         'season': None,
-                        'nutrition': get_nutrition_data(crop_name)
+                        'nutrition': nutrition  # From API
                     }
                 
                 recommendations.append(recommendation)
+
             
             # Log prediction for analytics (async-safe)
             self._log_prediction(request, validated_data, predictions)

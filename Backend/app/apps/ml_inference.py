@@ -74,11 +74,11 @@ class CropPredictor:
             
             data = response.json()
             
-            # Hugging Face API normally returns a single crop. 
-            # We wrap it in a list to maintain compatibility with the frontend.
+            # Return the API response with crop, confidence, and nutrition
             return [{
                 'crop': data['crop'],
-                'confidence': round(data['confidence'] * 100, 2)
+                'confidence': round(data['confidence'] * 100, 2),
+                'nutrition': data.get('nutrition')  # Include nutrition from API
             }]
             
         except Exception as e:
