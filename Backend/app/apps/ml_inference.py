@@ -11,10 +11,7 @@ This module:
 
 import os
 import logging
-import numpy as np
-import pandas as pd
-import joblib
-from pathlib import Path
+import requests
 from django.conf import settings
 from typing import List, Dict, Optional
 
@@ -23,19 +20,13 @@ logger = logging.getLogger(__name__)
 
 class CropPredictor:
     """
-    Singleton class for ML model inference.
+    ML model inference client that calls a remote API (Hugging Face).
     
-    Loads the trained Random Forest model and Label Encoder once,
-    then reuses them for all predictions.
+    This avoids loading large models into memory on restricted environments like Render.
     """
     
     _instance: Optional['CropPredictor'] = None
-    _model = None
-    _label_encoder = None
-    _is_loaded = False
-    
-    # Feature columns in exact order expected by the model
-    FEATURE_COLUMNS = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+    _api_url = None
     
     def __new__(cls):
         """Singleton pattern - only one instance exists."""
@@ -44,64 +35,13 @@ class CropPredictor:
         return cls._instance
     
     def __init__(self):
-        """Initialize and load models if not already loaded."""
-        if not self._is_loaded:
-            self._load_models()
-    
-    def _get_model_path(self) -> Path:
-        """
-        Get the path to AiMl directory containing model files.
-        Checks AI_ML_DIR environment variable first, then uses default relative path.
-        """
-        env_path = os.environ.get("AI_ML_DIR")
-        if env_path:
-            aiml_dir = Path(env_path)
-        else:
-            # Navigate from Backend/app to AiMl
-            base_dir = Path(settings.BASE_DIR)  # D:/downloads/CRS/Backend/app
-            aiml_dir = base_dir.parent.parent / 'AiMl'  # D:/downloads/CRS/AiMl
-        
-        if not aiml_dir.exists():
-            raise FileNotFoundError(f"AiMl directory not found at: {aiml_dir}. Set AI_ML_DIR env var if it's located elsewhere.")
-        
-        return aiml_dir
-    
-    def _load_models(self):
-        """
-        Load the trained model and label encoder from disk.
-        
-        Files loaded:
-        - model_rf.joblib: Trained Random Forest classifier
-        - label_encoder.joblib: Scikit-learn LabelEncoder for crop names
-        """
-        try:
-            aiml_dir = self._get_model_path()
+        """Initialize with API configuration."""
+        # Use Hugging Face Space URL from environment
+        self._api_url = os.environ.get("HF_API_URL", "https://shingala-crs.hf.space")
+        if not self._api_url.endswith("/predict"):
+            self._api_url = f"{self._api_url.rstrip('/')}/predict"
             
-            model_path = aiml_dir / 'model_rf.joblib'
-            encoder_path = aiml_dir / 'label_encoder.joblib'
-            
-            # Validate files exist
-            if not model_path.exists():
-                raise FileNotFoundError(f"Model file not found: {model_path}")
-            if not encoder_path.exists():
-                raise FileNotFoundError(f"Label encoder not found: {encoder_path}")
-            
-            # Load models
-            logger.info(f"Loading ML model from: {model_path}")
-            self._model = joblib.load(model_path)
-            
-            logger.info(f"Loading label encoder from: {encoder_path}")
-            self._label_encoder = joblib.load(encoder_path)
-            
-            self._is_loaded = True
-            logger.info("ML models loaded successfully!")
-            
-            # Log available crop classes
-            logger.info(f"Available crops: {list(self._label_encoder.classes_)}")
-            
-        except Exception as e:
-            logger.error(f"Failed to load ML models: {e}")
-            raise
+        logger.info(f"CropPredictor initialized with API: {self._api_url}")
     
     def predict_top_crops(
         self,
@@ -115,31 +55,9 @@ class CropPredictor:
         top_n: int = 3
     ) -> List[Dict]:
         """
-        Predict top N crop recommendations with confidence scores.
-        
-        Args:
-            n: Nitrogen content (kg/ha)
-            p: Phosphorus content (kg/ha)
-            k: Potassium content (kg/ha)
-            temperature: Average temperature (°C)
-            humidity: Relative humidity (%)
-            ph: Soil pH value
-            rainfall: Annual rainfall (mm)
-            top_n: Number of top recommendations (default: 3)
-        
-        Returns:
-            List of dictionaries with crop names and confidence percentages:
-            [
-                {"crop": "rice", "confidence": 98.6},
-                {"crop": "wheat", "confidence": 12.3},
-                {"crop": "maize", "confidence": 3.1}
-            ]
+        Predict top N crop recommendations via remote API.
         """
-        if not self._is_loaded:
-            self._load_models()
-        
-        # Prepare input data as DataFrame with correct column order
-        input_data = pd.DataFrame([{
+        payload = {
             'N': n,
             'P': p,
             'K': k,
@@ -147,38 +65,41 @@ class CropPredictor:
             'humidity': humidity,
             'ph': ph,
             'rainfall': rainfall
-        }])[self.FEATURE_COLUMNS]
+        }
         
-        # Get prediction probabilities for all classes
-        probabilities = self._model.predict_proba(input_data)[0]
-        
-        # Get indices of top N predictions (sorted descending)
-        top_indices = np.argsort(probabilities)[-top_n:][::-1]
-        
-        # Build result list with crop names and confidence scores
-        results = []
-        for idx in top_indices:
-            crop_name = self._label_encoder.inverse_transform([idx])[0]
-            confidence = round(probabilities[idx] * 100, 2)  # Convert to percentage
+        try:
+            logger.info(f"Calling ML API for prediction: {self._api_url}")
+            response = requests.post(self._api_url, json=payload, timeout=15)
+            response.raise_for_status()
             
-            results.append({
-                'crop': crop_name,
-                'confidence': confidence
-            })
-        
-        logger.info(f"Prediction results: {results}")
-        return results
+            data = response.json()
+            
+            # Hugging Face API normally returns a single crop. 
+            # We wrap it in a list to maintain compatibility with the frontend.
+            return [{
+                'crop': data['crop'],
+                'confidence': round(data['confidence'] * 100, 2)
+            }]
+            
+        except Exception as e:
+            logger.error(f"Prediction API call failed: {e}")
+            # Return a graceful fallback or raise depending on preference
+            # For now, we raise to let the view handle the error
+            raise RuntimeError(f"ML Model API Error: {str(e)}")
     
     def get_available_crops(self) -> List[str]:
-        """Return list of all crop labels the model can predict."""
-        if not self._is_loaded:
-            self._load_models()
-        return list(self._label_encoder.classes_)
-    
+        """Check if API is live."""
+        try:
+            health_url = self._api_url.replace("/predict", "/")
+            response = requests.get(health_url, timeout=5)
+            response.raise_for_status()
+            return ["API is active"]
+        except:
+            return ["API is unreachable"]
+
     def reload_models(self):
-        """Force reload models from disk (useful for model updates)."""
-        self._is_loaded = False
-        self._load_models()
+        """No-op for remote API."""
+        pass
 
 
 # Global singleton instance
@@ -186,15 +107,7 @@ _predictor: Optional[CropPredictor] = None
 
 
 def get_predictor() -> CropPredictor:
-    """
-    Get the global CropPredictor instance.
-    
-    Usage:
-        from apps.ml_inference import get_predictor
-        
-        predictor = get_predictor()
-        results = predictor.predict_top_crops(N=90, P=42, K=43, ...)
-    """
+    """Get the global CropPredictor instance."""
     global _predictor
     if _predictor is None:
         _predictor = CropPredictor()
@@ -211,20 +124,7 @@ def predict_top_crops(
     rainfall: float,
     top_n: int = 3
 ) -> List[Dict]:
-    """
-    Convenience function for making predictions.
-    
-    Wraps the CropPredictor singleton for simpler API.
-    
-    Usage:
-        from apps.ml_inference import predict_top_crops
-        
-        results = predict_top_crops(
-            n=90, p=42, k=43,
-            temperature=24.5, humidity=68,
-            ph=6.7, rainfall=120
-        )
-    """
+    """Convenience function for making predictions."""
     predictor = get_predictor()
     return predictor.predict_top_crops(
         n=n, p=p, k=k,
