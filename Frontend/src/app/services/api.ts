@@ -52,20 +52,45 @@ export interface HealthResponse {
  * Get crop recommendations from the ML model
  */
 export async function getPrediction(input: PredictionInput): Promise<PredictionResponse> {
-  const response = await fetch(`${API_BASE_URL}/predict/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(input),
-  });
+  const url = `${API_BASE_URL}/predict/`;
+  console.log('🌐 API Request URL:', url);
+  console.log('📝 API Base URL env:', import.meta.env.VITE_API_BASE_URL);
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || `Request failed with status ${response.status}`);
+    console.log('📡 Response status:', response.status, response.statusText);
+
+    if (!response.ok) {
+      let errorDetails;
+      try {
+        errorDetails = await response.json();
+      } catch {
+        errorDetails = { error: response.statusText };
+      }
+      console.error('❌ API Error Response:', errorDetails);
+      throw new Error(errorDetails.error || `Request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ API Response data:', data);
+    return data;
+  } catch (err) {
+    console.error('💥 Fetch error:', err);
+    if (err instanceof Error) {
+      // Network error or timeout
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+      }
+    }
+    throw err;
   }
-
-  return response.json();
 }
 
 /**

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HuggingFace API Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; margin-right: 10px; }
+        #result { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>HuggingFace API Test</h1>
+    <button onclick="testHFAPI()">Test HuggingFace API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testHFAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Loading...';
+            
+            const testData = {
+                N: 90,
+                P: 42,
+                K: 43,
+                temperature: 24.5,
+                humidity: 68,
+                ph: 6.7,
+                rainfall: 120
+            };
+
+            const urls = [
+                'https://shingala-crs.hf.space/predict',
+                'https://huggingface.co/spaces/shingala/CRS/api/predict'
+            ];
+
+            for (const url of urls) {
+                try {
+                    resultDiv.textContent += `\n\nTrying: ${url}\n`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(testData)
+                    });
+
+                    console.log('Response status:', response.status);
+                    
+                    if (!response.ok) {
+                        resultDiv.textContent += `Error ${response.status}\n`;
+                        continue;
+                    }
+
+                    const data = await response.json();
+                    console.log('Response data:', data);
+                    
+                    resultDiv.textContent = 
+                        `✅ SUCCESS with ${url}\n\n` +
+                        `Full Response:\n${JSON.stringify(data, null, 2)}`;
+                    return;
+                } catch (err) {
+                    console.error('Error:', err);
+                    resultDiv.textContent += `❌ Error: ${err.message}\n`;
+                }
+            }
+            
+            resultDiv.textContent += `\n\n❌ All attempts failed`;
+        }
+    </script>
+</body>
+</html>

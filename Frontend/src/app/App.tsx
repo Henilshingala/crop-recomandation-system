@@ -13,6 +13,7 @@ export default function App() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setResults(null);
 
     // Get form data
     const form = e.target as HTMLFormElement;
@@ -28,13 +29,28 @@ export default function App() {
       rainfall: parseFloat(formData.get('rainfall') as string),
     };
 
+    console.log('📤 Sending prediction request:', input);
+
     try {
       const response = await getPrediction(input);
-      setResults(response.recommendations);
+      console.log('📥 Response received:', response);
+      console.log('📊 Full response object:', JSON.stringify(response, null, 2));
+      
+      if (response && response.recommendations && Array.isArray(response.recommendations)) {
+        console.log('✅ Valid recommendations:', response.recommendations.length, 'crops');
+        console.log('🌾 Recommendations array:', response.recommendations);
+        setResults(response.recommendations);
+      } else {
+        console.error('❌ Invalid response structure:', response);
+        throw new Error('Invalid response structure from API');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get recommendations');
-      console.error('Prediction error:', err);
+      console.error('❌ Prediction error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get recommendations';
+      setError(errorMessage);
+      setResults(null);
     } finally {
+      console.log('🔄 Setting loading to false');
       setIsLoading(false);
     }
   };

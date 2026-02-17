@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test HF Predict Endpoint</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+        #result { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Test HuggingFace /predict Endpoint</h1>
+    <button onclick="testPredict()">Test /predict (should return 3 crops)</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPredict() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = '';
+            
+            const testData = {
+                N: 90,
+                P: 42,
+                K: 43,
+                temperature: 24.5,
+                humidity: 68,
+                ph: 6.7,
+                rainfall: 120
+            };
+
+            try {
+                console.log('Sending request to HF Space...');
+                const response = await fetch('https://shingala-crs.hf.space/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const error = await response.text();
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = `❌ Error ${response.status}:\n${error}`;
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                // Check if we got predictions array
+                if (data.predictions && Array.isArray(data.predictions)) {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = 
+                        `✅ SUCCESS!\n\n` +
+                        `Number of predictions: ${data.predictions.length}\n\n` +
+                        `Crops returned:\n` +
+                        data.predictions.map((p, i) => 
+                            `${i+1}. ${p.crop} (${(p.confidence * 100).toFixed(1)}% confidence)`
+                        ).join('\n') +
+                        `\n\n` +
+                        `Full Response:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = 
+                        `⚠️ Got response but wrong format:\n\n` +
+                        JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                resultDiv.className = 'error';
+                resultDiv.textContent = `❌ Error: ${err.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
