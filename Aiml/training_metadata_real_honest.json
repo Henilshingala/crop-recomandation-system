@@ -1,0 +1,259 @@
+{
+  "model_version": "real_world_honest_1.0",
+  "model_type": "CalibratedClassifierCV(RandomForestClassifier)",
+  "calibration_method": "sigmoid",
+  "calibration_cv": 3,
+  "n_estimators": 400,
+  "honest_model": true,
+  "data_leakage_fixed": true,
+  "features": [
+    "n",
+    "p",
+    "k",
+    "temperature",
+    "humidity",
+    "ph",
+    "rainfall",
+    "season",
+    "soil_type",
+    "irrigation",
+    "moisture"
+  ],
+  "removed_leaky_features": [
+    "yield",
+    "area",
+    "production",
+    "state_encoded",
+    "district_encoded",
+    "jun-sep",
+    "oct-dec",
+    "jan-feb",
+    "mar-may",
+    "rain_monsoon",
+    "rain_postmonsoon"
+  ],
+  "dataset": "real_world_merged_dataset.csv",
+  "dataset_hash": "a36580392bd448ef",
+  "model_file_hash": "7312cca43aac46b0",
+  "top1_accuracy": 0.773332,
+  "top3_accuracy": 0.987476,
+  "base_top1_accuracy": 0.786178,
+  "base_top3_accuracy": 0.988951,
+  "max_confidence_pct": 95.28,
+  "cv_mean": 0.786339,
+  "cv_std": 0.000625,
+  "total_classes": 19,
+  "classes": [
+    "barley",
+    "castor",
+    "chickpea",
+    "cotton",
+    "finger_millet",
+    "groundnut",
+    "linseed",
+    "maize",
+    "mustard",
+    "pearl_millet",
+    "pigeonpea",
+    "rice",
+    "safflower",
+    "sesamum",
+    "sorghum",
+    "soybean",
+    "sugarcane",
+    "sunflower",
+    "wheat"
+  ],
+  "total_samples": 186440,
+  "class_distribution": {
+    "rice": 14978,
+    "maize": 14146,
+    "chickpea": 13849,
+    "wheat": 13731,
+    "sugarcane": 13511,
+    "sesamum": 13240,
+    "pigeonpea": 13017,
+    "groundnut": 12029,
+    "mustard": 11626,
+    "sorghum": 11548,
+    "pearl_millet": 9949,
+    "barley": 7924,
+    "cotton": 7804,
+    "linseed": 6837,
+    "finger_millet": 5867,
+    "castor": 5018,
+    "sunflower": 4896,
+    "soybean": 4069,
+    "safflower": 2401
+  },
+  "feature_importances": {
+    "moisture": 0.19831,
+    "humidity": 0.160938,
+    "ph": 0.151296,
+    "p": 0.128678,
+    "n": 0.119101,
+    "k": 0.116052,
+    "season": 0.098134,
+    "irrigation": 0.012785,
+    "temperature": 0.006639,
+    "rainfall": 0.006266,
+    "soil_type": 0.001801
+  },
+  "per_class_metrics": {
+    "barley": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1585
+    },
+    "castor": {
+      "precision": 0.2765,
+      "recall": 0.0727,
+      "f1-score": 0.1151,
+      "support": 1004
+    },
+    "chickpea": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2770
+    },
+    "cotton": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1561
+    },
+    "finger_millet": {
+      "precision": 0.195,
+      "recall": 0.0537,
+      "f1-score": 0.0842,
+      "support": 1173
+    },
+    "groundnut": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2406
+    },
+    "linseed": {
+      "precision": 0.2874,
+      "recall": 0.18,
+      "f1-score": 0.2213,
+      "support": 1367
+    },
+    "maize": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2829
+    },
+    "mustard": {
+      "precision": 0.4598,
+      "recall": 0.6443,
+      "f1-score": 0.5366,
+      "support": 2325
+    },
+    "pearl_millet": {
+      "precision": 0.3617,
+      "recall": 0.4487,
+      "f1-score": 0.4005,
+      "support": 1990
+    },
+    "pigeonpea": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2603
+    },
+    "rice": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2996
+    },
+    "safflower": {
+      "precision": 0.1538,
+      "recall": 0.0083,
+      "f1-score": 0.0158,
+      "support": 480
+    },
+    "sesamum": {
+      "precision": 0.6151,
+      "recall": 0.8943,
+      "f1-score": 0.7288,
+      "support": 2648
+    },
+    "sorghum": {
+      "precision": 0.4125,
+      "recall": 0.4788,
+      "f1-score": 0.4432,
+      "support": 2310
+    },
+    "soybean": {
+      "precision": 0.3892,
+      "recall": 0.1683,
+      "f1-score": 0.235,
+      "support": 814
+    },
+    "sugarcane": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2702
+    },
+    "sunflower": {
+      "precision": 0.2473,
+      "recall": 0.2554,
+      "f1-score": 0.2513,
+      "support": 979
+    },
+    "wheat": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2746
+    }
+  },
+  "comparison_with_leaky_model": {
+    "leaky_top1": 90.18,
+    "leaky_top3": 99.68,
+    "leaky_max_conf": 97.5,
+    "leaky_cv": 90.58,
+    "leaky_features": 22,
+    "honest_top1": 77.33,
+    "honest_top3": 98.75,
+    "honest_max_conf": 95.3,
+    "honest_cv": 78.63,
+    "honest_features": 11,
+    "top1_diff": -12.85,
+    "top3_diff": -0.94,
+    "total_leaked_importance": 0.2319,
+    "removed_features": [
+      "yield",
+      "area",
+      "production",
+      "state_encoded",
+      "district_encoded",
+      "jun-sep",
+      "oct-dec",
+      "jan-feb",
+      "mar-may",
+      "rain_monsoon",
+      "rain_postmonsoon"
+    ]
+  },
+  "data_sources": [
+    "ICRISAT-District_Level_Data.csv",
+    "data_core.csv",
+    "temperature.csv",
+    "rainfall.csv",
+    "Crop_recommendation.csv"
+  ],
+  "sklearn_version": "1.8.0",
+  "numpy_version": "2.4.2",
+  "pandas_version": "3.0.0",
+  "timestamp": "2026-02-18T17:23:47.661220+00:00",
+  "random_state": 42,
+  "note": "Honest crop recommendation model. All post-planting and geography-identity features removed to eliminate data leakage. Uses only pre-planting agronomic and environmental features for prediction. No synthetic data. No shortcuts. No leakage."
+}
