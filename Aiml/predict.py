@@ -1,95 +1,83 @@
 """
-Crop Recommendation Prediction Script
-Loads pre-trained Random Forest model and makes predictions on new data.
+Crop Recommendation v2.2 — Prediction Script
+=============================================
+Loads the v2.2 calibrated model and makes predictions.
+Includes season + soil_type + irrigation features.
 """
 
-import os
 import joblib
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-# Paths
-MODELS_DIR = 'models'
-MODEL_PATH = os.path.join(MODELS_DIR, 'model_rf.joblib')
-ENCODERS_PATH = os.path.join(MODELS_DIR, 'encoders.joblib')
-DATA_CSV = 'final_with_season.csv'
+MODEL_PATH = "model_rf.joblib"
+ENCODER_PATH = "label_encoder.joblib"
 
-# Load model and encoders
-print('Loading pre-trained model and encoders...')
+FEATURES = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall",
+            "season", "soil_type", "irrigation"]
+
+SEASON_REVERSE = {0: "Kharif", 1: "Rabi", 2: "Zaid"}
+SOIL_REVERSE = {0: "sandy", 1: "loamy", 2: "clay"}
+IRRIG_REVERSE = {0: "rainfed", 1: "irrigated"}
+
+print("Loading v2.2 calibrated model …")
 model = joblib.load(MODEL_PATH)
-encoders_dict = joblib.load(ENCODERS_PATH)
+label_encoder = joblib.load(ENCODER_PATH)
 
-ohe = encoders_dict['onehot']
-le = encoders_dict['label']
-season_columns = encoders_dict['season_columns']
 
-print(f'[OK] Model loaded: {MODEL_PATH}')
-print(f'[OK] Encoders loaded: {ENCODERS_PATH}')
+def infer_season(temperature: float) -> int:
+    if temperature >= 28: return 0
+    elif temperature <= 22: return 1
+    else: return 2
 
-# Example: Load data and make predictions
-if os.path.exists(DATA_CSV):
-    print(f'\nLoading example data from {DATA_CSV}...')
-    df = pd.read_csv(DATA_CSV)
-    
-    # Extract numeric features
-    numeric_cols = ['N', 'P', 'K', 'TEMPERATURE', 'HUMIDITY', 'PH', 'RAINFALL']
-    X = df[numeric_cols].values
-    
-    # One-hot encode SEASON
-    season_encoded = ohe.transform(df[['SEASON']])
-    
-    # Combine features
-    X_full = np.hstack([X, season_encoded])
-    
-    # Make predictions
-    predictions = model.predict(X_full)
-    predicted_labels = le.inverse_transform(predictions)
-    
-    # Add to dataframe
-    df['PREDICTED_CROP'] = predicted_labels
-    
-    print(f'[OK] Predictions generated for {len(df)} samples')
-    print(f'\nFirst 10 predictions:')
-    print(df[['N', 'P', 'K', 'TEMPERATURE', 'HUMIDITY', 'PH', 'RAINFALL', 'SEASON', 'PREDICTED_CROP']].head(10))
-    
-    # Optional: Save predictions
-    output_file = 'predictions.csv'
-    df.to_csv(output_file, index=False)
-    print(f'\n[OK] Full predictions saved to {output_file}')
-else:
-    print(f'\n[WARNING] Data file {DATA_CSV} not found.')
-    print('To make predictions, ensure final_with_season.csv is in the same directory.')
 
-def predict_single(n, p, k, temperature, humidity, ph, rainfall, season):
-    """
-    Make a prediction for a single sample.
-    
-    Args:
-        n, p, k: Nitrogen, Phosphorus, Potassium (numeric)
-        temperature: Numeric
-        humidity: Numeric
-        ph: Numeric
-        rainfall: Numeric
-        season: One of ['ZAID', 'RABI', 'KHARIF']
-    
-    Returns:
-        str: Predicted crop name
-    """
-    X = np.array([[n, p, k, temperature, humidity, ph, rainfall]])
-    season_df = pd.DataFrame({'SEASON': [season]})
-    season_encoded = ohe.transform(season_df)
-    X_full = np.hstack([X, season_encoded])
-    
-    pred = model.predict(X_full)[0]
-    return le.inverse_transform([pred])[0]
+def predict_top_crops(input_dict: dict, top_n: int = 3):
+    if "season" not in input_dict:
+        input_dict["season"] = infer_season(input_dict["temperature"])
+    if "soil_type" not in input_dict:
+        input_dict["soil_type"] = 1  # default loamy
+    if "irrigation" not in input_dict:
+        input_dict["irrigation"] = 0  # default rainfed
 
-if __name__ == '__main__':
-    print('\n' + '='*60)
-    print('USAGE EXAMPLES:')
-    print('='*60)
-    print('\nExample 1: Predict a single crop')
-    print('>>> from predict import predict_single')
-    print('>>> crop = predict_single(30, 20, 10, 25.5, 60, 7.0, 100, "RABI")')
-    print('>>> print(crop)')
-    print('\nExample 2: Batch predictions from CSV')
-    print('Place final_with_season.csv in the same directory and run this script.')
+    X = pd.DataFrame([input_dict])[FEATURES]
+    proba = model.predict_proba(X)[0]
+    top_idx = np.argsort(proba)[-top_n:][::-1]
+
+    results = []
+    for rank, idx in enumerate(top_idx, start=1):
+        crop_name = label_encoder.inverse_transform([idx])[0]
+        results.append({
+            "rank": rank,
+            "crop": crop_name,
+            "confidence": round(float(proba[idx]) * 100, 2),
+        })
+    return results
+
+
+if __name__ == "__main__":
+    test_input = {
+        "N": 100, "P": 50, "K": 50,
+        "temperature": 28, "humidity": 85,
+        "ph": 6.5, "rainfall": 2000,
+        "soil_type": 2,  # clay
+        "irrigation": 1,  # irrigated
+    }
+
+    print("\n" + "=" * 60)
+    print("PREDICTION DEMO (v2.2 — Calibrated)")
+    print("=" * 60)
+    print("Input:")
+    for k, v in test_input.items():
+        if k == "soil_type":
+            print(f"  {k:12s}: {v} ({SOIL_REVERSE.get(v, '?')})")
+        elif k == "irrigation":
+            print(f"  {k:12s}: {v} ({IRRIG_REVERSE.get(v, '?')})")
+        else:
+            print(f"  {k:12s}: {v}")
+
+    results = predict_top_crops(test_input, top_n=5)
+    season = infer_season(test_input["temperature"])
+    print(f"\nInferred Season: {SEASON_REVERSE[season]}")
+    print("\nTop 5 Recommendations:")
+    for r in results:
+        print(f"  {r['rank']}. {r['crop']:20s} ({r['confidence']:.1f}%)")
+    print("=" * 60)
