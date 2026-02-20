@@ -5,6 +5,8 @@
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://crop-recomandation-system.onrender.com/api').replace(/\/$/, '');
 
+/* ── Request types ────────────────────────────────────────────────── */
+
 export interface PredictionInput {
   N: number;
   P: number;
@@ -13,15 +15,21 @@ export interface PredictionInput {
   humidity: number;
   ph: number;
   rainfall: number;
+  mode?: 'honest' | 'hybrid';
+  soil_type?: number;
+  irrigation?: number;
+  moisture?: number;
 }
+
+/* ── Response types ───────────────────────────────────────────────── */
 
 export interface CropRecommendation {
   crop: string;
   confidence: number;
-  image_url: string;
-  image_urls?: string[];  // Array of 3 images for carousel
-  expected_yield: string | null;
-  season: string | null;
+  image_url?: string;
+  image_urls?: string[];
+  expected_yield?: string | null;
+  season?: string | null;
   nutrition?: {
     protein_g: number;
     fat_g: number;
@@ -36,8 +44,26 @@ export interface CropRecommendation {
   } | null;
 }
 
+export interface ModelInfo {
+  coverage: number;
+  type: string;
+}
+
+export interface HybridDetail {
+  source_dominance: string;
+  rule_triggered: string;
+  real_top1: string;
+  real_confidence: number;
+  synth_top1: string;
+  synth_confidence: number;
+}
+
 export interface PredictionResponse {
-  recommendations: CropRecommendation[];
+  mode: 'honest' | 'hybrid';
+  top_1: CropRecommendation;
+  top_3: CropRecommendation[];
+  model_info: ModelInfo;
+  hybrid_detail?: HybridDetail | null;
 }
 
 export interface HealthResponse {
@@ -45,27 +71,25 @@ export interface HealthResponse {
   database: string;
   ml_model: string;
   crop_count?: number;
-  available_crops?: string[];
+  honest_crops?: number;
+  hybrid_crops?: number;
+  modes?: string[];
 }
+
+/* ── API calls ────────────────────────────────────────────────────── */
 
 /**
  * Get crop recommendations from the ML model
  */
 export async function getPrediction(input: PredictionInput): Promise<PredictionResponse> {
   const url = `${API_BASE_URL}/predict/`;
-  console.log('🌐 API Request URL:', url);
-  console.log('📝 API Base URL env:', import.meta.env.VITE_API_BASE_URL);
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
-
-    console.log('📡 Response status:', response.status, response.statusText);
 
     if (!response.ok) {
       let errorDetails;
@@ -74,17 +98,12 @@ export async function getPrediction(input: PredictionInput): Promise<PredictionR
       } catch {
         errorDetails = { error: response.statusText };
       }
-      console.error('❌ API Error Response:', errorDetails);
       throw new Error(errorDetails.error || `Request failed with status ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('✅ API Response data:', data);
-    return data;
+    return await response.json();
   } catch (err) {
-    console.error('💥 Fetch error:', err);
     if (err instanceof Error) {
-      // Network error or timeout
       if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
         throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
       }
@@ -98,24 +117,16 @@ export async function getPrediction(input: PredictionInput): Promise<PredictionR
  */
 export async function checkHealth(): Promise<HealthResponse> {
   const response = await fetch(`${API_BASE_URL}/health/`);
-  
-  if (!response.ok) {
-    throw new Error('Backend is not available');
-  }
-
+  if (!response.ok) throw new Error('Backend is not available');
   return response.json();
 }
 
 /**
  * Get list of available crops from ML model
  */
-export async function getAvailableCrops(): Promise<string[]> {
-  const response = await fetch(`${API_BASE_URL}/crops/available/`);
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch available crops');
-  }
-
+export async function getAvailableCrops(mode: string = 'honest'): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/crops/available/?mode=${mode}`);
+  if (!response.ok) throw new Error('Failed to fetch available crops');
   const data = await response.json();
   return data.crops;
 }
