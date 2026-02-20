@@ -155,7 +155,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Documentation: https://github.com/adamchainz/django-cors-headers
 
 # Allow React dev server and production domains from environment
-_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,https://crop-recomandation-system.vercel.app").split(",")
+_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,https://crop-recomandation-system.vercel.app").split(",")
 
 if "*" in _cors_origins:
     CORS_ALLOW_ALL_ORIGINS = True
