@@ -41,3 +41,6 @@ Aiml/model_real_world_honest_v2.joblib
 Aiml/model_rf.joblib
 
 Aiml/stacked_ensemble_v3.joblib
+
+# Ignore all joblib files (keep only on local PC)
+*.joblib
