@@ -1,0 +1,142 @@
+{
+  "training_date": "2026-02-19T20:17:09.751592",
+  "model_version": "v3_stacked_ensemble",
+  "architecture": {
+    "base_models": [
+      "BalancedRandomForest",
+      "XGBoost",
+      "LightGBM"
+    ],
+    "meta_learner": "LogisticRegression (multinomial, isotonic calibrated)",
+    "n_folds": 5
+  },
+  "performance": {
+    "top1_accuracy": 0.7506,
+    "top3_accuracy": 0.9746,
+    "macro_f1": 0.6361,
+    "weighted_f1": 0.7442,
+    "ece": 0.0205
+  },
+  "per_class_f1": {
+    "barley": 1.0,
+    "castor": 0.2637,
+    "chickpea": 1.0,
+    "cotton": 1.0,
+    "finger_millet": 0.0223,
+    "groundnut": 1.0,
+    "linseed": 0.2342,
+    "maize": 1.0,
+    "mustard": 0.3988,
+    "pearl_millet": 0.4855,
+    "pigeonpea": 1.0,
+    "rice": 1.0,
+    "safflower": 0.1272,
+    "sesamum": 0.6419,
+    "sorghum": 0.3286,
+    "soybean": 0.2665,
+    "sugarcane": 1.0,
+    "sunflower": 0.318,
+    "wheat": 1.0
+  },
+  "weak_classes": [
+    "castor",
+    "finger_millet",
+    "linseed",
+    "mustard",
+    "pearl_millet",
+    "safflower",
+    "sorghum",
+    "soybean",
+    "sunflower"
+  ],
+  "dominance": {
+    "mcw": 0.2238,
+    "rates": {
+      "barley": 0.0425,
+      "castor": 0.0384,
+      "chickpea": 0.0743,
+      "cotton": 0.0419,
+      "finger_millet": 0.0023,
+      "groundnut": 0.0645,
+      "linseed": 0.0188,
+      "maize": 0.0759,
+      "mustard": 0.0416,
+      "pearl_millet": 0.1036,
+      "pigeonpea": 0.0698,
+      "rice": 0.0803,
+      "safflower": 0.031,
+      "sesamum": 0.0702,
+      "sorghum": 0.0409,
+      "soybean": 0.0112,
+      "sugarcane": 0.0725,
+      "sunflower": 0.0468,
+      "wheat": 0.0736
+    }
+  },
+  "calibration": {
+    "temperature": 1.0,
+    "inv_freq_alpha": 0.75
+  },
+  "cv_scores": {
+    "BalancedRF": {
+      "mean": 0.6302,
+      "std": 0.0019
+    },
+    "XGBoost": {
+      "mean": 0.6298,
+      "std": 0.0023
+    },
+    "LightGBM": {
+      "mean": 0.6301,
+      "std": 0.0017
+    }
+  },
+  "robustness": {
+    "baseline": {
+      "acc": 0.7907369663162411,
+      "f1": 0.5788452638623426
+    },
+    "npk_10pct": {
+      "acc": 0.5572570263891868,
+      "f1": 0.4348369469180734
+    },
+    "rainfall_5pct": {
+      "acc": 0.7906565114782236,
+      "f1": 0.5771131623473561
+    },
+    "season_5pct": {
+      "acc": 0.7876528641922335,
+      "f1": 0.5771174860215073
+    },
+    "soil_5pct": {
+      "acc": 0.7907906028749195,
+      "f1": 0.5791007825575217
+    },
+    "combined_worst": {
+      "acc": 0.5515179146105986,
+      "f1": 0.4299673923456341
+    }
+  },
+  "shap_analysis": {
+    "method": "gini_fallback",
+    "feature_importance_pct": {
+      "n": 12.6,
+      "p": 13.55,
+      "k": 14.27,
+      "temperature": 2.35,
+      "humidity": 14.01,
+      "ph": 12.71,
+      "rainfall": 2.26,
+      "season": 11.31,
+      "soil_type": 0.67,
+      "irrigation": 1.32,
+      "moisture": 14.94
+    }
+  },
+  "goals": {
+    "mcw_under_30pct": true,
+    "top1_above_75pct": true,
+    "top3_above_94pct": true,
+    "all_passed": true
+  }
+}
