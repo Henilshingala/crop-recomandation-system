@@ -1,0 +1,366 @@
+{
+  "model_version": "2.2",
+  "dataset_hash": "df237221e977d507",
+  "validation_date": "2026-02-18T16:50:33.295608+00:00",
+  "script": "03_real_world_validation.py",
+  "feature_compatibility": {
+    "missing_columns": [],
+    "extra_columns": [],
+    "out_of_range": {},
+    "type_warnings": [],
+    "total_rows": 22300
+  },
+  "status": "complete",
+  "edge_case_results": [
+    {
+      "name": "Very high NPK, very low rainfall, rainfed",
+      "description": "Nutrient-rich soil but severe drought, no irrigation",
+      "input": {
+        "N": 185,
+        "P": 95,
+        "K": 250,
+        "temperature": 30,
+        "humidity": 35,
+        "ph": 7.0,
+        "rainfall": 50,
+        "season": 0,
+        "soil_type": 0,
+        "irrigation": 0
+      },
+      "prediction": "banana",
+      "confidence": 31.69,
+      "confidence_flag": "low_confidence",
+      "top3": [
+        {
+          "crop": "banana",
+          "confidence": 31.69
+        },
+        {
+          "crop": "jowar",
+          "confidence": 12.71
+        },
+        {
+          "crop": "cotton",
+          "confidence": 12.67
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.7231
+    },
+    {
+      "name": "Very low NPK but irrigated, loamy",
+      "description": "Poor soil but irrigation available",
+      "input": {
+        "N": 5,
+        "P": 5,
+        "K": 5,
+        "temperature": 25,
+        "humidity": 70,
+        "ph": 6.5,
+        "rainfall": 800,
+        "season": 0,
+        "soil_type": 1,
+        "irrigation": 1
+      },
+      "prediction": "citrus",
+      "confidence": 23.83,
+      "confidence_flag": "low_confidence",
+      "top3": [
+        {
+          "crop": "citrus",
+          "confidence": 23.83
+        },
+        {
+          "crop": "custard_apple",
+          "confidence": 12.18
+        },
+        {
+          "crop": "mungbean",
+          "confidence": 6.79
+        }
+      ],
+      "collapses_to_dominant_crop": true,
+      "normalized_entropy": 0.794
+    },
+    {
+      "name": "Clay soil + very low rainfall (conflict)",
+      "description": "Clay retains moisture but rainfall is extremely low",
+      "input": {
+        "N": 80,
+        "P": 40,
+        "K": 60,
+        "temperature": 35,
+        "humidity": 20,
+        "ph": 7.5,
+        "rainfall": 80,
+        "season": 2,
+        "soil_type": 2,
+        "irrigation": 0
+      },
+      "prediction": "gourd",
+      "confidence": 47.12,
+      "confidence_flag": "low_confidence",
+      "top3": [
+        {
+          "crop": "gourd",
+          "confidence": 47.12
+        },
+        {
+          "crop": "muskmelon",
+          "confidence": 8.43
+        },
+        {
+          "crop": "watermelon",
+          "confidence": 3.01
+        }
+      ],
+      "collapses_to_dominant_crop": true,
+      "normalized_entropy": 0.6527
+    },
+    {
+      "name": "Sandy soil + extremely high rainfall (conflict)",
+      "description": "Sandy soil cannot hold water, extreme monsoon rainfall",
+      "input": {
+        "N": 50,
+        "P": 30,
+        "K": 40,
+        "temperature": 28,
+        "humidity": 95,
+        "ph": 5.5,
+        "rainfall": 3200,
+        "season": 0,
+        "soil_type": 0,
+        "irrigation": 1
+      },
+      "prediction": "coconut",
+      "confidence": 77.53,
+      "confidence_flag": "moderate_confidence",
+      "top3": [
+        {
+          "crop": "coconut",
+          "confidence": 77.53
+        },
+        {
+          "crop": "jute",
+          "confidence": 5.71
+        },
+        {
+          "crop": "citrus",
+          "confidence": 1.57
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.3192
+    },
+    {
+      "name": "Out-of-range temperature (extreme cold)",
+      "description": "Below training data range \u2014 near-freezing",
+      "input": {
+        "N": 60,
+        "P": 30,
+        "K": 80,
+        "temperature": 2,
+        "humidity": 60,
+        "ph": 6.0,
+        "rainfall": 600,
+        "season": 1,
+        "soil_type": 1,
+        "irrigation": 0
+      },
+      "prediction": "barley",
+      "confidence": 63.19,
+      "confidence_flag": "moderate_confidence",
+      "top3": [
+        {
+          "crop": "barley",
+          "confidence": 63.19
+        },
+        {
+          "crop": "carrot",
+          "confidence": 6.21
+        },
+        {
+          "crop": "radish",
+          "confidence": 3.44
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.4871
+    },
+    {
+      "name": "Out-of-range temperature (extreme heat)",
+      "description": "Above training data range \u2014 desert heat",
+      "input": {
+        "N": 20,
+        "P": 15,
+        "K": 25,
+        "temperature": 48,
+        "humidity": 10,
+        "ph": 8.5,
+        "rainfall": 100,
+        "season": 2,
+        "soil_type": 0,
+        "irrigation": 0
+      },
+      "prediction": "date_palm",
+      "confidence": 93.76,
+      "confidence_flag": "high_confidence",
+      "top3": [
+        {
+          "crop": "date_palm",
+          "confidence": 93.76
+        },
+        {
+          "crop": "citrus",
+          "confidence": 0.34
+        },
+        {
+          "crop": "barley",
+          "confidence": 0.26
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.1191
+    },
+    {
+      "name": "Extreme pH (very acidic)",
+      "description": "pH below training data range",
+      "input": {
+        "N": 70,
+        "P": 40,
+        "K": 90,
+        "temperature": 26,
+        "humidity": 75,
+        "ph": 3.5,
+        "rainfall": 1500,
+        "season": 0,
+        "soil_type": 2,
+        "irrigation": 1
+      },
+      "prediction": "tobacco",
+      "confidence": 50.23,
+      "confidence_flag": "moderate_confidence",
+      "top3": [
+        {
+          "crop": "tobacco",
+          "confidence": 50.23
+        },
+        {
+          "crop": "papaya",
+          "confidence": 42.64
+        },
+        {
+          "crop": "citrus",
+          "confidence": 0.77
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.2943
+    },
+    {
+      "name": "Extreme pH (very alkaline)",
+      "description": "pH above training data range",
+      "input": {
+        "N": 70,
+        "P": 40,
+        "K": 90,
+        "temperature": 32,
+        "humidity": 40,
+        "ph": 9.5,
+        "rainfall": 400,
+        "season": 1,
+        "soil_type": 0,
+        "irrigation": 0
+      },
+      "prediction": "radish",
+      "confidence": 21.87,
+      "confidence_flag": "low_confidence",
+      "top3": [
+        {
+          "crop": "radish",
+          "confidence": 21.87
+        },
+        {
+          "crop": "carrot",
+          "confidence": 15.43
+        },
+        {
+          "crop": "onion",
+          "confidence": 6.36
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.7959
+    },
+    {
+      "name": "All features at extreme high",
+      "description": "Saturated conditions \u2014 everything maxed out",
+      "input": {
+        "N": 200,
+        "P": 145,
+        "K": 295,
+        "temperature": 45,
+        "humidity": 99,
+        "ph": 9.0,
+        "rainfall": 3400,
+        "season": 0,
+        "soil_type": 2,
+        "irrigation": 1
+      },
+      "prediction": "banana",
+      "confidence": 73.19,
+      "confidence_flag": "moderate_confidence",
+      "top3": [
+        {
+          "crop": "banana",
+          "confidence": 73.19
+        },
+        {
+          "crop": "sugarcane",
+          "confidence": 20.78
+        },
+        {
+          "crop": "citrus",
+          "confidence": 0.33
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.2415
+    },
+    {
+      "name": "All features at extreme low",
+      "description": "Minimal conditions \u2014 everything at lower bound",
+      "input": {
+        "N": 1,
+        "P": 1,
+        "K": 1,
+        "temperature": 5,
+        "humidity": 5,
+        "ph": 4.0,
+        "rainfall": 50,
+        "season": 1,
+        "soil_type": 0,
+        "irrigation": 0
+      },
+      "prediction": "spinach",
+      "confidence": 24.19,
+      "confidence_flag": "low_confidence",
+      "top3": [
+        {
+          "crop": "spinach",
+          "confidence": 24.19
+        },
+        {
+          "crop": "barley",
+          "confidence": 23.31
+        },
+        {
+          "crop": "lentil",
+          "confidence": 3.02
+        }
+      ],
+      "collapses_to_dominant_crop": false,
+      "normalized_entropy": 0.7538
+    }
+  ]
+}
