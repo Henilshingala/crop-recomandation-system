@@ -161,7 +161,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # HUGGINGFACE ML GATEWAY
 # =============================================================================
 
-HF_MODEL_URL = os.environ.get("HF_MODEL_URL", "https://shingala-crs.hf.space")
+HF_MODEL_URL = os.environ.get("HF_MODEL_URL") or os.environ.get("HF_API_URL") or "https://shingala-crs.hf.space"
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 
 
