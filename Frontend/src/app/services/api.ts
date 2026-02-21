@@ -126,5 +126,3 @@ export async function getAvailableCrops(mode: string = 'original'): Promise<stri
   const data = await response.json();
   return data.crops;
 }
-
-}
