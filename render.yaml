@@ -5,7 +5,7 @@ services:
     region: oregon
     rootDir: Backend/app
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput && python manage.py sync_crops
-    startCommand: gunicorn app.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile -
+    startCommand: python manage.py migrate --noinput && python manage.py sync_crops && gunicorn app.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile -
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"
