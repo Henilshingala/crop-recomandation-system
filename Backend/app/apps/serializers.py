@@ -41,7 +41,7 @@ class PredictionInputSerializer(serializers.Serializer):
     Optional: mode, soil_type, irrigation, moisture
     """
 
-    MODE_CHOICES = [("honest", "Honest"), ("hybrid", "Hybrid")]
+    MODE_CHOICES = [("original", "Original"), ("synthetic", "Synthetic"), ("both", "Both")]
 
     N = serializers.FloatField(
         min_value=0, max_value=150,
@@ -73,9 +73,9 @@ class PredictionInputSerializer(serializers.Serializer):
     )
     mode = serializers.ChoiceField(
         choices=MODE_CHOICES,
-        default="honest",
+        default="original",
         required=False,
-        help_text="Prediction mode: 'honest' (19 crops) or 'hybrid' (54 crops)",
+        help_text="Prediction mode: 'original' (HF v3, 19 crops), 'synthetic' (local, 51 crops), or 'both' (blended)",
     )
     soil_type = serializers.IntegerField(
         min_value=0, max_value=2,
@@ -102,6 +102,10 @@ class CropRecommendationSerializer(serializers.Serializer):
 
     crop = serializers.CharField()
     confidence = serializers.FloatField()
+    risk_level = serializers.CharField(
+        required=False, default="medium",
+        help_text="low / medium / high based on confidence",
+    )
     image_url = serializers.CharField(allow_blank=True, required=False, default="")
     image_urls = serializers.ListField(
         child=serializers.CharField(),
@@ -120,18 +124,10 @@ class ModelInfoSerializer(serializers.Serializer):
     """Model metadata."""
 
     coverage = serializers.IntegerField(help_text="Number of crops the model covers")
-    type = serializers.CharField(help_text="Model type (e.g. leakage-free)")
-
-
-class HybridDetailSerializer(serializers.Serializer):
-    """Extra detail returned only for hybrid mode."""
-
-    source_dominance = serializers.CharField()
-    rule_triggered = serializers.CharField()
-    real_top1 = serializers.CharField()
-    real_confidence = serializers.FloatField()
-    synth_top1 = serializers.CharField()
-    synth_confidence = serializers.FloatField()
+    type = serializers.CharField(help_text="Model type (e.g. stacked-ensemble-v3)")
+    version = serializers.CharField(required=False, help_text="Model version")
+    fallback = serializers.BooleanField(required=False, default=False,
+                                         help_text="True when HF was unreachable")
 
 
 class PredictionResponseSerializer(serializers.Serializer):
@@ -139,11 +135,10 @@ class PredictionResponseSerializer(serializers.Serializer):
     Full prediction response.
 
     {
-        "mode": "honest" | "hybrid",
+        "mode": "original" | "synthetic" | "both",
         "top_1": {"crop": "rice", "confidence": 98.6, ...},
         "top_3": [...],
-        "model_info": {"coverage": 19, "type": "leakage-free"},
-        "hybrid_detail": { ... }   // only for hybrid mode
+        "model_info": {"coverage": 19, "type": "stacked-ensemble-v3", "version": "3.0"}
     }
     """
 
@@ -151,7 +146,6 @@ class PredictionResponseSerializer(serializers.Serializer):
     top_1 = CropRecommendationSerializer()
     top_3 = CropRecommendationSerializer(many=True)
     model_info = ModelInfoSerializer()
-    hybrid_detail = HybridDetailSerializer(required=False, allow_null=True)
 
 
 class PredictionLogSerializer(serializers.ModelSerializer):

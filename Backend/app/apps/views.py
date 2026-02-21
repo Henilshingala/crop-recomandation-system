@@ -3,8 +3,8 @@ Crop Recommendation System - API Views
 ======================================
 REST API endpoints for crop prediction and management.
 
-Dual prediction modes:
-  POST /api/predict/  { ..., "mode": "honest" | "hybrid" }
+Prediction modes:
+  POST /api/predict/  { ..., "mode": "original" | "synthetic" | "both" }
 """
 
 import csv
@@ -28,7 +28,7 @@ from .serializers import (
     PredictionLogSerializer,
     PredictionResponseSerializer,
 )
-from .ml_inference import predict_top_crops, get_predictor
+from .ml_inference import predict_top_crops, get_predictor, get_available_crops
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class CropPredictionView(APIView):
     """
     POST /api/predict/
 
-    Dual-mode crop prediction.
+    Crop prediction via HuggingFace Space gateway.
 
     Request body
     ────────────
@@ -90,20 +90,19 @@ class CropPredictionView(APIView):
         "N": 90, "P": 42, "K": 43,
         "temperature": 24.5, "humidity": 68,
         "ph": 6.7, "rainfall": 120,
-        "mode": "honest",          // optional, default "honest"
-        "soil_type": 1,            // optional, default 1 (loamy)
-        "irrigation": 0,           // optional, default 0 (rainfed)
-        "moisture": 43.5           // optional, default 43.5
+        "mode": "original",          // optional, default "original"
+        "soil_type": 1,              // optional, default 1 (loamy)
+        "irrigation": 0,             // optional, default 0 (rainfed)
+        "moisture": 43.5             // optional, default 43.5
     }
 
     Response (200)
     ──────────────
     {
-        "mode": "honest",
-        "top_1": { "crop": "rice", "confidence": 98.6, ... },
+        "mode": "original",
+        "top_1": { "crop": "rice", "confidence": 98.6, "risk_level": "low", ... },
         "top_3": [ ... ],
-        "model_info": { "coverage": 19, "type": "leakage-free" },
-        "hybrid_detail": null      // populated only for hybrid mode
+        "model_info": { "coverage": 19, "type": "stacked-ensemble-v3", "version": "3.0" }
     }
     """
 
@@ -118,7 +117,7 @@ class CropPredictionView(APIView):
             )
 
         vd = serializer.validated_data
-        mode = vd.get("mode", "honest")
+        mode = vd.get("mode", "original")
 
         try:
             result = predict_top_crops(
@@ -135,9 +134,14 @@ class CropPredictionView(APIView):
                 mode=mode,
             )
 
-            # Enrich top_1 and top_3 with DB metadata + nutrition
-            result["top_1"] = self._enrich(request, result["top_1"])
+            # Enrich top_3 with DB metadata + nutrition
             result["top_3"] = [self._enrich(request, r) for r in result["top_3"]]
+
+            # Derive top_1 from top_3[0]
+            if result["top_3"]:
+                result["top_1"] = result["top_3"][0]
+            else:
+                result["top_1"] = {"crop": "unknown", "confidence": 0, "risk_level": "high"}
 
             # Log prediction
             self._log_prediction(request, vd, result)
@@ -268,7 +272,7 @@ def health_check(request):
         "status": "healthy",
         "database": "ok",
         "ml_model": "ok",
-        "modes": ["honest", "hybrid"],
+        "modes": ["original", "synthetic", "both"],
     }
 
     try:
@@ -278,9 +282,8 @@ def health_check(request):
         info["status"] = "unhealthy"
 
     try:
-        predictor = get_predictor()
-        info["honest_crops"]  = len(predictor.get_available_crops("honest"))
-        info["hybrid_crops"]  = len(predictor.get_available_crops("hybrid"))
+        info["original_crops"] = len(get_available_crops("original"))
+        info["synthetic_crops"] = len(get_available_crops("synthetic"))
     except Exception as e:
         info["ml_model"] = f"error: {e}"
         info["status"] = "unhealthy"
@@ -292,11 +295,10 @@ def health_check(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def available_crops(request):
-    """GET /api/crops/available/?mode=honest|hybrid"""
-    mode = request.query_params.get("mode", "honest")
+    """GET /api/crops/available/?mode=original|synthetic|both"""
+    mode = request.query_params.get("mode", "original")
     try:
-        predictor = get_predictor()
-        crops = predictor.get_available_crops(mode)
+        crops = get_available_crops(mode)
         return Response({"mode": mode, "count": len(crops), "crops": crops})
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)

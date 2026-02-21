@@ -150,6 +150,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # =============================================================================
+# HUGGINGFACE ML GATEWAY
+# =============================================================================
+
+HF_MODEL_URL = os.environ.get("HF_MODEL_URL", "https://shingala-crs.hf.space")
+
+
+# =============================================================================
 # CORS CONFIGURATION (for React frontend)
 # =============================================================================
 # Documentation: https://github.com/adamchainz/django-cors-headers
