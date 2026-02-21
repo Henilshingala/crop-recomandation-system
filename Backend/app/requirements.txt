@@ -13,8 +13,8 @@ django-cors-headers>=4.3
 # Image handling
 Pillow>=10.0
 
-# ASGI server (production)
-gunicorn>=21.0
+# WSGI server (production — pinned to avoid gunicorn 25.x worker-spawn bug)
+gunicorn==22.0.0
 
 # Environment variables (optional, for production)
 python-dotenv>=1.0
