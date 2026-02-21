@@ -15,7 +15,10 @@ app = FastAPI(title="Crop Recommendation ML API", version="2.2")
 
 model = joblib.load("model_rf.joblib")
 label_encoder = joblib.load("label_encoder.joblib")
-nutrients_df = pd.read_csv("Nutrient.csv")
+try:
+    nutrients_df = pd.read_csv("Nutrient.csv")
+except FileNotFoundError:
+    nutrients_df = pd.DataFrame()
 
 FEATURES = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall",
             "season", "soil_type", "irrigation"]
@@ -62,6 +65,8 @@ class PredictionInput(BaseModel):
 
 def get_nutrition(crop_name: str) -> Optional[dict]:
     try:
+        if nutrients_df is None or nutrients_df.empty or "food_name" not in nutrients_df.columns:
+            return None
         nutrient_row = nutrients_df[
             nutrients_df["food_name"].str.lower().str.contains(
                 crop_name.lower(), na=False
