@@ -1,0 +1,206 @@
+{
+  "system_name": "Hybrid Crop Recommendation System v2 (Anti-Bias Refactor)",
+  "version": "2.0",
+  "improvements": [
+    "1. Class-balanced honest model (balanced_subsample)",
+    "2. Probability temperature scaling",
+    "3. Per-class inverse-frequency normalization",
+    "4. Entropy-based dominance penalty",
+    "5. Confusion-matrix binary classifiers (top-5 pairs)",
+    "6. SHAP-based bias audit with feature scaling"
+  ],
+  "honest_model": {
+    "file": "model_real_world_honest_v2.joblib",
+    "training_approach": "balanced_subsample",
+    "features": [
+      "n",
+      "p",
+      "k",
+      "temperature",
+      "humidity",
+      "ph",
+      "rainfall",
+      "season",
+      "soil_type",
+      "irrigation",
+      "moisture"
+    ],
+    "crops": 19
+  },
+  "synth_model": {
+    "file": "model_rf.joblib",
+    "crops": 51
+  },
+  "config": {
+    "temperature": 0.75,
+    "inv_freq_alpha": 0.65,
+    "entropy_threshold": 0.4,
+    "dominance_penalty": 0.12,
+    "binary_classifier_pairs": [
+      [
+        "sorghum",
+        "pearl_millet"
+      ],
+      [
+        "mustard",
+        "sunflower"
+      ],
+      [
+        "pearl_millet",
+        "sorghum"
+      ],
+      [
+        "castor",
+        "sesamum"
+      ],
+      [
+        "mustard",
+        "linseed"
+      ]
+    ],
+    "feature_scaling": {}
+  },
+  "blending_weights": {
+    "default": {
+      "real": 0.6,
+      "synth": 0.4
+    },
+    "high_conf": {
+      "real": 0.75,
+      "synth": 0.25
+    },
+    "low_conf": {
+      "real": 0.5,
+      "synth": 0.5
+    }
+  },
+  "crop_name_mapping": {
+    "pigeonpea": "pigeonpeas",
+    "sesamum": "sesame",
+    "pearl_millet": "bajra",
+    "finger_millet": "ragi",
+    "sorghum": "jowar"
+  },
+  "unified_crops": [
+    "apple",
+    "bajra",
+    "banana",
+    "barley",
+    "ber",
+    "blackgram",
+    "brinjal",
+    "carrot",
+    "castor",
+    "chickpea",
+    "citrus",
+    "coconut",
+    "coffee",
+    "cole_crop",
+    "cotton",
+    "cucumber",
+    "custard_apple",
+    "date_palm",
+    "gourd",
+    "grapes",
+    "green_chilli",
+    "groundnut",
+    "guava",
+    "jowar",
+    "jute",
+    "kidneybeans",
+    "lentil",
+    "linseed",
+    "maize",
+    "mango",
+    "mothbeans",
+    "mungbean",
+    "muskmelon",
+    "mustard",
+    "okra",
+    "onion",
+    "papaya",
+    "pigeonpeas",
+    "pomegranate",
+    "potato",
+    "radish",
+    "ragi",
+    "rice",
+    "safflower",
+    "sapota",
+    "sesame",
+    "soybean",
+    "spinach",
+    "sugarcane",
+    "sunflower",
+    "tobacco",
+    "tomato",
+    "watermelon",
+    "wheat"
+  ],
+  "shap_audit": {
+    "feature_importance_pct": {
+      "n": 4.32,
+      "p": 6.15,
+      "k": 4.79,
+      "temperature": 5.1,
+      "humidity": 4.11,
+      "ph": 5.25,
+      "rainfall": 4.16,
+      "season": 5.54,
+      "soil_type": 4.56,
+      "irrigation": 4.23,
+      "moisture": 6.68
+    },
+    "moisture_humidity_combined": 10.79,
+    "dominance_detected": false,
+    "feature_scaling": {}
+  },
+  "performance": {
+    "honest": {
+      "top1": 0.756839,
+      "top3": 0.983909,
+      "macro_f1": 0.646635,
+      "per_class_f1": {
+        "barley": 1.0,
+        "castor": 0.1497,
+        "chickpea": 1.0,
+        "cotton": 1.0,
+        "finger_millet": 0.2162,
+        "groundnut": 1.0,
+        "linseed": 0.2505,
+        "maize": 1.0,
+        "mustard": 0.4334,
+        "pearl_millet": 0.4046,
+        "pigeonpea": 1.0,
+        "rice": 1.0,
+        "safflower": 0.0872,
+        "sesamum": 0.6757,
+        "sorghum": 0.3932,
+        "soybean": 0.3467,
+        "sugarcane": 1.0,
+        "sunflower": 0.3289,
+        "wheat": 1.0
+      }
+    },
+    "real_hybrid": {
+      "samples": 37288,
+      "top1": 0.726185,
+      "top3": 0.904125,
+      "mcw_dominance_pct": 22.4
+    },
+    "synth_hybrid": {
+      "samples": 4460,
+      "top1": 0.857399,
+      "top3": 0.943049
+    },
+    "goals": {
+      "macro_f1_improvement": 4.08,
+      "honest_top1": 75.68,
+      "synth_top3": 94.3,
+      "mcw_dominance": 22.4,
+      "all_passed": false
+    }
+  },
+  "sklearn_version": "1.8.0",
+  "timestamp": "2026-02-21T00:47:46.608445+00:00"
+}

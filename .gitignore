@@ -1,0 +1,44 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.vscode/
+.idea/
+.DS_Store
+
+# frontend junk
+Frontend/node_modules/
+Frontend/.next/
+Frontend/dist/
+
+# database
+Backend/app/db.sqlite3
+
+# media
+Backend/app/media/
+
+# training datasets
+Aiml/*.csv
+Aiml/confusion_matrix*.png
+
+# logs
+*.log
