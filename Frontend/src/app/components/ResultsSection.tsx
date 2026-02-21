@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { Sprout, TrendingUp, AlertCircle, Calendar, Shield, Layers } from "lucide-react";
+import { Sprout, TrendingUp, AlertCircle, Calendar, Shield, Layers, Combine } from "lucide-react";
 import { type PredictionResponse, type CropRecommendation } from "@/app/services/api";
 import { useEffect, useState, useMemo } from "react";
 
@@ -49,15 +49,19 @@ function AutoCarousel({ images, alt }: { images: string[]; alt: string }) {
 function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
   const h = size === "sm" ? "h-2" : "h-3";
   const color =
-    value >= 80 ? "from-green-500 to-emerald-500"
+    value >= 75 ? "from-green-500 to-emerald-500"
     : value >= 50 ? "from-yellow-400 to-amber-500"
-    : "from-orange-400 to-red-400";
+    : "from-orange-400 to-red-500";
+  const textColor =
+    value >= 75 ? "text-green-700"
+    : value >= 50 ? "text-amber-700"
+    : "text-red-700";
 
   return (
     <div className="w-full">
       <div className="flex justify-between text-sm mb-1">
         <span className="font-medium text-gray-600">Confidence</span>
-        <span className="font-bold text-green-700">{value.toFixed(1)}%</span>
+        <span className={`font-bold ${textColor}`}>{value.toFixed(1)}%</span>
       </div>
       <div className={`w-full bg-gray-200 rounded-full ${h}`}>
         <div
@@ -72,18 +76,26 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
 /* ── Mode badge ───────────────────────────────────────────────────── */
 
 function ModeBadge({ mode }: { mode: string }) {
-  if (mode === "honest") {
+  if (mode === "original") {
     return (
       <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1.5 px-3 py-1 text-xs font-medium">
         <Shield className="w-3 h-3" />
-        Leakage-free real-world model
+        Original — 19 real-world crops
+      </Badge>
+    );
+  }
+  if (mode === "synthetic") {
+    return (
+      <Badge className="bg-blue-100 text-blue-800 border border-blue-300 gap-1.5 px-3 py-1 text-xs font-medium">
+        <Layers className="w-3 h-3" />
+        Synthetic — 51 augmented crops
       </Badge>
     );
   }
   return (
-    <Badge className="bg-blue-100 text-blue-800 border border-blue-300 gap-1.5 px-3 py-1 text-xs font-medium">
-      <Layers className="w-3 h-3" />
-      Unified 54-crop system
+    <Badge className="bg-purple-100 text-purple-800 border border-purple-300 gap-1.5 px-3 py-1 text-xs font-medium">
+      <Combine className="w-3 h-3" />
+      Both — 59 merged crops
     </Badge>
   );
 }
@@ -91,7 +103,7 @@ function ModeBadge({ mode }: { mode: string }) {
 /* ── Main component ───────────────────────────────────────────────── */
 
 export function ResultsSection({ data }: ResultsSectionProps) {
-  const { mode, top_1, top_3, model_info, hybrid_detail } = data;
+  const { mode, top_1, top_3, model_info } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
 
@@ -224,22 +236,6 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             </div>
           </div>
 
-          {/* Hybrid detail panel */}
-          {mode === "hybrid" && hybrid_detail && (
-            <div className="mt-6 bg-blue-50/60 backdrop-blur-sm border border-blue-200/60 rounded-xl p-4">
-              <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                <Layers className="w-4 h-4" />
-                Hybrid Blend Details
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                <MiniStat label="Source" value={hybrid_detail.source_dominance} />
-                <MiniStat label="Rule" value={hybrid_detail.rule_triggered} />
-                <MiniStat label="Real Top-1" value={`${hybrid_detail.real_top1} (${hybrid_detail.real_confidence}%)`} />
-                <MiniStat label="Synth Top-1" value={`${hybrid_detail.synth_top1} (${hybrid_detail.synth_confidence}%)`} />
-              </div>
-            </div>
-          )}
-
           {/* Info alert */}
           <div className="mt-6 bg-amber-50/70 backdrop-blur-sm border border-amber-200/60 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -298,7 +294,11 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   >
                     #{i + 1}
                   </Badge>
-                  <Badge className="bg-green-100 text-green-700 border border-green-200 text-xs">
+                  <Badge className={`text-xs border ${
+                    crop.confidence >= 75 ? 'bg-green-100 text-green-700 border-green-200'
+                    : crop.confidence >= 50 ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                    : 'bg-red-100 text-red-700 border-red-200'
+                  }`}>
                     {crop.confidence.toFixed(1)}%
                   </Badge>
                 </div>
@@ -332,17 +332,6 @@ export function ResultsSection({ data }: ResultsSectionProps) {
           Try Another Analysis
         </button>
       </div>
-    </div>
-  );
-}
-
-/* ── Mini stat chip ───────────────────────────────────────────────── */
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-white/60 rounded-lg px-3 py-2 border border-blue-100">
-      <p className="text-[10px] text-blue-500 uppercase tracking-wide font-medium">{label}</p>
-      <p className="text-sm font-semibold text-blue-900 capitalize truncate" title={value}>{value}</p>
     </div>
   );
 }

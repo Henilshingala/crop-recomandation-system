@@ -1,9 +1,13 @@
 /**
  * API Service for Crop Recommendation System
- * Handles all backend communication
+ * All requests route through the Render backend (Django gateway).
+ * No direct HuggingFace calls from the frontend.
  */
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://crop-recomandation-system.onrender.com/api').replace(/\/$/, '');
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://crop-recomandation-system.onrender.com/api'
+).replace(/\/$/, '');
 
 /* ── Request types ────────────────────────────────────────────────── */
 
@@ -15,7 +19,7 @@ export interface PredictionInput {
   humidity: number;
   ph: number;
   rainfall: number;
-  mode?: 'honest' | 'hybrid';
+  mode?: 'original' | 'synthetic' | 'both';
   soil_type?: number;
   irrigation?: number;
   moisture?: number;
@@ -26,6 +30,7 @@ export interface PredictionInput {
 export interface CropRecommendation {
   crop: string;
   confidence: number;
+  risk_level?: 'low' | 'medium' | 'high';
   image_url?: string;
   image_urls?: string[];
   expected_yield?: string | null;
@@ -47,23 +52,14 @@ export interface CropRecommendation {
 export interface ModelInfo {
   coverage: number;
   type: string;
-}
-
-export interface HybridDetail {
-  source_dominance: string;
-  rule_triggered: string;
-  real_top1: string;
-  real_confidence: number;
-  synth_top1: string;
-  synth_confidence: number;
+  version?: string;
 }
 
 export interface PredictionResponse {
-  mode: 'honest' | 'hybrid';
+  mode: 'original' | 'synthetic' | 'both';
   top_1: CropRecommendation;
   top_3: CropRecommendation[];
   model_info: ModelInfo;
-  hybrid_detail?: HybridDetail | null;
 }
 
 export interface HealthResponse {
@@ -71,15 +67,15 @@ export interface HealthResponse {
   database: string;
   ml_model: string;
   crop_count?: number;
-  honest_crops?: number;
-  hybrid_crops?: number;
+  original_crops?: number;
+  synthetic_crops?: number;
   modes?: string[];
 }
 
 /* ── API calls ────────────────────────────────────────────────────── */
 
 /**
- * Get crop recommendations from the ML model
+ * Get crop recommendations from the Render backend
  */
 export async function getPrediction(input: PredictionInput): Promise<PredictionResponse> {
   const url = `${API_BASE_URL}/predict/`;
@@ -124,9 +120,11 @@ export async function checkHealth(): Promise<HealthResponse> {
 /**
  * Get list of available crops from ML model
  */
-export async function getAvailableCrops(mode: string = 'honest'): Promise<string[]> {
+export async function getAvailableCrops(mode: string = 'original'): Promise<string[]> {
   const response = await fetch(`${API_BASE_URL}/crops/available/?mode=${mode}`);
   if (!response.ok) throw new Error('Failed to fetch available crops');
   const data = await response.json();
   return data.crops;
+}
+
 }

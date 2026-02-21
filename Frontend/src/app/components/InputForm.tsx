@@ -3,7 +3,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
-import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2, ChevronDown, Shield, Layers } from "lucide-react";
+import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2, ChevronDown, Shield, Layers, Combine } from "lucide-react";
 import { useState } from "react";
 
 interface InputFormProps {
@@ -25,7 +25,7 @@ const VALIDATION_RANGES = {
 
 export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [mode, setMode] = useState<'honest' | 'hybrid'>('honest');
+  const [mode, setMode] = useState<'original' | 'synthetic' | 'both'>('original');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const validateField = (name: string, value: string) => {
@@ -158,24 +158,33 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
               Prediction Mode
             </h3>
             <input type="hidden" name="mode" value={mode} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <ModeCard
-                active={mode === 'honest'}
-                onClick={() => setMode('honest')}
+                active={mode === 'original'}
+                onClick={() => setMode('original')}
                 icon={<Shield className="w-5 h-5" />}
-                title="Honest Mode"
-                subtitle="Real-world, 19 crops"
-                badge="Leakage-free"
+                title="Original"
+                subtitle="19 real-world crops"
+                badge="V3 ensemble"
                 badgeClass="bg-emerald-100 text-emerald-700 border-emerald-200"
               />
               <ModeCard
-                active={mode === 'hybrid'}
-                onClick={() => setMode('hybrid')}
+                active={mode === 'synthetic'}
+                onClick={() => setMode('synthetic')}
                 icon={<Layers className="w-5 h-5" />}
-                title="Hybrid Mode"
-                subtitle="Full 54-crop system"
-                badge="Unified blend"
+                title="Synthetic"
+                subtitle="51 augmented crops"
+                badge="Extended"
                 badgeClass="bg-blue-100 text-blue-700 border-blue-200"
+              />
+              <ModeCard
+                active={mode === 'both'}
+                onClick={() => setMode('both')}
+                icon={<Combine className="w-5 h-5" />}
+                title="Both"
+                subtitle="59 merged crops"
+                badge="Full coverage"
+                badgeClass="bg-purple-100 text-purple-700 border-purple-200"
               />
             </div>
           </div>
