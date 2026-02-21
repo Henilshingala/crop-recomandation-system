@@ -3,7 +3,8 @@
   "model_type": "CalibratedClassifierCV(RandomForestClassifier)",
   "calibration_method": "sigmoid",
   "calibration_cv": 3,
-  "n_estimators": 400,
+  "n_estimators": 150,
+  "max_depth": 25,
   "honest_model": true,
   "data_leakage_fixed": true,
   "features": [
@@ -34,14 +35,14 @@
   ],
   "dataset": "real_world_merged_dataset.csv",
   "dataset_hash": "a36580392bd448ef",
-  "model_file_hash": "7312cca43aac46b0",
-  "top1_accuracy": 0.773332,
-  "top3_accuracy": 0.987476,
-  "base_top1_accuracy": 0.786178,
-  "base_top3_accuracy": 0.988951,
+  "model_file_hash": "d67115f6a7692a96",
+  "top1_accuracy": 0.773654,
+  "top3_accuracy": 0.987422,
+  "base_top1_accuracy": 0.785829,
+  "base_top3_accuracy": 0.98887,
   "max_confidence_pct": 95.28,
-  "cv_mean": 0.786339,
-  "cv_std": 0.000625,
+  "cv_mean": 0.786467,
+  "cv_std": 0.00077,
   "total_classes": 19,
   "classes": [
     "barley",
@@ -87,17 +88,17 @@
     "safflower": 2401
   },
   "feature_importances": {
-    "moisture": 0.19831,
-    "humidity": 0.160938,
-    "ph": 0.151296,
-    "p": 0.128678,
-    "n": 0.119101,
-    "k": 0.116052,
-    "season": 0.098134,
-    "irrigation": 0.012785,
-    "temperature": 0.006639,
-    "rainfall": 0.006266,
-    "soil_type": 0.001801
+    "moisture": 0.204372,
+    "humidity": 0.16424,
+    "ph": 0.146398,
+    "p": 0.128066,
+    "n": 0.115668,
+    "k": 0.112294,
+    "season": 0.100379,
+    "irrigation": 0.013928,
+    "temperature": 0.006557,
+    "rainfall": 0.006208,
+    "soil_type": 0.001889
   },
   "per_class_metrics": {
     "barley": {
@@ -107,9 +108,9 @@
       "support": 1585
     },
     "castor": {
-      "precision": 0.2765,
+      "precision": 0.2797,
       "recall": 0.0727,
-      "f1-score": 0.1151,
+      "f1-score": 0.1154,
       "support": 1004
     },
     "chickpea": {
@@ -125,9 +126,9 @@
       "support": 1561
     },
     "finger_millet": {
-      "precision": 0.195,
-      "recall": 0.0537,
-      "f1-score": 0.0842,
+      "precision": 0.1953,
+      "recall": 0.0494,
+      "f1-score": 0.0789,
       "support": 1173
     },
     "groundnut": {
@@ -138,8 +139,8 @@
     },
     "linseed": {
       "precision": 0.2874,
-      "recall": 0.18,
-      "f1-score": 0.2213,
+      "recall": 0.1741,
+      "f1-score": 0.2169,
       "support": 1367
     },
     "maize": {
@@ -149,15 +150,15 @@
       "support": 2829
     },
     "mustard": {
-      "precision": 0.4598,
-      "recall": 0.6443,
-      "f1-score": 0.5366,
+      "precision": 0.4581,
+      "recall": 0.6606,
+      "f1-score": 0.541,
       "support": 2325
     },
     "pearl_millet": {
-      "precision": 0.3617,
-      "recall": 0.4487,
-      "f1-score": 0.4005,
+      "precision": 0.3591,
+      "recall": 0.4417,
+      "f1-score": 0.3961,
       "support": 1990
     },
     "pigeonpea": {
@@ -179,21 +180,21 @@
       "support": 480
     },
     "sesamum": {
-      "precision": 0.6151,
-      "recall": 0.8943,
-      "f1-score": 0.7288,
+      "precision": 0.6148,
+      "recall": 0.895,
+      "f1-score": 0.7289,
       "support": 2648
     },
     "sorghum": {
-      "precision": 0.4125,
-      "recall": 0.4788,
-      "f1-score": 0.4432,
+      "precision": 0.412,
+      "recall": 0.4866,
+      "f1-score": 0.4462,
       "support": 2310
     },
     "soybean": {
-      "precision": 0.3892,
+      "precision": 0.3914,
       "recall": 0.1683,
-      "f1-score": 0.235,
+      "f1-score": 0.2354,
       "support": 814
     },
     "sugarcane": {
@@ -203,9 +204,9 @@
       "support": 2702
     },
     "sunflower": {
-      "precision": 0.2473,
-      "recall": 0.2554,
-      "f1-score": 0.2513,
+      "precision": 0.2447,
+      "recall": 0.236,
+      "f1-score": 0.2402,
       "support": 979
     },
     "wheat": {
@@ -221,12 +222,12 @@
     "leaky_max_conf": 97.5,
     "leaky_cv": 90.58,
     "leaky_features": 22,
-    "honest_top1": 77.33,
-    "honest_top3": 98.75,
+    "honest_top1": 77.37,
+    "honest_top3": 98.74,
     "honest_max_conf": 95.3,
-    "honest_cv": 78.63,
+    "honest_cv": 78.65,
     "honest_features": 11,
-    "top1_diff": -12.85,
+    "top1_diff": -12.82,
     "top3_diff": -0.94,
     "total_leaked_importance": 0.2319,
     "removed_features": [
@@ -253,7 +254,7 @@
   "sklearn_version": "1.8.0",
   "numpy_version": "2.4.2",
   "pandas_version": "3.0.0",
-  "timestamp": "2026-02-18T17:23:47.661220+00:00",
+  "timestamp": "2026-02-21T00:45:55.578422+00:00",
   "random_state": 42,
   "note": "Honest crop recommendation model. All post-planting and geography-identity features removed to eliminate data leakage. Uses only pre-planting agronomic and environmental features for prediction. No synthetic data. No shortcuts. No leakage."
 }

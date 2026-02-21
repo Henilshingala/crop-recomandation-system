@@ -102,10 +102,10 @@ print(f"       Train: {len(X_train)}, Test: {len(X_test)}")
 # ===========================================================================
 # TRAIN BASE MODEL
 # ===========================================================================
-print("\n[4/10] Training base Random Forest (n_estimators=400) …")
+print("\n[4/10] Training base Random Forest (n_estimators=150, max_depth=25) …")
 base_model = RandomForestClassifier(
-    n_estimators=400,
-    max_depth=None,
+    n_estimators=150,
+    max_depth=25,
     min_samples_split=5,
     min_samples_leaf=2,
     random_state=RANDOM_STATE,
@@ -218,7 +218,8 @@ except ImportError:
 print("\n[9/10] 5-Fold Stratified Cross-Validation (base model) …")
 kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
 cv_model = RandomForestClassifier(
-    n_estimators=400,
+    n_estimators=150,
+    max_depth=25,
     min_samples_split=5,
     min_samples_leaf=2,
     random_state=RANDOM_STATE,
@@ -235,10 +236,10 @@ print(f"       Std Deviation   : {cv_scores.std():.4f}")
 # ===========================================================================
 print(f"\n[10/10] Saving artifacts …")
 
-joblib.dump(model, MODEL_FILE)
-print(f"        ✓ {MODEL_FILE} (calibrated)")
+joblib.dump(model, MODEL_FILE, compress=3)
+print(f"        ✓ {MODEL_FILE} (calibrated, compressed)")
 
-joblib.dump(le, ENCODER_FILE)
+joblib.dump(le, ENCODER_FILE, compress=3)
 print(f"        ✓ {ENCODER_FILE}")
 
 # ── Hashes ───────────────────────────────────────────────────────────────
@@ -440,7 +441,8 @@ metadata = {
     "calibration_used": True,
     "calibration_method": "sigmoid",
     "calibration_cv": 3,
-    "n_estimators": 400,
+    "n_estimators": 150,
+    "max_depth": 25,
     "features": FEATURES,
     "soil_feature_added": True,
     "irrigation_feature_added": True,

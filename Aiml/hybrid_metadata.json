@@ -33,7 +33,7 @@
   },
   "config": {
     "temperature": 0.75,
-    "inv_freq_alpha": 0.6000000000000001,
+    "inv_freq_alpha": 0.65,
     "entropy_threshold": 0.4,
     "dominance_penalty": 0.12,
     "binary_classifier_pairs": [
@@ -42,20 +42,20 @@
         "pearl_millet"
       ],
       [
-        "pearl_millet",
-        "sorghum"
-      ],
-      [
         "mustard",
         "sunflower"
+      ],
+      [
+        "pearl_millet",
+        "sorghum"
       ],
       [
         "castor",
         "sesamum"
       ],
       [
-        "linseed",
-        "mustard"
+        "mustard",
+        "linseed"
       ]
     ],
     "feature_scaling": {}
@@ -139,68 +139,68 @@
   ],
   "shap_audit": {
     "feature_importance_pct": {
-      "n": 4.15,
-      "p": 6.19,
-      "k": 4.74,
-      "temperature": 5.08,
-      "humidity": 4.07,
+      "n": 4.32,
+      "p": 6.15,
+      "k": 4.79,
+      "temperature": 5.1,
+      "humidity": 4.11,
       "ph": 5.25,
-      "rainfall": 4.19,
-      "season": 5.58,
-      "soil_type": 4.61,
-      "irrigation": 4.19,
-      "moisture": 6.7
+      "rainfall": 4.16,
+      "season": 5.54,
+      "soil_type": 4.56,
+      "irrigation": 4.23,
+      "moisture": 6.68
     },
-    "moisture_humidity_combined": 10.77,
+    "moisture_humidity_combined": 10.79,
     "dominance_detected": false,
     "feature_scaling": {}
   },
   "performance": {
     "honest": {
-      "top1": 0.758394,
-      "top3": 0.984231,
-      "macro_f1": 0.646123,
+      "top1": 0.756839,
+      "top3": 0.983909,
+      "macro_f1": 0.646635,
       "per_class_f1": {
         "barley": 1.0,
-        "castor": 0.1506,
+        "castor": 0.1497,
         "chickpea": 1.0,
         "cotton": 1.0,
-        "finger_millet": 0.1962,
+        "finger_millet": 0.2162,
         "groundnut": 1.0,
-        "linseed": 0.248,
+        "linseed": 0.2505,
         "maize": 1.0,
-        "mustard": 0.4406,
-        "pearl_millet": 0.404,
+        "mustard": 0.4334,
+        "pearl_millet": 0.4046,
         "pigeonpea": 1.0,
         "rice": 1.0,
-        "safflower": 0.085,
-        "sesamum": 0.6815,
-        "sorghum": 0.4024,
-        "soybean": 0.3411,
+        "safflower": 0.0872,
+        "sesamum": 0.6757,
+        "sorghum": 0.3932,
+        "soybean": 0.3467,
         "sugarcane": 1.0,
-        "sunflower": 0.327,
+        "sunflower": 0.3289,
         "wheat": 1.0
       }
     },
     "real_hybrid": {
       "samples": 37288,
-      "top1": 0.727204,
-      "top3": 0.905117,
+      "top1": 0.726185,
+      "top3": 0.904125,
       "mcw_dominance_pct": 22.4
     },
     "synth_hybrid": {
       "samples": 4460,
-      "top1": 0.849552,
-      "top3": 0.941704
+      "top1": 0.857399,
+      "top3": 0.943049
     },
     "goals": {
-      "macro_f1_improvement": 4.09,
-      "honest_top1": 75.84,
-      "synth_top3": 94.17,
+      "macro_f1_improvement": 4.08,
+      "honest_top1": 75.68,
+      "synth_top3": 94.3,
       "mcw_dominance": 22.4,
       "all_passed": false
     }
   },
   "sklearn_version": "1.8.0",
-  "timestamp": "2026-02-19T08:54:24.015756+00:00"
+  "timestamp": "2026-02-21T00:47:46.608445+00:00"
 }

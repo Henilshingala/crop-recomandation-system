@@ -219,10 +219,10 @@ def step2_train(df: pd.DataFrame, features: list, le_crop: LabelEncoder):
     log.info(f"    Classes: {len(le_crop.classes_)}")
 
     # ── Train base Random Forest ────────────────────────────────────────
-    sub("Training RandomForestClassifier (n_estimators=400)")
+    sub("Training RandomForestClassifier (n_estimators=150, max_depth=25)")
     base_rf = RandomForestClassifier(
-        n_estimators=400,
-        max_depth=None,
+        n_estimators=150,
+        max_depth=25,
         min_samples_split=5,
         min_samples_leaf=2,
         random_state=RANDOM_STATE,
@@ -377,7 +377,7 @@ def step3_evaluate(results: dict, le_crop: LabelEncoder, df: pd.DataFrame):
 
     kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
     cv_rf = RandomForestClassifier(
-        n_estimators=400, min_samples_split=5, min_samples_leaf=2,
+        n_estimators=150, max_depth=25, min_samples_split=5, min_samples_leaf=2,
         random_state=RANDOM_STATE, n_jobs=-1,
     )
     cv_scores = cross_val_score(cv_rf, X_all, y_all, cv=kfold, scoring="accuracy")
@@ -507,7 +507,8 @@ def step5_save(results: dict, le_crop: LabelEncoder, df: pd.DataFrame,
         "model_type": "CalibratedClassifierCV(RandomForestClassifier)",
         "calibration_method": "sigmoid",
         "calibration_cv": 3,
-        "n_estimators": 400,
+        "n_estimators": 150,
+        "max_depth": 25,
         "honest_model": True,
         "data_leakage_fixed": True,
         "features": features,

@@ -235,7 +235,7 @@ def step2_retrain(data):
     # ── A) Baseline: standard RF (no balancing) ───────────────────────
     sub("A) Standard RF (baseline)")
     rf_a = RandomForestClassifier(
-        n_estimators=400, min_samples_split=5, min_samples_leaf=2,
+        n_estimators=150, max_depth=25, min_samples_split=5, min_samples_leaf=2,
         random_state=RANDOM_STATE, n_jobs=-1,
     )
     rf_a.fit(X_train, y_train)
@@ -247,7 +247,7 @@ def step2_retrain(data):
     # ── B) RF with balanced_subsample ─────────────────────────────────
     sub("B) RF balanced_subsample")
     rf_b = RandomForestClassifier(
-        n_estimators=400, min_samples_split=5, min_samples_leaf=2,
+        n_estimators=150, max_depth=25, min_samples_split=5, min_samples_leaf=2,
         class_weight="balanced_subsample",
         random_state=RANDOM_STATE, n_jobs=-1,
     )
@@ -263,7 +263,7 @@ def step2_retrain(data):
     try:
         from imblearn.ensemble import BalancedRandomForestClassifier
         rf_c = BalancedRandomForestClassifier(
-            n_estimators=400, min_samples_split=5, min_samples_leaf=2,
+            n_estimators=150, max_depth=25, min_samples_split=5, min_samples_leaf=2,
             random_state=RANDOM_STATE, n_jobs=-1,
         )
         rf_c.fit(X_train, y_train)
@@ -1009,10 +1009,10 @@ def step8_save(data, training, predictor, metrics, shap_report,
 
     le = data["le_crop"]
 
-    joblib.dump(training["model"], HONEST_MODEL_OUT)
+    joblib.dump(training["model"], HONEST_MODEL_OUT, compress=3)
     log.info(f"  ✓ {HONEST_MODEL_OUT}")
 
-    joblib.dump(le, HONEST_ENCODER_OUT)
+    joblib.dump(le, HONEST_ENCODER_OUT, compress=3)
     log.info(f"  ✓ {HONEST_ENCODER_OUT}")
 
     config = {
@@ -1026,7 +1026,7 @@ def step8_save(data, training, predictor, metrics, shap_report,
         "dominance_freq_threshold": DOMINANCE_FREQ_THRESHOLD,
         "dominance_penalty": DOMINANCE_PENALTY,
     }
-    joblib.dump(config, HYBRID_CONFIG_OUT)
+    joblib.dump(config, HYBRID_CONFIG_OUT, compress=3)
     log.info(f"  ✓ {HYBRID_CONFIG_OUT}")
 
     # Confusion matrix plot

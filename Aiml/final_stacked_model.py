@@ -315,14 +315,15 @@ def step2_build_stacked_ensemble(data: Dict) -> Dict[str, Any]:
     
     base_models = {
         "BalancedRF": BalancedRandomForestClassifier(
-            n_estimators=300,
+            n_estimators=100,
+            max_depth=20,
             min_samples_split=5,
             min_samples_leaf=2,
             random_state=RANDOM_STATE,
             n_jobs=-1,
         ),
         "XGBoost": xgb.XGBClassifier(
-            n_estimators=300,
+            n_estimators=100,
             max_depth=8,
             learning_rate=0.1,
             subsample=0.8,
@@ -333,7 +334,7 @@ def step2_build_stacked_ensemble(data: Dict) -> Dict[str, Any]:
             n_jobs=-1,
         ),
         "LightGBM": lgb.LGBMClassifier(
-            n_estimators=300,
+            n_estimators=100,
             max_depth=8,
             learning_rate=0.1,
             subsample=0.8,
@@ -366,13 +367,13 @@ def step2_build_stacked_ensemble(data: Dict) -> Dict[str, Any]:
             # Clone model for this fold
             if name == "BalancedRF":
                 m = BalancedRandomForestClassifier(
-                    n_estimators=300, min_samples_split=5, min_samples_leaf=2,
+                    n_estimators=100, max_depth=20, min_samples_split=5, min_samples_leaf=2,
                     random_state=RANDOM_STATE, n_jobs=-1
                 )
                 m.fit(X_tr, y_tr)
             elif name == "XGBoost":
                 m = xgb.XGBClassifier(
-                    n_estimators=300, max_depth=8, learning_rate=0.1,
+                    n_estimators=100, max_depth=8, learning_rate=0.1,
                     subsample=0.8, colsample_bytree=0.8,
                     random_state=RANDOM_STATE, use_label_encoder=False,
                     eval_metric="mlogloss", n_jobs=-1
@@ -380,7 +381,7 @@ def step2_build_stacked_ensemble(data: Dict) -> Dict[str, Any]:
                 m.fit(X_tr, y_tr, sample_weight=sw_tr)
             else:  # LightGBM
                 m = lgb.LGBMClassifier(
-                    n_estimators=300, max_depth=8, learning_rate=0.1,
+                    n_estimators=100, max_depth=8, learning_rate=0.1,
                     subsample=0.8, colsample_bytree=0.8,
                     class_weight="balanced", random_state=RANDOM_STATE,
                     n_jobs=-1, verbose=-1
@@ -1080,11 +1081,11 @@ def step10_save_artifacts(
         "n_classes": data["n_classes"],
         "feature_names": HONEST_FEATURES,
     }
-    joblib.dump(stacked_model, BASE_DIR / "stacked_ensemble_v3.joblib")
+    joblib.dump(stacked_model, BASE_DIR / "stacked_ensemble_v3.joblib", compress=3)
     log.info("    Saved: stacked_ensemble_v3.joblib")
     
     # 2. Label encoder
-    joblib.dump(data["le_crop"], BASE_DIR / "label_encoder_v3.joblib")
+    joblib.dump(data["le_crop"], BASE_DIR / "label_encoder_v3.joblib", compress=3)
     log.info("    Saved: label_encoder_v3.joblib")
     
     # 3. Calibration config
@@ -1113,7 +1114,7 @@ def step10_save_artifacts(
     
     # 5. Binary classifiers
     binary_clf_dict = binary_clf["binary_classifiers"]
-    joblib.dump(binary_clf_dict, BASE_DIR / "binary_classifiers_v3.joblib")
+    joblib.dump(binary_clf_dict, BASE_DIR / "binary_classifiers_v3.joblib", compress=3)
     log.info(f"    Saved: binary_classifiers_v3.joblib ({len(binary_clf_dict)} classifiers)")
     
     # 6. Full config for inference
@@ -1132,7 +1133,7 @@ def step10_save_artifacts(
         "n_classes": data["n_classes"],
         "crops": data["real_crops"],
     }
-    joblib.dump(inference_config, BASE_DIR / "stacked_v3_config.joblib")
+    joblib.dump(inference_config, BASE_DIR / "stacked_v3_config.joblib", compress=3)
     log.info("    Saved: stacked_v3_config.joblib")
     
     # 7. Full metrics table
