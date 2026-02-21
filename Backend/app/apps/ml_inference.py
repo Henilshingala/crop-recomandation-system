@@ -120,10 +120,10 @@ def predict_top_crops(
 # ═════════════════════════════════════════════════════════════════════════
 
 _ORIGINAL_CROPS = sorted([
-    "chickpea", "cotton", "finger_millet", "groundnut", "jowar",
-    "lentil", "maize", "moong", "pearl_millet", "pigeonpea",
-    "rice", "safflower", "sesamum", "sorghum", "soybean",
-    "sugarcane", "sunflower", "urad", "wheat",
+    "barley", "castor", "chickpea", "cotton", "finger_millet",
+    "groundnut", "linseed", "maize", "mustard", "pearl_millet",
+    "pigeonpea", "rice", "safflower", "sesamum", "sorghum",
+    "soybean", "sugarcane", "sunflower", "wheat",
 ])
 
 _SYNTHETIC_CROPS = sorted([

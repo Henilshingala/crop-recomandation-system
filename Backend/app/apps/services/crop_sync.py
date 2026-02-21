@@ -20,32 +20,54 @@ _HF_TIMEOUT = 15  # seconds
 # 1) Fetch original (HF v3) crops from /health endpoint
 # ═════════════════════════════════════════════════════════════════════════
 
-def fetch_hf_crops() -> List[str]:
+# Static fallback — mirrors the HF v3 label_encoder.classes_ (19 crops)
+_HF_FALLBACK_CROPS = sorted([
+    "barley", "castor", "chickpea", "cotton", "finger_millet",
+    "groundnut", "linseed", "maize", "mustard", "pearl_millet",
+    "pigeonpea", "rice", "safflower", "sesamum", "sorghum",
+    "soybean", "sugarcane", "sunflower", "wheat",
+])
+
+
+def fetch_hf_crops(use_fallback: bool = True) -> List[str]:
     """
-    Call the HuggingFace Space root ``/`` endpoint and extract
-    ``available_crops`` from the JSON response.
+    Try to fetch crops from the HuggingFace Space.
+
+    Attempts ``/crops`` then ``/`` endpoints.  Falls back to a static
+    19-crop list when *use_fallback* is True (default).
 
     Returns
     -------
-    list[str]  – crop names (lowercase), e.g. ["chickpea", "cotton", ...]
-    Empty list on failure (logged, not raised).
+    list[str]  – crop names (lowercase)
     """
     base = getattr(settings, "HF_MODEL_URL", "") or ""
     base = base.rstrip("/")
     if not base:
-        logger.error("HF_MODEL_URL not configured — cannot fetch HF crops")
-        return []
+        logger.warning("HF_MODEL_URL not configured — using fallback crop list")
+        return list(_HF_FALLBACK_CROPS) if use_fallback else []
 
-    url = f"{base}/"
-    try:
-        resp = requests.get(url, timeout=_HF_TIMEOUT)
-        resp.raise_for_status()
-        data = resp.json()
-        crops = data.get("available_crops", [])
-        return [c.strip().lower() for c in crops if c and c.strip()]
-    except Exception as exc:
-        logger.error("Failed to fetch HF crops from %s: %s", url, exc)
-        return []
+    # Try /crops first (lightweight), then / (health)
+    for path in ("/crops", "/"):
+        url = f"{base}{path}"
+        try:
+            resp = requests.get(url, timeout=_HF_TIMEOUT, headers={
+                "Accept": "application/json",
+                "User-Agent": "CRS-Backend/1.0",
+            })
+            resp.raise_for_status()
+            data = resp.json()
+            crops = data.get("crops") or data.get("available_crops") or []
+            if crops:
+                logger.info("Fetched %d HF crops from %s", len(crops), url)
+                return [c.strip().lower() for c in crops if c and c.strip()]
+        except Exception as exc:
+            logger.warning("HF %s failed: %s", url, exc)
+
+    # All endpoints failed — use static fallback
+    if use_fallback:
+        logger.info("HF unreachable — using static fallback (%d crops)", len(_HF_FALLBACK_CROPS))
+        return list(_HF_FALLBACK_CROPS)
+    return []
 
 
 # ═════════════════════════════════════════════════════════════════════════

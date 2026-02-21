@@ -290,14 +290,6 @@ def health_check(request):
         info["ml_model"] = f"error: {e}"
         info["status"] = "unhealthy"
 
-    # Live HF crop count (non-blocking, best-effort)
-    try:
-        from .services.crop_sync import fetch_hf_crops
-        hf_live = fetch_hf_crops()
-        info["hf_live_crops"] = len(hf_live) if hf_live else "unreachable"
-    except Exception:
-        info["hf_live_crops"] = "error"
-
     code = status.HTTP_200_OK if info["status"] == "healthy" else status.HTTP_503_SERVICE_UNAVAILABLE
     return Response(info, status=code)
 
