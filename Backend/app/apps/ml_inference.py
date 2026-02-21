@@ -67,8 +67,15 @@ def _load_synthetic():
     if _synth_model is not None:
         return
     aiml = _get_aiml_dir()
-    _synth_model = joblib.load(aiml / "model_rf.joblib")
-    _synth_encoder = joblib.load(aiml / "label_encoder.joblib")
+    model_path = aiml / "model_rf.joblib"
+    encoder_path = aiml / "label_encoder.joblib"
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"Synthetic model not found at {model_path}. "
+            f"AI_ML_DIR={os.environ.get('AI_ML_DIR', '(not set)')}"
+        )
+    _synth_model = joblib.load(model_path)
+    _synth_encoder = joblib.load(encoder_path)
     logger.info(
         "Synthetic model loaded — %d crops", len(_synth_encoder.classes_)
     )

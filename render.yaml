@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: CRS-Backend
+    runtime: python
+    region: oregon
+    rootDir: Backend/app
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn app.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level info
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com,localhost"
+      - key: HF_MODEL_URL
+        value: "https://shingala-crs.hf.space"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
