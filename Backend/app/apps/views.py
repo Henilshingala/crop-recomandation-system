@@ -148,10 +148,10 @@ class CropPredictionView(APIView):
 
             return Response(result, status=status.HTTP_200_OK)
 
-        except FileNotFoundError as e:
-            logger.error("Model files missing: %s", e)
+        except (FileNotFoundError, ConnectionError) as e:
+            logger.error("ML service unavailable: %s", e)
             return Response(
-                {"error": "ML model not available. Please contact admin."},
+                {"error": "ML service temporarily unavailable. Please try again later."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         except Exception as e:
