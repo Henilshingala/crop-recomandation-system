@@ -126,9 +126,25 @@ _ORIGINAL_CROPS = sorted([
     "sugarcane", "sunflower", "urad", "wheat",
 ])
 
+_SYNTHETIC_CROPS = sorted([
+    "apple", "bajra", "banana", "barley", "ber", "blackgram",
+    "brinjal", "carrot", "castor", "chickpea", "citrus", "coconut",
+    "coffee", "cole_crop", "cotton", "cucumber", "custard_apple",
+    "date_palm", "gourd", "grapes", "green_chilli", "groundnut",
+    "guava", "jowar", "jute", "kidneybeans", "lentil", "maize",
+    "mango", "mothbeans", "mungbean", "muskmelon", "mustard", "okra",
+    "onion", "papaya", "pigeonpeas", "pomegranate", "potato", "radish",
+    "ragi", "rice", "sapota", "sesame", "soybean", "spinach",
+    "sugarcane", "tobacco", "tomato", "watermelon", "wheat",
+])
+
 
 def get_available_crops(mode: str = "original") -> List[str]:
     """Return crop list for the requested mode."""
+    if mode == "synthetic":
+        return list(_SYNTHETIC_CROPS)
+    if mode == "both":
+        return sorted(set(_ORIGINAL_CROPS) | set(_SYNTHETIC_CROPS))
     return list(_ORIGINAL_CROPS)
 
 

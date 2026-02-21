@@ -275,18 +275,28 @@ def health_check(request):
         "modes": ["original", "synthetic", "both"],
     }
 
+    # DB crop count
     try:
         info["crop_count"] = Crop.objects.count()
     except Exception as e:
         info["database"] = f"error: {e}"
         info["status"] = "unhealthy"
 
+    # ML crop counts (static lists — no network call)
     try:
         info["original_crops"] = len(get_available_crops("original"))
         info["synthetic_crops"] = len(get_available_crops("synthetic"))
     except Exception as e:
         info["ml_model"] = f"error: {e}"
         info["status"] = "unhealthy"
+
+    # Live HF crop count (non-blocking, best-effort)
+    try:
+        from .services.crop_sync import fetch_hf_crops
+        hf_live = fetch_hf_crops()
+        info["hf_live_crops"] = len(hf_live) if hf_live else "unreachable"
+    except Exception:
+        info["hf_live_crops"] = "error"
 
     code = status.HTTP_200_OK if info["status"] == "healthy" else status.HTTP_503_SERVICE_UNAVAILABLE
     return Response(info, status=code)
