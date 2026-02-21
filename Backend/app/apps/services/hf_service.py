@@ -26,6 +26,15 @@ def _get_hf_url() -> str:
     return f"{base}/predict"
 
 
+def _get_hf_headers() -> dict:
+    """Return request headers, including auth if HF_TOKEN is set."""
+    headers = {"Content-Type": "application/json"}
+    token = getattr(settings, "HF_TOKEN", "") or ""
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def call_hf_model(payload: dict) -> Optional[dict]:
     """
     POST *payload* to the HuggingFace Space /predict endpoint.
@@ -42,11 +51,12 @@ def call_hf_model(payload: dict) -> Optional[dict]:
     None   – on failure (after retries)
     """
     url = _get_hf_url()
+    headers = _get_hf_headers()
     last_exc: Optional[Exception] = None
 
     for attempt in range(1, _MAX_RETRIES + 1):
         try:
-            resp = requests.post(url, json=payload, timeout=_TIMEOUT)
+            resp = requests.post(url, json=payload, headers=headers, timeout=_TIMEOUT)
             resp.raise_for_status()
             return resp.json()
         except requests.exceptions.Timeout as exc:

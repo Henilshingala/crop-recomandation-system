@@ -162,6 +162,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # =============================================================================
 
 HF_MODEL_URL = os.environ.get("HF_MODEL_URL", "https://shingala-crs.hf.space")
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
 
 
 # =============================================================================

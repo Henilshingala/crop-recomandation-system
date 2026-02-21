@@ -46,14 +46,20 @@ def fetch_hf_crops(use_fallback: bool = True) -> List[str]:
         logger.warning("HF_MODEL_URL not configured — using fallback crop list")
         return list(_HF_FALLBACK_CROPS) if use_fallback else []
 
+    # Build headers (include auth token for private Spaces)
+    req_headers = {
+        "Accept": "application/json",
+        "User-Agent": "CRS-Backend/1.0",
+    }
+    token = getattr(settings, "HF_TOKEN", "") or ""
+    if token:
+        req_headers["Authorization"] = f"Bearer {token}"
+
     # Try /crops first (lightweight), then / (health)
     for path in ("/crops", "/"):
         url = f"{base}{path}"
         try:
-            resp = requests.get(url, timeout=_HF_TIMEOUT, headers={
-                "Accept": "application/json",
-                "User-Agent": "CRS-Backend/1.0",
-            })
+            resp = requests.get(url, timeout=_HF_TIMEOUT, headers=req_headers)
             resp.raise_for_status()
             data = resp.json()
             crops = data.get("crops") or data.get("available_crops") or []
