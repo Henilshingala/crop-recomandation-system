@@ -1,3 +1,13 @@
+---
+title: Crop Recommendation System
+emoji: "🌾"
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🌾 Crop Recommendation System
 
 ![Status](https://img.shields.io/badge/Status-Production-success)
