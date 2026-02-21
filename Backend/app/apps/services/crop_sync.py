@@ -214,3 +214,103 @@ def sync_crops_to_db(
 
     total = Crop.objects.count()
     return created, skipped, total
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# 4) Auto-assign image URLs from GitHub raw content
+# ═════════════════════════════════════════════════════════════════════════
+
+_GITHUB_RAW_BASE = (
+    "https://raw.githubusercontent.com/Henilshingala/"
+    "crop-recomandation-system/main/Backend/app/media/crops/"
+)
+
+# Map: crop_name → [image1, image2, image3]  (None = no image for that slot)
+# Derived from the actual files in Backend/app/media/crops/
+_CROP_IMAGES: Dict[str, List[str | None]] = {
+    "apple":        [None, "apple2.jpg", "apple3.jpg"],
+    "banana":       ["b1.webp", "b2.jpg", None],
+    "blackgram":    [None, "blackgram2.webp", None],
+    "brinjal":      ["brinjal1.avif", "brinjal2.jpg", "brinjal3.webp"],
+    "carrot":       ["carrot1.webp", "carrot2.webp", "carrot3.jpg"],
+    "castor":       [None, None, "castor3.jpg"],
+    "chickpea":     ["c1.webp", "c2.jpg", "c3.jpg"],
+    "citrus":       [None, None, "citrus3.jpg"],
+    "coconut":      ["coconut1.jpg", "coconut2.webp", "coconut3.jpg"],
+    "coffee":       ["coffee1.jpg", "coffee2.avif", "coffee3.jpg"],
+    "cole_crop":    [None, "cole_crop2.jpg", "cole_crop3.jpg"],
+    "cotton":       ["c1.webp", "c2.jpg", "c3.jpg"],
+    "date_palm":    ["date_palm1.webp", None, None],
+    "gourd":        ["gourd1.webp", "gourd2.jpg", None],
+    "grapes":       ["grapes1.webp", None, "grapes3.jpg"],
+    "green_chilli": ["green_chilli1.jpg", "green_chilli2.webp", "green_chilli3.jpg"],
+    "groundnut":    [None, None, "groundnut3.jpg"],
+    "guava":        ["guava1.jpg", None, None],
+    "jute":         ["jute1.webp", None, None],
+    "maize":        [None, "maize2.webp", "maize3.jpg"],
+    "mango":        [None, "mango2.jpg", "mango3.webp"],
+    "mungbean":     ["mungbean1.webp", None, "mungbean3.webp"],
+    "muskmelon":    ["muskmelon1.jpg", None, None],
+    "mustard":      ["mustard1.avif", None, None],
+    "okra":         [None, None, "okra3.jpg"],
+    "onion":        ["onion1.jpg", "onion2.webp", "onion3.webp"],
+    "papaya":       ["papaya1.jpg", None, "papaya3.webp"],
+    "pigeonpeas":   ["pigeonpeas1.jpg", "pigeonpeas2.jpg", None],
+    "pomegranate":  ["pomegranate.png", "pomegranate2.jpg", "pomegranate3.jpg"],
+    "potato":       ["potato1.jpeg", "potato2.jpg", None],
+    "radish":       [None, None, "radish3.jpg"],
+    "rice":         ["rice1.jpeg", "rice2.jpg", "rice3.avif"],
+    "sapota":       ["sapota1.webp", None, "sapota3.webp"],
+    "sesame":       ["sesame1.jpg", "sesame2.webp", None],
+    "soybean":      ["soybean1.webp", None, "soybean3.webp"],
+    "spinach":      [None, "spinach2.jpg", "spinach3.jpg"],
+    "sugarcane":    ["sugarcane1.webp", "sugarcane2.jpg", "sugarcane3.avif"],
+    "tobacco":      ["tobacco1.webp", "tobacco.jpg", None],
+    "tomato":       ["tomato1.jpg", None, "tomato3.jpg"],
+    "watermelon":   ["watermelon1.jpg", None, "watermelon3.webp"],
+    "wheat":        [None, "wheat2.jpg", "wheat3.png"],
+}
+
+
+def assign_image_urls() -> Tuple[int, int]:
+    """
+    For every Crop in the DB, set ``image_url`` / ``image_2_url`` /
+    ``image_3_url`` to the GitHub raw URL if an image file exists and
+    the URL slot is currently empty.
+
+    Returns
+    -------
+    (updated_count, skipped_count)
+    """
+    from apps.models import Crop
+
+    updated = 0
+    skipped = 0
+
+    for crop in Crop.objects.all():
+        images = _CROP_IMAGES.get(crop.name.lower())
+        if not images:
+            skipped += 1
+            continue
+
+        changed = False
+        # Slot 1
+        if images[0] and not crop.image_url and not (crop.image and crop.image.name):
+            crop.image_url = f"{_GITHUB_RAW_BASE}{images[0]}"
+            changed = True
+        # Slot 2
+        if images[1] and not crop.image_2_url and not (crop.image_2 and crop.image_2.name):
+            crop.image_2_url = f"{_GITHUB_RAW_BASE}{images[1]}"
+            changed = True
+        # Slot 3
+        if images[2] and not crop.image_3_url and not (crop.image_3 and crop.image_3.name):
+            crop.image_3_url = f"{_GITHUB_RAW_BASE}{images[2]}"
+            changed = True
+
+        if changed:
+            crop.save()
+            updated += 1
+        else:
+            skipped += 1
+
+    return updated, skipped

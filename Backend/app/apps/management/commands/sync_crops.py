@@ -15,6 +15,7 @@ Idempotent — safe to run multiple times.
 from django.core.management.base import BaseCommand
 
 from apps.services.crop_sync import (
+    assign_image_urls,
     fetch_hf_crops,
     get_synthetic_crops,
     sync_crops_to_db,
@@ -90,4 +91,12 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(
             f"Sync complete!  Created: {created}  |  Skipped (exists): {skipped}  |  DB total: {total}"
+        ))
+
+        # 6) Assign image URLs from GitHub
+        self.stdout.write("")
+        self.stdout.write(self.style.NOTICE("── Image URL Sync ──"))
+        img_updated, img_skipped = assign_image_urls()
+        self.stdout.write(self.style.SUCCESS(
+            f"Images assigned: {img_updated}  |  No image available: {img_skipped}"
         ))
