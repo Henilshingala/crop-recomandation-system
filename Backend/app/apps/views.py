@@ -189,11 +189,13 @@ class CropPredictionView(APIView):
 
     @staticmethod
     def _abs_image_url(request, crop: Crop, num: int) -> str:
+        """Return the image URL — already absolute (GitHub/placeholder)."""
         url = crop.get_image_url(num)
-        img_field = {1: crop.image, 2: crop.image_2, 3: crop.image_3}.get(num)
-        if img_field and hasattr(img_field, "url"):
-            return request.build_absolute_uri(url)
-        return url
+        # If it's already an absolute URL (GitHub, placeholder, etc.) return as-is
+        if url and url.startswith(("http://", "https://")):
+            return url
+        # Local media file — make absolute via request
+        return request.build_absolute_uri(url)
 
     # ── logging ─────────────────────────────────────────────────────────
 
