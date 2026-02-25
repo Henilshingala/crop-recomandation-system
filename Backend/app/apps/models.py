@@ -13,8 +13,7 @@ class Crop(models.Model):
     """
     Crop model stores metadata for each crop type.
     
-    Admin can upload an image file OR provide an image URL.
-    Priority: uploaded image > image_url > placeholder
+    Clean model ready for fresh image uploads after deployment.
     """
     
     name = models.CharField(
@@ -24,52 +23,7 @@ class Crop(models.Model):
         help_text="Unique crop name (must match ML model label)"
     )
     
-    # Image 1 - either file upload or URL
-    image = models.ImageField(
-        upload_to='crops/',
-        blank=True,
-        null=True,
-        help_text="Upload crop image 1 (takes priority over URL)"
-    )
-    
-    image_url = models.URLField(
-        max_length=500,
-        blank=True,
-        null=True,
-        help_text="Image 1 URL (used if no file uploaded)"
-    )
-    
-    # Image 2 - either file upload or URL
-    image_2 = models.ImageField(
-        upload_to='crops/',
-        blank=True,
-        null=True,
-        help_text="Upload crop image 2 (takes priority over URL)"
-    )
-    
-    image_2_url = models.URLField(
-        max_length=500,
-        blank=True,
-        null=True,
-        help_text="Image 2 URL (used if no file uploaded)"
-    )
-    
-    # Image 3 - either file upload or URL
-    image_3 = models.ImageField(
-        upload_to='crops/',
-        blank=True,
-        null=True,
-        help_text="Upload crop image 3 (takes priority over URL)"
-    )
-    
-    image_3_url = models.URLField(
-        max_length=500,
-        blank=True,
-        null=True,
-        help_text="Image 3 URL (used if no file uploaded)"
-    )
-    
-    # Crop metadata (kept for compatibility but not shown in admin)
+    # Crop metadata
     expected_yield = models.CharField(
         max_length=100,
         blank=True,
@@ -103,77 +57,9 @@ class Crop(models.Model):
     
     def get_image_url(self, image_number=1):
         """
-        Returns the appropriate image URL based on priority:
-        1. External image URL (if provided) — e.g. GitHub raw content
-        2. Uploaded image file (if exists)
-        3. Placeholder image URL
+        Returns placeholder image URL until new images are uploaded.
         """
-        from django.conf import settings
-        
-        image_field = None
-        external_url = None
-        
-        if image_number == 1:
-            image_field = self.image
-            external_url = self.image_url
-        elif image_number == 2:
-            image_field = self.image_2
-            external_url = self.image_2_url
-        elif image_number == 3:
-            image_field = self.image_3
-            external_url = self.image_3_url
-        
-        # 1. Check for external URL (GitHub raw, Cloudinary, etc.)
-        if external_url:
-            return external_url
-        
-        # 2. Check for uploaded image file
-        if image_field and hasattr(image_field, 'name') and image_field.name:
-            return image_field.url
-            
-        # 3. Return a placeholder image
         return f"https://via.placeholder.com/300x200?text={self.name}+{image_number}"
-    
-    def clean(self):
-        """Validate and clean image URLs."""
-        # Strip whitespace from URLs
-        if self.image_url:
-            self.image_url = self.image_url.strip()
-        if self.image_2_url:
-            self.image_2_url = self.image_2_url.strip()
-        if self.image_3_url:
-            self.image_3_url = self.image_3_url.strip()
-        
-        # Validate URLs start with http:// or https://
-        errors = {}
-        
-        if self.image_url and not (self.image_url.startswith('http://') or self.image_url.startswith('https://')):
-            errors['image_url'] = 'URL must start with http:// or https://'
-        
-        if self.image_2_url and not (self.image_2_url.startswith('http://') or self.image_2_url.startswith('https://')):
-            errors['image_2_url'] = 'URL must start with http:// or https://'
-        
-        if self.image_3_url and not (self.image_3_url.startswith('http://') or self.image_3_url.startswith('https://')):
-            errors['image_3_url'] = 'URL must start with http:// or https://'
-        
-        if errors:
-            raise ValidationError(errors)
-    
-    def save(self, *args, **kwargs):
-        """Save model and ensure URLs are properly formatted."""
-        # Strip whitespace from URLs before saving
-        if self.image_url:
-            self.image_url = self.image_url.strip()
-        if self.image_2_url:
-            self.image_2_url = self.image_2_url.strip()
-        if self.image_3_url:
-            self.image_3_url = self.image_3_url.strip()
-        
-        # Call clean to validate
-        self.full_clean()
-        
-        # Call parent save
-        super().save(*args, **kwargs)
 
 
 class PredictionLog(models.Model):
