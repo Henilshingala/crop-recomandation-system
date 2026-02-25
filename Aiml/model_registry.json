@@ -1,0 +1,56 @@
+{
+  "models": {
+    "real": {
+      "model_file": "stacked_ensemble_v3.joblib",
+      "encoder_file": "label_encoder_v3.joblib",
+      "config_file": "stacked_v3_config.joblib",
+      "crop_count": 19,
+      "feature_count": 11,
+      "features": ["n", "p", "k", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"],
+      "type": "stacked-ensemble-v3",
+      "description": "Real-world stacked ensemble model with 19 crops"
+    },
+    "synthetic": {
+      "model_file": "model_rf.joblib",
+      "encoder_file": "label_encoder.joblib",
+      "config_file": null,
+      "crop_count": 51,
+      "feature_count": 10,
+      "features": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation"],
+      "type": "synthetic-rf",
+      "description": "Synthetic Random Forest model with 51 crops"
+    },
+    "both": {
+      "model_file": null,
+      "encoder_file": null,
+      "config_file": null,
+      "crop_count": 54,
+      "feature_count": 11,
+      "features": ["n", "p", "k", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"],
+      "type": "hybrid-both",
+      "description": "Hybrid model combining real and synthetic predictors with 54 crops",
+      "blend_weights": {
+        "real": 0.6,
+        "synthetic": 0.4
+      }
+    }
+  },
+  "crop_mappings": {
+    "real_to_synthetic": {
+      "pigeonpea": "pigeonpeas",
+      "sesamum": "sesame",
+      "pearl_millet": "bajra",
+      "finger_millet": "ragi",
+      "sorghum": "jowar"
+    },
+    "synthetic_to_real": {
+      "pigeonpeas": "pigeonpea",
+      "sesame": "sesamum",
+      "bajra": "pearl_millet",
+      "ragi": "finger_millet",
+      "jowar": "sorghum"
+    }
+  },
+  "version": "4.0",
+  "last_updated": "2026-02-23"
+}

@@ -42,3 +42,4 @@ Aiml/confusion_matrix*.png
 
 # logs
 *.log
+Backups/
