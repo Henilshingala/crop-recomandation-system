@@ -20,13 +20,30 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import serializers
 
 from .models import Crop, PredictionLog
-from .validators import SecurePredictionSerializer, PredictionInputValidator
 from .ml_inference import predict_top_crops, get_predictor, get_available_crops
 from .serializers import CropSerializer, PredictionLogSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class SecurePredictionSerializer(serializers.Serializer):
+    """Simple secure serializer for prediction input."""
+    N = serializers.FloatField(min_value=0, max_value=300)
+    P = serializers.FloatField(min_value=0, max_value=200)
+    K = serializers.FloatField(min_value=0, max_value=200)
+    temperature = serializers.FloatField(min_value=-10, max_value=55)
+    humidity = serializers.FloatField(min_value=0, max_value=100)
+    ph = serializers.FloatField(min_value=0, max_value=14)
+    rainfall = serializers.FloatField(min_value=0, max_value=1000)
+    moisture = serializers.FloatField(min_value=0, max_value=100, required=False, default=43.5)
+    season = serializers.IntegerField(min_value=0, max_value=2, required=False)
+    soil_type = serializers.IntegerField(min_value=0, max_value=4, required=False)
+    irrigation = serializers.IntegerField(min_value=0, max_value=1, required=False)
+    top_n = serializers.IntegerField(min_value=1, max_value=10, required=False, default=3)
+    mode = serializers.ChoiceField(choices=['original', 'synthetic', 'both'], default='both')
 
 
 # ═════════════════════════════════════════════════════════════════════════
