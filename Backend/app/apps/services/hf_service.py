@@ -1,8 +1,7 @@
 """
 HuggingFace ML Gateway — Service Layer
 =======================================
-Calls the HuggingFace Space internally for real-world (v3) inference.
-Provides retry logic and clean error handling.
+Calls the HuggingFace Space with timeout and error handling.
 """
 
 import logging
@@ -59,18 +58,18 @@ def call_hf_model(payload: dict) -> Optional[dict]:
             resp = requests.post(url, json=payload, headers=headers, timeout=_TIMEOUT)
             resp.raise_for_status()
             return resp.json()
-        except requests.exceptions.Timeout as exc:
-            logger.warning("HF call attempt %d/%d timed out: %s", attempt, _MAX_RETRIES, exc)
-            last_exc = exc
-        except requests.exceptions.ConnectionError as exc:
-            logger.warning("HF call attempt %d/%d connection error: %s", attempt, _MAX_RETRIES, exc)
-            last_exc = exc
+        except requests.exceptions.Timeout:
+            logger.warning("HF call attempt %d/%d timed out", attempt, _MAX_RETRIES)
+            last_exc = TimeoutError("ML service timeout")
+        except requests.exceptions.ConnectionError:
+            logger.warning("HF call attempt %d/%d connection failed", attempt, _MAX_RETRIES)
+            last_exc = ConnectionError("ML service unavailable")
         except requests.exceptions.HTTPError as exc:
-            logger.error("HF call attempt %d/%d HTTP error: %s", attempt, _MAX_RETRIES, exc)
-            last_exc = exc
+            logger.error("HF call attempt %d/%d HTTP error: %s", attempt, _MAX_RETRIES, exc.status_code)
+            last_exc = ConnectionError(f"ML service error: {exc.status_code}")
         except Exception as exc:
-            logger.exception("HF call attempt %d/%d unexpected error: %s", attempt, _MAX_RETRIES, exc)
-            last_exc = exc
+            logger.error("HF call attempt %d/%d unexpected error: %s", attempt, _MAX_RETRIES, type(exc).__name__)
+            last_exc = RuntimeError("ML service error")
 
-    logger.error("All %d HF call attempts failed. Last error: %s", _MAX_RETRIES, last_exc)
+    logger.error("All %d HF call attempts failed", _MAX_RETRIES)
     return None

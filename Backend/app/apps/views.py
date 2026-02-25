@@ -22,13 +22,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Crop, PredictionLog
-from .serializers import (
-    CropSerializer,
-    PredictionInputSerializer,
-    PredictionLogSerializer,
-    PredictionResponseSerializer,
-)
+from .validators import SecurePredictionSerializer, PredictionInputValidator
 from .ml_inference import predict_top_crops, get_predictor, get_available_crops
+from .serializers import CropSerializer, PredictionLogSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +61,12 @@ def get_nutrition_data(crop_name: str) -> dict | None:
                         "energy_kcal":    float(row["energy_kcal_per_kg"]),
                         "water_g":        float(row["water_g_per_kg"]),
                     }
-    except Exception as e:
-        logger.warning("Nutrition CSV lookup failed for %s: %s", crop_name, e)
+    except FileNotFoundError:
+        logger.warning("Nutrition CSV file not found at %s", path)
+    except (KeyError, ValueError) as e:
+        logger.warning("Invalid nutrition data format for %s: %s", crop_name, e)
+    except IOError as e:
+        logger.warning("IO error reading nutrition CSV for %s: %s", crop_name, e)
     return None
 
 
@@ -109,7 +109,8 @@ class CropPredictionView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = PredictionInputSerializer(data=request.data)
+        # Use enhanced secure validation
+        serializer = SecurePredictionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
                 {"error": "Invalid input", "details": serializer.errors},
@@ -118,6 +119,11 @@ class CropPredictionView(APIView):
 
         vd = serializer.validated_data
         mode = vd.get("mode", "original")
+        
+        # Add security warnings if any
+        response_data = {}
+        if hasattr(serializer, '_warnings'):
+            response_data['security_warnings'] = serializer._warnings
 
         try:
             result = predict_top_crops(
@@ -146,18 +152,26 @@ class CropPredictionView(APIView):
             # Log prediction
             self._log_prediction(request, vd, result)
 
-            return Response(result, status=status.HTTP_200_OK)
+            # Merge with any security warnings
+            response_data.update(result)
+            return Response(response_data, status=status.HTTP_200_OK)
 
-        except (FileNotFoundError, ConnectionError) as e:
+        except (FileNotFoundError, ConnectionError, TimeoutError) as e:
             logger.error("ML service unavailable: %s", e)
             return Response(
                 {"error": "ML service temporarily unavailable. Please try again later."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        except Exception as e:
-            logger.exception("Prediction error: %s", e)
+        except ValueError as e:
+            logger.error("Invalid ML response format: %s", e)
             return Response(
-                {"error": "Prediction failed", "details": str(e)},
+                {"error": "Invalid response from ML service"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except Exception as e:
+            logger.exception("Unexpected prediction error")
+            return Response(
+                {"error": "Internal server error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -215,8 +229,10 @@ class CropPredictionView(APIView):
                 predictions=result.get("top_3", []),
                 ip_address=ip,
             )
+        except (KeyError, TypeError) as e:
+            logger.error("Invalid input data for logging: %s", e)
         except Exception as e:
-            logger.warning("Failed to log prediction: %s", e)
+            logger.error("Database logging failed: %s", e)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -277,19 +293,22 @@ def health_check(request):
         "modes": ["original", "synthetic", "both"],
     }
 
-    # DB crop count
+    # Simple DB check - avoid heavy queries
     try:
-        info["crop_count"] = Crop.objects.count()
-    except Exception as e:
-        info["database"] = f"error: {e}"
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        info["crop_count"] = "ok"
+    except Exception:
+        info["database"] = "error"
         info["status"] = "unhealthy"
 
     # ML crop counts (static lists — no network call)
     try:
         info["original_crops"] = len(get_available_crops("original"))
         info["synthetic_crops"] = len(get_available_crops("synthetic"))
-    except Exception as e:
-        info["ml_model"] = f"error: {e}"
+    except Exception:
+        info["ml_model"] = "error"
         info["status"] = "unhealthy"
 
     code = status.HTTP_200_OK if info["status"] == "healthy" else status.HTTP_503_SERVICE_UNAVAILABLE

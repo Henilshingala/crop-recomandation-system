@@ -1,7 +1,7 @@
 """
 Crop Recommendation System - Django Settings
 ============================================
-Production-ready configuration with PostgreSQL, CORS, and Media handling.
+Simple production configuration for diploma project.
 """
 
 import os
@@ -16,15 +16,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =============================================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# In production, load from environment variable
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-btq1k85j_@7ix9#3$#sld^7317zo1cx9!99tr3=wfs@v95lf!n"
-)
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("DJANGO_SECRET_KEY environment variable must be set")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 
+# Strict ALLOWED_HOSTS for production
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS",
     "localhost,127.0.0.1,.onrender.com"
@@ -35,40 +34,40 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# Remove empty entries and strip whitespace
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
+
+# SECURITY: No wildcard hosts allowed
+if "*" in ALLOWED_HOSTS:
+    raise ValueError("Wildcard hosts not allowed in production")
+
 
 # =============================================================================
 # APPLICATION DEFINITION
 # =============================================================================
 
 INSTALLED_APPS = [
-    # Django built-in apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
-    # Third-party apps
-    "rest_framework",           # Django REST Framework
-    "corsheaders",              # CORS handling for React frontend
-    
-    # Local apps
-    "apps",                     # Crop recommendation app
+    "rest_framework",
+    "corsheaders",
+    "apps",
 ]
 
 MIDDLEWARE = [
-    # CORS middleware must be at the top
+    "apps.middleware.RateLimitMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Must be after SecurityMiddleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = "app.urls"
@@ -92,14 +91,16 @@ WSGI_APPLICATION = "app.wsgi.application"
 
 
 # =============================================================================
-# DATABASE - SQLite Configuration
+# DATABASE CONFIGURATION
 # =============================================================================
-# Documentation: https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        "OPTIONS": {
+            "timeout": 20,
+        }
     }
 }
 
@@ -127,27 +128,20 @@ USE_TZ = True
 
 
 # =============================================================================
-# STATIC FILES (CSS, JavaScript, Images)
+# STATIC FILES
 # =============================================================================
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
-# WhiteNoise configuration for static files
-# Documentation: http://whitenoise.evans.io/en/stable/
-# "CompressedStaticFilesStorage" is safer than "CompressedManifestStaticFilesStorage"
-# because it doesn't crash if a file is missing from the manifest.
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 
 # =============================================================================
-# MEDIA FILES (User uploads - crop images)
+# MEDIA FILES
 # =============================================================================
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-
-# Media files are served from GitHub Raw content in production via model logic
 
 
 # =============================================================================
@@ -166,20 +160,17 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
 
 
 # =============================================================================
-# CORS CONFIGURATION (for React frontend)
+# CORS CONFIGURATION
 # =============================================================================
-# Documentation: https://github.com/adamchainz/django-cors-headers
 
 # Allow React dev server and production domains from environment
-_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,https://crop-recomandation-system.vercel.app").split(",")
+_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,https://crop-recomandation-system.vercel.app").split(",")
 
-if "*" in _cors_origins:
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGINS = []
-else:
-    CORS_ALLOWED_ORIGINS = _cors_origins
+# SECURITY: Never allow all origins - explicit allowlist only
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins if origin.strip()]
 
-# Allow credentials (cookies, authorization headers)
+# Allow credentials
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow all headers
@@ -211,25 +202,18 @@ CORS_ALLOW_METHODS = [
 # =============================================================================
 
 REST_FRAMEWORK = {
-    # Default permission classes
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
-    
-    # JSON renderer by default
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
-    
-    # Pagination
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
-    
-    # Exception handling
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
 }
 
-# Add browsable API in debug mode
+# Add browsable API in debug mode only
 if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
         "rest_framework.renderers.BrowsableAPIRenderer"
@@ -242,18 +226,25 @@ if DEBUG:
 
 if not DEBUG:
     # SSL/HTTPS settings
-    SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "False").lower() == "true"
+    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     
+    # Reverse proxy settings
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+    
     # HSTS settings
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     
     # Extra security headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+    X_FRAME_OPTIONS = "DENY"
+
 
 # =============================================================================
 # LOGGING CONFIGURATION
@@ -263,7 +254,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "verbose": {
+        "simple": {
             "format": "{levelname} {asctime} {module} {message}",
             "style": "{",
         },
@@ -271,7 +262,7 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
+            "formatter": "simple",
         },
     },
     "loggers": {
