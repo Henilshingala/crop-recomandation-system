@@ -100,18 +100,18 @@ NUTRITION_MAPPING = {
 }
 
 class PredictionInput(BaseModel):
-    N: float = Field(..., description="Nitrogen content (kg/ha)")
-    P: float = Field(..., description="Phosphorus content (kg/ha)")
-    K: float = Field(..., description="Potassium content (kg/ha)")
-    temperature: float = Field(..., description="Temperature (°C)")
-    humidity: float = Field(..., description="Humidity (%)")
-    ph: float = Field(..., description="Soil pH")
-    rainfall: float = Field(..., description="Rainfall (mm)")
-    moisture: Optional[float] = Field(43.5, description="Soil moisture (%)")
-    season: Optional[int] = Field(None, description="0=Kharif, 1=Rabi, 2=Zaid")
-    soil_type: Optional[int] = Field(1, description="0=sandy, 1=loamy, 2=clay")
-    irrigation: Optional[int] = Field(0, description="0=rainfed, 1=irrigated")
-    top_n: Optional[int] = Field(3)
+    N: float = Field(..., ge=0, le=300, description="Nitrogen content (kg/ha)")
+    P: float = Field(..., ge=0, le=200, description="Phosphorus content (kg/ha)")
+    K: float = Field(..., ge=0, le=200, description="Potassium content (kg/ha)")
+    temperature: float = Field(..., ge=-10, le=55, description="Temperature (°C)")
+    humidity: float = Field(..., ge=0, le=100, description="Humidity (%)")
+    ph: float = Field(..., ge=3.0, le=10.0, description="Soil pH")
+    rainfall: float = Field(..., ge=0, le=1000, description="Rainfall (mm)")
+    moisture: Optional[float] = Field(43.5, ge=0, le=100, description="Soil moisture (%)")
+    season: Optional[int] = Field(None, ge=0, le=2, description="0=Kharif, 1=Rabi, 2=Zaid")
+    soil_type: Optional[int] = Field(1, ge=0, le=4, description="0=sandy, 1=loamy, 2=clay")
+    irrigation: Optional[int] = Field(0, ge=0, le=1, description="0=rainfed, 1=irrigated")
+    top_n: Optional[int] = Field(3, ge=1, le=10, description="Number of predictions to return")
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -139,7 +139,10 @@ def get_nutrition(crop_name: str) -> Optional[dict]:
                 "energy_kcal": float(row["energy_kcal_per_kg"]),
                 "water_g": float(row["water_g_per_kg"]),
             }
-    except: pass
+    except (KeyError, ValueError) as e:
+        logger.warning("Invalid nutrition data for %s: %s", crop_name, e)
+    except Exception as e:
+        logger.error("Unexpected error in nutrition lookup for %s: %s", crop_name, e)
     return None
 
 # ═══════════════════════════════════════════════════════════════════════════

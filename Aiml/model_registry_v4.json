@@ -1,0 +1,79 @@
+{
+  "version": "4.0",
+  "last_updated": "2026-02-23T20:45:00Z",
+  "models": {
+    "real": {
+      "model_file": "stacked_ensemble_v4.joblib",
+      "encoder_file": "label_encoder_real_v4.joblib",
+      "scaler_file": "scaler_real_v4.joblib",
+      "config_file": null,
+      "crop_count": 22,
+      "feature_count": 11,
+      "features": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"],
+      "type": "stacked-ensemble-v4",
+      "description": "Real-world stacked ensemble model with 22 crops"
+    },
+    "synthetic": {
+      "model_file": "model_rf_v4.joblib",
+      "encoder_file": "label_encoder_synth_v4.joblib",
+      "scaler_file": "scaler_synth_v4.joblib",
+      "config_file": null,
+      "crop_count": 53,
+      "feature_count": 10,
+      "features": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation"],
+      "type": "synthetic-rf-v4",
+      "description": "Synthetic Random Forest model with 53 crops"
+    },
+    "both": {
+      "model_file": null,
+      "encoder_file": null,
+      "scaler_file": null,
+      "config_file": "hybrid_config_v4.joblib",
+      "crop_count": 53,
+      "feature_count": 11,
+      "features": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"],
+      "type": "hybrid-both-v4",
+      "description": "Hybrid model combining real and synthetic predictors with 53 crops",
+      "blend_weights": {
+        "real": 0.6,
+        "synthetic": 0.4
+      }
+    }
+  },
+  "crop_mappings": {
+    "real_to_synthetic": {
+      "pigeonpea": "pigeonpeas",
+      "sesamum": "sesame",
+      "pearl_millet": "bajra",
+      "finger_millet": "ragi",
+      "sorghum": "jowar"
+    },
+    "synthetic_to_real": {
+      "pigeonpeas": "pigeonpea",
+      "sesame": "sesamum",
+      "bajra": "pearl_millet",
+      "ragi": "finger_millet",
+      "jowar": "sorghum"
+    }
+  },
+  "validation_rules": {
+    "required_features": {
+      "real": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"],
+      "synthetic": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation"],
+      "both": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"]
+    },
+    "feature_ranges": {
+      "N": {"min": 0, "max": 200},
+      "P": {"min": 0, "max": 200},
+      "K": {"min": 0, "max": 200},
+      "temperature": {"min": 0, "max": 50},
+      "humidity": {"min": 0, "max": 100},
+      "ph": {"min": 0, "max": 14},
+      "rainfall": {"min": 0, "max": 500},
+      "season": {"min": 0, "max": 2},
+      "soil_type": {"min": 1, "max": 4},
+      "irrigation": {"min": 0, "max": 1},
+      "moisture": {"min": 0, "max": 100}
+    }
+  }
+}
