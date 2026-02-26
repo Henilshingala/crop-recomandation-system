@@ -100,6 +100,28 @@ class Command(BaseCommand):
         'citrus': {'season': 'Winter', 'expected_yield': '15-20 tons/hectare'},
     }
 
+    def _find_image_file(self, crop_name: str, num: int) -> str | None:
+        """Scan media/crops/ for {crop_name}{num}.{ext}"""
+        import os
+        from django.conf import settings
+        
+        media_root = settings.MEDIA_ROOT
+        crops_dir = os.path.join(media_root, 'crops')
+        
+        if not os.path.exists(crops_dir):
+            return None
+            
+        extensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif']
+        # Try both "apple1.jpg" and "apple.jpg" (for num=1)
+        search_names = [f"{crop_name.lower()}{num}", crop_name.lower()] if num == 1 else [f"{crop_name.lower()}{num}"]
+        
+        for name in search_names:
+            for ext in extensions:
+                filename = f"{name}{ext}"
+                if os.path.exists(os.path.join(crops_dir, filename)):
+                    return f"crops/{filename}"
+        return None
+
     def add_arguments(self, parser):
         parser.add_argument(
             '--force',
@@ -135,29 +157,52 @@ class Command(BaseCommand):
                 'expected_yield': 'Varies'
             })
             
-            # Robust Check: Use filter().first() instead of get_or_create to avoid edge cases
+            # Robust Check: Use filter().first()
             crop = Crop.objects.filter(name__iexact=clean_name).first()
+
+            # Find matching local images
+            img1 = self._find_image_file(clean_name, 1)
+            img2 = self._find_image_file(clean_name, 2)
+            img3 = self._find_image_file(clean_name, 3)
 
             if not crop:
                 # CREATION: Use the exact Case provided by ML Registry
-                Crop.objects.create(
+                crop = Crop.objects.create(
                     name=clean_name,
                     season=metadata.get('season', 'Various'),
                     expected_yield=metadata.get('expected_yield', 'Varies'),
-                    description=f"Recommended crop species: {clean_name}. Data provided by ML consensus."
+                    description=f"Recommended crop species: {clean_name}. Data provided by ML consensus.",
+                    image=img1 if img1 else None,
+                    image_2=img2 if img2 else None,
+                    image_3=img3 if img3 else None,
                 )
                 created_count += 1
-                self.stdout.write(f"  [CREATED] {clean_name}")
-            elif options.get('force'):
-                # UPDATE: Sync metadata if force flag is used
-                crop.name = clean_name # Ensure case is synced
-                crop.season = metadata.get('season', crop.season)
-                crop.expected_yield = metadata.get('expected_yield', crop.expected_yield)
-                crop.save()
-                updated_count += 1
-                self.stdout.write(f"  [UPDATED] {clean_name}")
+                self.stdout.write(f"  [CREATED] {clean_name} (Auto-Image: {'Yes' if img1 else 'No'})")
             else:
-                skipped_count += 1
+                # UPDATE logic: Only update images IF they are currently empty (prevent overwriting admin uploads)
+                modified = False
+                if not crop.image and img1:
+                    crop.image = img1
+                    modified = True
+                if not crop.image_2 and img2:
+                    crop.image_2 = img2
+                    modified = True
+                if not crop.image_3 and img3:
+                    crop.image_3 = img3
+                    modified = True
+                    
+                if options.get('force'):
+                    crop.name = clean_name 
+                    crop.season = metadata.get('season', crop.season)
+                    crop.expected_yield = metadata.get('expected_yield', crop.expected_yield)
+                    modified = True
+
+                if modified:
+                    crop.save()
+                    updated_count += 1
+                    self.stdout.write(f"  [UPDATED] {clean_name}")
+                else:
+                    skipped_count += 1
 
         # 🔍 2. Final Result Logs
         self.stdout.write("\n" + "="*40)

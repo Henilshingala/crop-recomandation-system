@@ -96,22 +96,31 @@ class Crop(models.Model):
     
     def get_image_url(self, image_number=1):
         """
-        Returns the best available image URL:
+        Returns the best available image URL with cache-busting:
         1. Uploaded file
         2. External URL
         3. Placeholder (last resort)
         """
+        import time
+        ts = int(time.time())
+        url = None
+
         if image_number == 1:
-            if self.image: return self.image.url
-            if self.image_url: return self.image_url
+            if self.image: url = self.image.url
+            elif self.image_url: url = self.image_url
         elif image_number == 2:
-            if self.image_2: return self.image_2.url
-            if self.image_2_url: return self.image_2_url
+            if self.image_2: url = self.image_2.url
+            elif self.image_2_url: url = self.image_2_url
         elif image_number == 3:
-            if self.image_3: return self.image_3.url
-            if self.image_3_url: return self.image_3_url
+            if self.image_3: url = self.image_3.url
+            elif self.image_3_url: url = self.image_3_url
             
-        return f"https://via.placeholder.com/300x200?text={self.name.replace(' ', '+')}+{image_number}"
+        if not url:
+            url = f"https://via.placeholder.com/300x200?text={self.name.replace(' ', '+')}+{image_number}"
+
+        # Add cache busting timestamp for local media and external URLs
+        separator = '&' if '?' in url else '?'
+        return f"{url}{separator}v={ts}"
 
 
 class PredictionLog(models.Model):
