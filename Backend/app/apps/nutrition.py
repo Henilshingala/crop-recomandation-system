@@ -15,6 +15,26 @@ def _path() -> str:
     env = os.environ.get("AI_ML_DIR")
     if env:
         return os.path.join(env, "Nutrient.csv")
+    
+    # Render or Local structure: [repo]/Backend/app/ (where manage.py is)
+    # Aiml is at [repo]/Aiml/
+    possible_paths = [
+        os.path.join(settings.BASE_DIR.parent.parent, "Aiml", "Nutrient.csv"),  # Production structure
+        os.path.join(settings.BASE_DIR.parent, "Aiml", "Nutrient.csv"),         # Alt production structure
+        os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv"),   # Relative from Backend/app
+        os.environ.get("RENDER_SRC_ROOT", ""), # Render source root
+    ]
+    
+    # Add absolute path if we know the Render project structure
+    render_src = "/opt/render/project/src"
+    if os.path.exists(render_src):
+        possible_paths.append(os.path.join(render_src, "Aiml", "Nutrient.csv"))
+
+    for p in possible_paths:
+        if p and os.path.exists(p):
+            return p
+            
+    # Default fallback
     return os.path.join(settings.BASE_DIR.parent.parent, "Aiml", "Nutrient.csv")
 
 
