@@ -13,7 +13,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 _MAX_RETRIES = 2
-_TIMEOUT = 10  # seconds
+_TIMEOUT = 30  # seconds (increased for HF cold starts)
 
 
 def _get_hf_url() -> str:

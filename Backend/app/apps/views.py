@@ -25,66 +25,20 @@ from rest_framework import serializers
 from .models import Crop, PredictionLog
 from .ml_inference import predict_top_crops, get_predictor, get_available_crops
 from .serializers import CropSerializer, PredictionLogSerializer
+from .validators import SecurePredictionSerializer
+from .nutrition import get_nutrition_data
 
 logger = logging.getLogger(__name__)
 
 
-class SecurePredictionSerializer(serializers.Serializer):
-    """Simple secure serializer for prediction input."""
-    N = serializers.FloatField(min_value=0, max_value=300)
-    P = serializers.FloatField(min_value=0, max_value=200)
-    K = serializers.FloatField(min_value=0, max_value=200)
-    temperature = serializers.FloatField(min_value=-10, max_value=55)
-    humidity = serializers.FloatField(min_value=0, max_value=100)
-    ph = serializers.FloatField(min_value=0, max_value=14)
-    rainfall = serializers.FloatField(min_value=0, max_value=1000)
-    moisture = serializers.FloatField(min_value=0, max_value=100, required=False, default=43.5)
-    season = serializers.IntegerField(min_value=0, max_value=2, required=False)
-    soil_type = serializers.IntegerField(min_value=0, max_value=4, required=False)
-    irrigation = serializers.IntegerField(min_value=0, max_value=1, required=False)
-    top_n = serializers.IntegerField(min_value=1, max_value=10, required=False, default=3)
-    mode = serializers.ChoiceField(choices=['original', 'synthetic', 'both'], default='both')
+# SecurePredictionSerializer and get_nutrition_data are now imported from centralized modules.
 
 
 # ═════════════════════════════════════════════════════════════════════════
 # Helpers
 # ═════════════════════════════════════════════════════════════════════════
 
-def _nutrition_csv_path() -> str:
-    env = os.environ.get("AI_ML_DIR")
-    if env:
-        return os.path.join(env, "Nutrient.csv")
-    return os.path.join(settings.BASE_DIR.parent.parent, "Aiml", "Nutrient.csv")
-
-
-def get_nutrition_data(crop_name: str) -> dict | None:
-    """Lookup nutrition data from CSV."""
-    try:
-        path = _nutrition_csv_path()
-        with open(path, "r", encoding="utf-8") as fh:
-            for row in csv.DictReader(fh):
-                food = row["food_name"].lower().strip()
-                search = crop_name.lower().strip()
-                if food == search or food in search or search in food:
-                    return {
-                        "protein_g":      float(row["protein_g_per_kg"]),
-                        "fat_g":          float(row["fat_g_per_kg"]),
-                        "carbs_g":        float(row["carbs_g_per_kg"]),
-                        "fiber_g":        float(row["fiber_g_per_kg"]),
-                        "iron_mg":        float(row["iron_mg_per_kg"]),
-                        "calcium_mg":     float(row["calcium_mg_per_kg"]),
-                        "vitamin_a_mcg":  float(row["vitamin_a_mcg_per_kg"]),
-                        "vitamin_c_mg":   float(row["vitamin_c_mg_per_kg"]),
-                        "energy_kcal":    float(row["energy_kcal_per_kg"]),
-                        "water_g":        float(row["water_g_per_kg"]),
-                    }
-    except FileNotFoundError:
-        logger.warning("Nutrition CSV file not found at %s", path)
-    except (KeyError, ValueError) as e:
-        logger.warning("Invalid nutrition data format for %s: %s", crop_name, e)
-    except IOError as e:
-        logger.warning("IO error reading nutrition CSV for %s: %s", crop_name, e)
-    return None
+# get_nutrition_data helper moved to nutrition.py
 
 
 def index(request):
@@ -222,8 +176,11 @@ class CropPredictionView(APIView):
     def _abs_image_url(request, crop: Crop, num: int) -> str:
         """Return the image URL — already absolute (GitHub/placeholder)."""
         url = crop.get_image_url(num)
+        if not url:
+            return f"https://via.placeholder.com/300x200?text={crop.name}+{num}"
+        
         # If it's already an absolute URL (GitHub, placeholder, etc.) return as-is
-        if url and url.startswith(("http://", "https://")):
+        if url.startswith(("http://", "https://")):
             return url
         # Local media file — make absolute via request
         return request.build_absolute_uri(url)

@@ -104,6 +104,20 @@ DATABASES = {
     }
 }
 
+# =============================================================================
+# CACHE CONFIGURATION
+# =============================================================================
+
+# For production, Redis is recommended. For now, we use LocMemCache.
+# Note: LocMemCache is NOT shared between Gunicorn workers.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
+
 
 # =============================================================================
 # PASSWORD VALIDATION
@@ -169,6 +183,10 @@ _cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,ht
 # SECURITY: Never allow all origins - explicit allowlist only
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins if origin.strip()]
+
+# CSRF Trusted Origins (required for POST requests in production)
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in _cors_origins if origin.strip()]
+
 
 # Allow credentials
 CORS_ALLOW_CREDENTIALS = True
