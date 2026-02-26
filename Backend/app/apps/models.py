@@ -106,13 +106,13 @@ class Crop(models.Model):
         url = None
 
         if image_number == 1:
-            if self.image: url = self.image.url
+            if self.image: url = self.image.url.replace('/media/', '/static/')
             elif self.image_url: url = self.image_url
         elif image_number == 2:
-            if self.image_2: url = self.image_2.url
+            if self.image_2: url = self.image_2.url.replace('/media/', '/static/')
             elif self.image_2_url: url = self.image_2_url
         elif image_number == 3:
-            if self.image_3: url = self.image_3.url
+            if self.image_3: url = self.image_3.url.replace('/media/', '/static/')
             elif self.image_3_url: url = self.image_3_url
             
         if not url:

@@ -157,6 +157,12 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# This allows WhiteNoise to serve "media" files as static assets
+# (Useful for repo-resident images on Render's ephemeral filesystem)
+STATICFILES_DIRS = [
+    BASE_DIR / "media",
+]
+
 
 # =============================================================================
 # DEFAULT PRIMARY KEY FIELD TYPE
