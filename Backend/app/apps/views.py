@@ -229,13 +229,33 @@ def media_crops_list(request):
 
 
 def media_crops_redirect(request, filename):
+    """
+    Smart proxy for crop images. 
+    1. If a crop has an external URL, redirect to it.
+    2. If it's a local file, serve it directly from the media folder.
+    This prevents infinite redirect loops caused by the cache-busting v= query param.
+    """
+    import os
+    from django.conf import settings
+    from django.http import FileResponse, Http404
+
+    # 1. Try to serve locally first (most common for repo-based images)
+    local_path = os.path.join(settings.MEDIA_ROOT, 'crops', filename)
+    if os.path.exists(local_path):
+        return FileResponse(open(local_path, 'rb'))
+
+    # 2. Otherwise, find the crop that owns this filename and check for external URL
     crops = Crop.objects.all()
     for crop in crops:
         for i in range(1, 4):
             url = crop.get_image_url(i)
-            if url and filename in url:
-                return redirect(url)
-    return HttpResponse("File not found", status=404)
+            # Only redirect if it's a REAL remote URL (Cloudinary, GitHub, etc.)
+            if url and filename in url and url.startswith(('http://', 'https://')):
+                # Check that we aren't redirecting to OURSELVES
+                if request.get_host() not in url:
+                    return redirect(url)
+
+    return HttpResponse("File not found or redirect loop prevented", status=404)
 
 
 # ═════════════════════════════════════════════════════════════════════════
