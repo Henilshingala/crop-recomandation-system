@@ -108,57 +108,61 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.NOTICE('Starting full crop seeding (Original + Synthetic)...'))
+        # 🔍 1. ML Fetch & Debug
+        from apps.ml_inference import get_available_crops
+        ml_crops = get_available_crops(mode="both")
+        self.stdout.write(self.style.SUCCESS(f"TOTAL CROPS FROM ML: {len(ml_crops)}"))
+
+        created_count = 0
+        updated_count = 0
+        skipped_count = 0
         
-        try:
-            # Get ALL available crops (Original + Synthetic)
-            from apps.ml_inference import get_available_crops
-            ml_crops = get_available_crops(mode="both")
+        # Track names found in this run to ensure uniqueness
+        processed_names = set()
+
+        for crop_name in ml_crops:
+            # Normalize for detection
+            clean_name = crop_name.strip()
+            lookup_name = clean_name.lower()
             
-            self.stdout.write(f'Found {len(ml_crops)} total crops in ML model registry')
+            if lookup_name in processed_names:
+                continue
+            processed_names.add(lookup_name)
+
+            # Get metadata if available, otherwise use defaults
+            metadata = self.CROP_METADATA.get(lookup_name, {
+                'season': 'Various',
+                'expected_yield': 'Varies'
+            })
             
-            created_count = 0
-            updated_count = 0
-            skipped_count = 0
-            
-            for crop_name in ml_crops:
-                name_key = crop_name.lower().strip()
-                # Get metadata if available, otherwise use defaults
-                metadata = self.CROP_METADATA.get(name_key, {
-                    'season': 'Various',
-                    'expected_yield': 'Varies'
-                })
-                
-                # Check for existing crop (case-insensitive search but preserve original case in DB)
-                crop, created = Crop.objects.get_or_create(
-                    name__iexact=crop_name,
-                    defaults={
-                        'name': crop_name,
-                        'season': metadata.get('season', 'Various'),
-                        'expected_yield': metadata.get('expected_yield', 'Varies'),
-                        'description': f'Recommended crop species: {crop_name}. Data provided by ML consensus.'
-                    }
+            # Robust Check: Use filter().first() instead of get_or_create to avoid edge cases
+            crop = Crop.objects.filter(name__iexact=clean_name).first()
+
+            if not crop:
+                # CREATION: Use the exact Case provided by ML Registry
+                Crop.objects.create(
+                    name=clean_name,
+                    season=metadata.get('season', 'Various'),
+                    expected_yield=metadata.get('expected_yield', 'Varies'),
+                    description=f"Recommended crop species: {clean_name}. Data provided by ML consensus."
                 )
-                
-                if created:
-                    created_count += 1
-                    self.stdout.write(f'  Created: {crop_name}')
-                elif options['force']:
-                    # Update existing crop
-                    crop.season = metadata.get('season', crop.season)
-                    crop.expected_yield = metadata.get('expected_yield', crop.expected_yield)
-                    crop.save()
-                    updated_count += 1
-                    self.stdout.write(f'  Updated: {crop_name}')
-                else:
-                    skipped_count += 1
-            
-            self.stdout.write('')
-            self.stdout.write(self.style.SUCCESS(
-                f'Consistency Check Complete! Total Crops in DB: {Crop.objects.count()}. '
-                f'Newly Created: {created_count}, Updated: {updated_count}, Skipped: {skipped_count}'
-            ))
-            
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f'Critical Seeding Error: {e}'))
-            raise
+                created_count += 1
+                self.stdout.write(f"  [CREATED] {clean_name}")
+            elif options.get('force'):
+                # UPDATE: Sync metadata if force flag is used
+                crop.name = clean_name # Ensure case is synced
+                crop.season = metadata.get('season', crop.season)
+                crop.expected_yield = metadata.get('expected_yield', crop.expected_yield)
+                crop.save()
+                updated_count += 1
+                self.stdout.write(f"  [UPDATED] {clean_name}")
+            else:
+                skipped_count += 1
+
+        # 🔍 2. Final Result Logs
+        self.stdout.write("\n" + "="*40)
+        self.stdout.write(self.style.SUCCESS(
+            f"SUMMARY: Created: {created_count}, Updated: {updated_count}, Skipped: {skipped_count}"
+        ))
+        self.stdout.write(self.style.SUCCESS(f"TOTAL CROPS IN DB: {Crop.objects.count()}"))
+        self.stdout.write("="*40)
