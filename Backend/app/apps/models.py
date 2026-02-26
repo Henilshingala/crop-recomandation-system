@@ -44,6 +44,45 @@ class Crop(models.Model):
         help_text="Brief description of the crop"
     )
     
+    # Image 1 (Primary)
+    image = models.ImageField(
+        upload_to='crops/',
+        blank=True,
+        null=True,
+        help_text="Primary crop image (uploaded file)"
+    )
+    image_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Primary crop image (external URL)"
+    )
+    
+    # Image 2
+    image_2 = models.ImageField(
+        upload_to='crops/',
+        blank=True,
+        null=True,
+        help_text="Secondary crop image (uploaded file)"
+    )
+    image_2_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Secondary crop image (external URL)"
+    )
+    
+    # Image 3
+    image_3 = models.ImageField(
+        upload_to='crops/',
+        blank=True,
+        null=True,
+        help_text="Tertiary crop image (uploaded file)"
+    )
+    image_3_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Tertiary crop image (external URL)"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -57,9 +96,22 @@ class Crop(models.Model):
     
     def get_image_url(self, image_number=1):
         """
-        Returns placeholder image URL until new images are uploaded.
+        Returns the best available image URL:
+        1. Uploaded file
+        2. External URL
+        3. Placeholder (last resort)
         """
-        return f"https://via.placeholder.com/300x200?text={self.name}+{image_number}"
+        if image_number == 1:
+            if self.image: return self.image.url
+            if self.image_url: return self.image_url
+        elif image_number == 2:
+            if self.image_2: return self.image_2.url
+            if self.image_2_url: return self.image_2_url
+        elif image_number == 3:
+            if self.image_3: return self.image_3.url
+            if self.image_3_url: return self.image_3_url
+            
+        return f"https://via.placeholder.com/300x200?text={self.name.replace(' ', '+')}+{image_number}"
 
 
 class PredictionLog(models.Model):

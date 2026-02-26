@@ -108,32 +108,35 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.NOTICE('Starting crop seeding...'))
+        self.stdout.write(self.style.NOTICE('Starting full crop seeding (Original + Synthetic)...'))
         
         try:
-            # Get available crops from ML model
-            predictor = get_predictor()
-            ml_crops = predictor.get_available_crops()
+            # Get ALL available crops (Original + Synthetic)
+            from apps.ml_inference import get_available_crops
+            ml_crops = get_available_crops(mode="both")
             
-            self.stdout.write(f'Found {len(ml_crops)} crops in ML model')
+            self.stdout.write(f'Found {len(ml_crops)} total crops in ML model registry')
             
             created_count = 0
             updated_count = 0
             skipped_count = 0
             
             for crop_name in ml_crops:
+                name_key = crop_name.lower().strip()
                 # Get metadata if available, otherwise use defaults
-                metadata = self.CROP_METADATA.get(crop_name.lower(), {
-                    'season': 'Unknown',
+                metadata = self.CROP_METADATA.get(name_key, {
+                    'season': 'Various',
                     'expected_yield': 'Varies'
                 })
                 
+                # Check for existing crop (case-insensitive search but preserve original case in DB)
                 crop, created = Crop.objects.get_or_create(
-                    name=crop_name,
+                    name__iexact=crop_name,
                     defaults={
-                        'season': metadata.get('season', 'Unknown'),
+                        'name': crop_name,
+                        'season': metadata.get('season', 'Various'),
                         'expected_yield': metadata.get('expected_yield', 'Varies'),
-                        'description': f'Recommended crop: {crop_name}'
+                        'description': f'Recommended crop species: {crop_name}. Data provided by ML consensus.'
                     }
                 )
                 
@@ -152,9 +155,10 @@ class Command(BaseCommand):
             
             self.stdout.write('')
             self.stdout.write(self.style.SUCCESS(
-                f'Seeding complete! Created: {created_count}, Updated: {updated_count}, Skipped: {skipped_count}'
+                f'Consistency Check Complete! Total Crops in DB: {Crop.objects.count()}. '
+                f'Newly Created: {created_count}, Updated: {updated_count}, Skipped: {skipped_count}'
             ))
             
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'Error: {e}'))
+            self.stdout.write(self.style.ERROR(f'Critical Seeding Error: {e}'))
             raise
