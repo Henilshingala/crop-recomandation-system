@@ -100,26 +100,81 @@ class Command(BaseCommand):
         'citrus': {'season': 'Winter', 'expected_yield': '15-20 tons/hectare'},
     }
 
+    # Expert mapping (for tricky filenames like b1, c1)
+    _CROP_IMAGES = {
+        "apple":        [None, "apple2.jpg", "apple3.jpg"],
+        "banana":       ["b1.webp", "b2.jpg", None],
+        "blackgram":    [None, "blackgram2.webp", None],
+        "brinjal":      ["brinjal1.avif", "brinjal2.jpg", "brinjal3.webp"],
+        "carrot":       ["carrot1.webp", "carrot2.webp", "carrot3.jpg"],
+        "castor":       [None, None, "castor3.jpg"],
+        "chickpea":     ["c1.webp", "c2.jpg", "c3.jpg"],
+        "citrus":       [None, None, "citrus3.jpg"],
+        "coconut":      ["coconut1.jpg", "coconut2.webp", "coconut3.jpg"],
+        "coffee":       ["coffee1.jpg", "coffee2.avif", "coffee3.jpg"],
+        "cole_crop":    [None, "cole_crop2.jpg", "cole_crop3.jpg"],
+        "cotton":       ["c1.webp", "c2.jpg", "c3.jpg"],
+        "date_palm":    ["date_palm1.webp", None, None],
+        "gourd":        ["gourd1.webp", "gourd2.jpg", None],
+        "grapes":       ["grapes1.webp", None, "grapes3.jpg"],
+        "green_chilli": ["green_chilli1.jpg", "green_chilli2.webp", "green_chilli3.jpg"],
+        "groundnut":    [None, None, "groundnut3.jpg"],
+        "guava":        ["guava1.jpg", None, None],
+        "jute":         ["jute1.webp", None, None],
+        "maize":        [None, "maize2.webp", "maize3.jpg"],
+        "mango":        [None, "mango2.jpg", "mango3.webp"],
+        "mungbean":     ["mungbean1.webp", None, "mungbean3.webp"],
+        "muskmelon":    ["muskmelon1.jpg", None, None],
+        "mustard":      ["mustard1.avif", None, None],
+        "okra":         [None, None, "okra3.jpg"],
+        "onion":        ["onion1.jpg", "onion2.webp", "onion3.webp"],
+        "papaya":       ["papaya1.jpg", None, "papaya3.webp"],
+        "pigeonpeas":   ["pigeonpeas1.jpg", "pigeonpeas2.jpg", None],
+        "pomegranate":  ["pomegranate.png", "pomegranate2.jpg", "pomegranate3.jpg"],
+        "potato":       ["potato1.jpeg", "potato2.jpg", None],
+        "radish":       [None, None, "radish3.jpg"],
+        "rice":         ["rice1.jpeg", "rice2.jpg", "rice3.avif"],
+        "sapota":       ["sapota1.webp", None, "sapota3.webp"],
+        "sesame":       ["sesame1.jpg", "sesame2.webp", None],
+        "soybean":      ["soybean1.webp", None, "soybean3.webp"],
+        "spinach":      [None, "spinach2.jpg", "spinach3.jpg"],
+        "sugarcane":    ["sugarcane1.webp", "sugarcane2.jpg", "sugarcane3.avif"],
+        "tobacco":      ["tobacco1.webp", "tobacco.jpg", None],
+        "tomato":       ["tomato1.jpg", None, "tomato3.jpg"],
+        "watermelon":   ["watermelon1.jpg", None, "watermelon3.webp"],
+        "wheat":        [None, "wheat2.jpg", "wheat3.png"],
+    }
+
     def _find_image_file(self, crop_name: str, num: int) -> str | None:
-        """Scan media/crops/ for {crop_name}{num}.{ext}"""
+        """Ultimate image matching: Expert Map -> Standard Name -> Greedy Search."""
         import os
         from django.conf import settings
         
+        lookup_name = crop_name.lower().strip()
         media_root = settings.MEDIA_ROOT
         crops_dir = os.path.join(media_root, 'crops')
         
         if not os.path.exists(crops_dir):
             return None
             
+        # 1. Check Expert Map
+        mapped_images = self._CROP_IMAGES.get(lookup_name)
+        if mapped_images and len(mapped_images) >= num:
+            filename = mapped_images[num-1]
+            if filename and os.path.exists(os.path.join(crops_dir, filename)):
+                return f"crops/{filename}"
+
+        # 2. Greedy Search: If slot X is missing, try to find ANY matching image for this crop
+        # This handles cases like apple2 being image 1 if apple1 is missing.
         extensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif']
-        # Try both "apple1.jpg" and "apple.jpg" (for num=1)
-        search_names = [f"{crop_name.lower()}{num}", crop_name.lower()] if num == 1 else [f"{crop_name.lower()}{num}"]
+        all_files = sorted([f for f in os.listdir(crops_dir) if f.lower().startswith(lookup_name)])
         
-        for name in search_names:
-            for ext in extensions:
-                filename = f"{name}{ext}"
-                if os.path.exists(os.path.join(crops_dir, filename)):
-                    return f"crops/{filename}"
+        # Filter for validity
+        valid_files = [f for f in all_files if any(f.lower().endswith(ext) for ext in extensions)]
+        
+        if len(valid_files) >= num:
+            return f"crops/{valid_files[num-1]}"
+            
         return None
 
     def add_arguments(self, parser):
@@ -139,11 +194,11 @@ class Command(BaseCommand):
         updated_count = 0
         skipped_count = 0
         
-        # Track names found in this run to ensure uniqueness
+        # Track names found in this run
         processed_names = set()
 
         for crop_name in ml_crops:
-            # Normalize for detection
+            # Normalize
             clean_name = crop_name.strip()
             lookup_name = clean_name.lower()
             
@@ -151,35 +206,36 @@ class Command(BaseCommand):
                 continue
             processed_names.add(lookup_name)
 
-            # Get metadata if available, otherwise use defaults
+            # Metadata
             metadata = self.CROP_METADATA.get(lookup_name, {
                 'season': 'Various',
                 'expected_yield': 'Varies'
             })
             
-            # Robust Check: Use filter().first()
+            # Fetch Crop
             crop = Crop.objects.filter(name__iexact=clean_name).first()
 
-            # Find matching local images
+            # Assign matching images
             img1 = self._find_image_file(clean_name, 1)
             img2 = self._find_image_file(clean_name, 2)
             img3 = self._find_image_file(clean_name, 3)
 
             if not crop:
-                # CREATION: Use the exact Case provided by ML Registry
+                # CREATION
                 crop = Crop.objects.create(
                     name=clean_name,
                     season=metadata.get('season', 'Various'),
                     expected_yield=metadata.get('expected_yield', 'Varies'),
-                    description=f"Recommended crop species: {clean_name}. Data provided by ML consensus.",
+                    description=f"Recommended crop: {clean_name}. Metadata managed by master registry.",
                     image=img1 if img1 else None,
                     image_2=img2 if img2 else None,
                     image_3=img3 if img3 else None,
                 )
                 created_count += 1
-                self.stdout.write(f"  [CREATED] {clean_name} (Auto-Image: {'Yes' if img1 else 'No'})")
+                self.stdout.write(f"  [CREATED] {clean_name} Images: " + 
+                                f"{'1 ' if img1 else ''}{'2 ' if img2 else ''}{'3' if img3 else ''}")
             else:
-                # UPDATE logic: Only update images IF they are currently empty (prevent overwriting admin uploads)
+                # UPDATE: Guard manual admin overrides
                 modified = False
                 if not crop.image and img1:
                     crop.image = img1
@@ -207,7 +263,7 @@ class Command(BaseCommand):
         # 🔍 2. Final Result Logs
         self.stdout.write("\n" + "="*40)
         self.stdout.write(self.style.SUCCESS(
-            f"SUMMARY: Created: {created_count}, Updated: {updated_count}, Skipped: {skipped_count}"
+            f"SEALING COMPLETE | Created: {created_count}, Updated: {updated_count}, Skipped: {skipped_count}"
         ))
         self.stdout.write(self.style.SUCCESS(f"TOTAL CROPS IN DB: {Crop.objects.count()}"))
         self.stdout.write("="*40)
