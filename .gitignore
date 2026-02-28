@@ -33,10 +33,9 @@ Frontend/dist/
 # database
 Backend/app/db.sqlite3
 
-# media
-Backend/app/media/
 
 # training datasets
+
 Aiml/*.csv
 Aiml/confusion_matrix*.png
 
