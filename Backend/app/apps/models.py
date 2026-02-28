@@ -97,28 +97,41 @@ class Crop(models.Model):
     def get_image_url(self, image_number=1):
         """
         Returns the best available image URL with cache-busting:
-        1. Uploaded file
-        2. External URL
+        1. Uploaded file (MediaField)
+        2. External URL (URLField)
         3. Placeholder (last resort)
         """
         import time
         ts = int(time.time())
         url = None
 
+        # Select the correct slot
         if image_number == 1:
-            if self.image: url = self.image.url.replace('/media/', '/static/')
-            elif self.image_url: url = self.image_url
+            if self.image and hasattr(self.image, 'url'):
+                url = self.image.url
+            elif self.image_url:
+                url = self.image_url
         elif image_number == 2:
-            if self.image_2: url = self.image_2.url.replace('/media/', '/static/')
-            elif self.image_2_url: url = self.image_2_url
+            if self.image_2 and hasattr(self.image_2, 'url'):
+                url = self.image_2.url
+            elif self.image_2_url:
+                url = self.image_2_url
         elif image_number == 3:
-            if self.image_3: url = self.image_3.url.replace('/media/', '/static/')
-            elif self.image_3_url: url = self.image_3_url
+            if self.image_3 and hasattr(self.image_3, 'url'):
+                url = self.image_3.url
+            elif self.image_3_url:
+                url = self.image_3_url
             
+        # Fallback to placeholder if no image found
         if not url:
-            url = f"https://via.placeholder.com/300x200?text={self.name.replace(' ', '+')}+{image_number}"
+            display_name = self.name.replace('_', ' ').title()
+            url = f"https://placehold.co/600x400?text={display_name}+Image+{image_number}"
 
-        # Add cache busting timestamp for local media and external URLs
+        # Clean up local media URLs to use static routing on Render
+        if url.startswith('/media/'):
+            url = url.replace('/media/', '/static/')
+
+        # Add cache busting timestamp
         separator = '&' if '?' in url else '?'
         return f"{url}{separator}v={ts}"
 
