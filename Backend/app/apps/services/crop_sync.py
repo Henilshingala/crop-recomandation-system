@@ -281,16 +281,8 @@ _CROP_IMAGES: Dict[str, List[str | None]] = {
 
 def assign_image_urls() -> Tuple[int, int]:
     """
-    For every Crop in the DB, set ``image_url`` / ``image_2_url`` /
-    ``image_3_url`` to the GitHub raw URL.  Also clears stale
-    ``image`` / ``image_2`` / ``image_3`` file fields that point
-    to local files that don't exist on Render.
-
-    **Always overwrites** URL fields — idempotent and safe.
-
-    Returns
-    -------
-    (updated_count, skipped_count)
+    For every Crop in the DB, set URLs from GitHub IF the current field is empty.
+    Allows manual overrides in Admin to persist (until Render restarts/wipes DB).
     """
     from apps.models import Crop
 
@@ -305,35 +297,35 @@ def assign_image_urls() -> Tuple[int, int]:
 
         changed = False
 
+        # Helper to decide if we should update a slot
+        def should_update(current_url, current_file):
+            # 1. Update if everything is empty
+            if not current_url and not current_file:
+                return True
+            # 2. Update if it's currently a placeholder or empty
+            if not current_url or 'placehold.co' in current_url or 'via.placeholder' in current_url:
+                return True
+            return False
+
         # Slot 1
-        if images[0]:
+        if images[0] and should_update(crop.image_url, crop.image):
             new_url = f"{_GITHUB_RAW_BASE}{images[0]}"
             if crop.image_url != new_url:
                 crop.image_url = new_url
                 changed = True
-            # Clear stale file field (doesn't exist on Render)
-            if crop.image and crop.image.name:
-                crop.image = None
-                changed = True
 
         # Slot 2
-        if images[1]:
+        if images[1] and should_update(crop.image_2_url, crop.image_2):
             new_url = f"{_GITHUB_RAW_BASE}{images[1]}"
             if crop.image_2_url != new_url:
                 crop.image_2_url = new_url
                 changed = True
-            if crop.image_2 and crop.image_2.name:
-                crop.image_2 = None
-                changed = True
 
         # Slot 3
-        if images[2]:
+        if images[2] and should_update(crop.image_3_url, crop.image_3):
             new_url = f"{_GITHUB_RAW_BASE}{images[2]}"
             if crop.image_3_url != new_url:
                 crop.image_3_url = new_url
-                changed = True
-            if crop.image_3 and crop.image_3.name:
-                crop.image_3 = None
                 changed = True
 
         if changed:
