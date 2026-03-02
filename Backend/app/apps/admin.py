@@ -76,9 +76,6 @@ class CropAdmin(admin.ModelAdmin):
     list_display = [
         'name',
         'image_count',
-        'image_1_preview',
-        'image_2_preview',
-        'image_3_preview',
         'season',
         'created_at'
     ]
@@ -127,8 +124,8 @@ class CropAdmin(admin.ModelAdmin):
         'image_3_preview_large'
     ]
     
-    # Items per page
-    list_per_page = 50
+    # Items per page - show all 69 crops on one page
+    list_per_page = 69
     
     def image_count(self, obj):
         """Show how many image slots are filled (out of 3)."""
