@@ -120,7 +120,10 @@ class CropPredictionView(APIView):
             else:
                 result["top_1"] = {"crop": "unknown", "confidence": 0, "risk_level": "high"}
 
-            # Log prediction
+            # Pass through confidence_info and warnings from ML service
+            # (already present in result from V5 HF response)
+
+            # Log prediction (now with all fields including mode, moisture, etc.)
             self._log_prediction(request, vd, result)
 
             # Merge with any security warnings
@@ -200,6 +203,11 @@ class CropPredictionView(APIView):
                 humidity=input_data["humidity"],
                 ph=input_data["ph"],
                 rainfall=input_data["rainfall"],
+                moisture=input_data.get("moisture"),
+                soil_type=input_data.get("soil_type"),
+                irrigation=input_data.get("irrigation"),
+                mode=input_data.get("mode", "original"),
+                model_version=result.get("model_info", {}).get("version", "5.0"),
                 predictions=result.get("top_3", []),
                 ip_address=ip,
             )

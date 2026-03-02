@@ -1,11 +1,22 @@
 """
-Crop Recommendation ML API — V3 Stacked Ensemble
-===============================================
-Statistically optimal model with real-world data integration.
-Features: 11 parameters (includes moisture).
-Architecture: Stacked Ensemble (RF + XGB + LGBM) with Bayesian Calibration.
+Crop Recommendation ML API — V5 Production
+==========================================
+True multi-mode serving with distribution validation, confidence gating,
+and deterministic inference pipeline.
+
+Architecture:
+  "original"   → V3 stacked ensemble (19 real-world crops)
+  "synthetic"  → Calibrated RF (51 synthetic crops)
+  "both"       → Confidence-adaptive blend of both models
+
+All models loaded once at startup.  No per-request loading.
+Probability distortion stack (inv-freq, entropy penalty) REMOVED.
+Raw calibrated probabilities only.
 """
 
+import hashlib
+import json
+import time
 import joblib
 import numpy as np
 import pandas as pd
@@ -13,84 +24,136 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, Dict, Any
 import logging
 import os
 
-# Set up logging
+# ═══════════════════════════════════════════════════════════════════════════
+# LOGGING
+# ═══════════════════════════════════════════════════════════════════════════
+
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("ml_api_v3")
+logger = logging.getLogger("ml_api_v5")
 
-app = FastAPI(title="Crop Recommendation ML API", version="3.0")
+app = FastAPI(title="Crop Recommendation ML API", version="5.0")
 
-# ═══════════════════════════════════════════════════════════════════════════
-# LOAD ARTIFACTS
-# ═══════════════════════════════════════════════════════════════════════════
-
-try:
-    logger.info("Loading V3 Stacked Ensemble artifacts...")
-    stacked_model = joblib.load("stacked_ensemble_v3.joblib")
-    label_encoder = joblib.load("label_encoder_v3.joblib")
-    config = joblib.load("stacked_v3_config.joblib")
-    nutrients_df = pd.read_csv("Nutrient.csv")
-    
-    FOLD_MODELS = stacked_model["fold_models"]
-    META_LEARNER = stacked_model["meta_learner"]
-    FEATURES = config["feature_names"]  # ['n', 'p', 'k', ...]
-    
-    # Inference Tuning Params
-    TEMPERATURE = config.get("temperature", 1.0)
-    INV_FREQ_WEIGHTS = np.array(config.get("inv_freq_weights", []))
-    CLASS_THRESHOLDS = np.array(config.get("class_thresholds", []))
-    ENTROPY_THRESHOLD = config.get("entropy_threshold", 0.4)
-    DOMINANCE_PENALTY = config.get("dominance_penalty", 0.15)
-    
-    logger.info("✓ V3 Artifacts loaded successfully.")
-except Exception as e:
-    logger.error(f"Failed to load V3 artifacts: {e}")
-    # Fallback/Safe state for startup
-    FEATURES = ["n", "p", "k", "temperature", "humidity", "ph", "rainfall", "season", "soil_type", "irrigation", "moisture"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UTILITIES & POST-PROCESSING
+# TRAINING DISTRIBUTION RANGES
+# These are the ACTUAL min/max the models were trained on.
+# Inputs outside these ranges are rejected BEFORE reaching the model.
 # ═══════════════════════════════════════════════════════════════════════════
 
-def apply_temperature(proba: np.ndarray, T: float) -> np.ndarray:
-    if T == 1.0: return proba
-    log_p = np.log(np.clip(proba, 1e-10, 1.0))
-    scaled = log_p / T
-    scaled -= scaled.max()
-    e = np.exp(scaled)
-    return e / e.sum()
+TRAINING_RANGES = {
+    "original": {
+        "N":           {"min": 0,    "max": 160},
+        "P":           {"min": 0,    "max": 100},
+        "K":           {"min": 0,    "max": 140},
+        "temperature": {"min": 10,   "max": 45},
+        "humidity":    {"min": 10,   "max": 100},
+        "ph":          {"min": 4.0,  "max": 9.0},
+        "rainfall":    {"min": 15,   "max": 310},
+        "moisture":    {"min": 0,    "max": 100},
+    },
+    "synthetic": {
+        "N":           {"min": 0,    "max": 160},
+        "P":           {"min": 0,    "max": 100},
+        "K":           {"min": 0,    "max": 260},
+        "temperature": {"min": 10,   "max": 45},
+        "humidity":    {"min": 10,   "max": 100},
+        "ph":          {"min": 4.0,  "max": 9.0},
+        "rainfall":    {"min": 15,   "max": 310},
+    },
+}
+# "both" uses the union (widest) of original + synthetic
+TRAINING_RANGES["both"] = {
+    feat: {
+        "min": min(
+            TRAINING_RANGES["original"].get(feat, {}).get("min", 999),
+            TRAINING_RANGES["synthetic"].get(feat, {}).get("min", 999),
+        ),
+        "max": max(
+            TRAINING_RANGES["original"].get(feat, {}).get("max", -999),
+            TRAINING_RANGES["synthetic"].get(feat, {}).get("max", -999),
+        ),
+    }
+    for feat in set(
+        list(TRAINING_RANGES["original"]) + list(TRAINING_RANGES["synthetic"])
+    )
+}
 
-def apply_inv_freq(proba: np.ndarray, weights: np.ndarray) -> np.ndarray:
-    if len(weights) == 0: return proba
-    adj = proba * weights
-    return adj / (adj.sum() + 1e-10)
 
-def apply_entropy_penalty(proba: np.ndarray, threshold: float, penalty: float) -> np.ndarray:
-    ent = -np.sum(proba * np.log(proba + 1e-10))
-    if ent < threshold:
-        top = np.argmax(proba)
-        removed = proba[top] * penalty
-        proba[top] -= removed
-        others = np.ones(len(proba), dtype=bool)
-        others[top] = False
-        s = proba[others].sum()
-        if s > 0:
-            proba[others] += removed * (proba[others] / s)
-    return proba
+# ═══════════════════════════════════════════════════════════════════════════
+# CONFIDENCE GATING
+# ═══════════════════════════════════════════════════════════════════════════
+
+MIN_CONFIDENCE_THRESHOLD = 0.60      # 60 % minimum for a confident prediction
+ENTROPY_WARNING_THRESHOLD = 2.0      # entropy above this triggers uncertainty flag
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# UTILITIES
+# ═══════════════════════════════════════════════════════════════════════════
 
 def infer_season(temperature: float) -> int:
-    if temperature >= 28: return 0  # Kharif
-    elif temperature <= 22: return 1 # Rabi
-    else: return 2 # Zaid
+    if temperature >= 28:
+        return 0   # Kharif
+    if temperature <= 22:
+        return 1   # Rabi
+    return 2       # Zaid
+
+
+def get_season_name(code: int) -> str:
+    return ["Kharif", "Rabi", "Zaid"][code] if 0 <= code <= 2 else "Unknown"
+
+
+def file_checksum(path: str) -> str:
+    """SHA-256 prefix for integrity verification."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()[:16]
+
+
+def compute_entropy(proba: np.ndarray) -> float:
+    p = proba[proba > 0]
+    return float(-np.sum(p * np.log(p)))
+
+
+def validate_distribution(input_dict: dict, mode: str) -> Optional[dict]:
+    """
+    Reject inputs that fall outside the training distribution for *mode*.
+    Returns None when valid, or an error dict when OOD.
+    """
+    ranges = TRAINING_RANGES.get(mode, TRAINING_RANGES["original"])
+    for field, bounds in ranges.items():
+        if field not in input_dict:
+            continue
+        val = input_dict[field]
+        if val < bounds["min"] or val > bounds["max"]:
+            return {
+                "error": "Input outside training distribution",
+                "field": field,
+                "value": val,
+                "training_range": [bounds["min"], bounds["max"]],
+                "mode": mode,
+            }
+    return None
+
+
+def risk_level(confidence_pct: float) -> str:
+    if confidence_pct >= 80:
+        return "low"
+    if confidence_pct >= 50:
+        return "medium"
+    return "high"
+
 
 # ═══════════════════════════════════════════════════════════════════════════
-# API MODELS & HANDLERS
+# NUTRITION LOOKUP
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Crop name mapping for nutrition lookup (Real-world -> Nutrient.csv names)
 NUTRITION_MAPPING = {
     "pigeonpea": "pigeonpeas",
     "sesamum": "sesame",
@@ -99,34 +162,20 @@ NUTRITION_MAPPING = {
     "sorghum": "jowar",
 }
 
-class PredictionInput(BaseModel):
-    N: float = Field(..., ge=0, le=300, description="Nitrogen content (kg/ha)")
-    P: float = Field(..., ge=0, le=200, description="Phosphorus content (kg/ha)")
-    K: float = Field(..., ge=0, le=200, description="Potassium content (kg/ha)")
-    temperature: float = Field(..., ge=-10, le=55, description="Temperature (°C)")
-    humidity: float = Field(..., ge=0, le=100, description="Humidity (%)")
-    ph: float = Field(..., ge=3.0, le=10.0, description="Soil pH")
-    rainfall: float = Field(..., ge=0, le=1000, description="Rainfall (mm)")
-    moisture: Optional[float] = Field(43.5, ge=0, le=100, description="Soil moisture (%)")
-    season: Optional[int] = Field(None, ge=0, le=2, description="0=Kharif, 1=Rabi, 2=Zaid")
-    soil_type: Optional[int] = Field(1, ge=0, le=4, description="0=sandy, 1=loamy, 2=clay")
-    irrigation: Optional[int] = Field(0, ge=0, le=1, description="0=rainfed, 1=irrigated")
-    top_n: Optional[int] = Field(3, ge=1, le=10, description="Number of predictions to return")
+try:
+    nutrients_df = pd.read_csv("Nutrient.csv")
+    logger.info("Nutrition data loaded.")
+except Exception as e:
+    logger.error("Failed to load Nutrient.csv: %s", e)
+    nutrients_df = pd.DataFrame()
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    error_details = exc.errors()
-    logger.error(f"Validation Error: {error_details}")
-    return JSONResponse(
-        status_code=422,
-        content={"detail": error_details, "message": "Invalid input format or missing fields"}
-    )
 
 def get_nutrition(crop_name: str) -> Optional[dict]:
     try:
-        # Use mapping for real-world crop names
-        search_name = NUTRITION_MAPPING.get(crop_name.lower(), crop_name.lower())
-        match = nutrients_df[nutrients_df["food_name"].str.contains(search_name, case=False, na=False)]
+        search = NUTRITION_MAPPING.get(crop_name.lower(), crop_name.lower())
+        match = nutrients_df[
+            nutrients_df["food_name"].str.contains(search, case=False, na=False)
+        ]
         if not match.empty:
             row = match.iloc[0]
             return {
@@ -139,103 +188,423 @@ def get_nutrition(crop_name: str) -> Optional[dict]:
                 "energy_kcal": float(row["energy_kcal_per_kg"]),
                 "water_g": float(row["water_g_per_kg"]),
             }
-    except (KeyError, ValueError) as e:
-        logger.warning("Invalid nutrition data for %s: %s", crop_name, e)
     except Exception as e:
-        logger.error("Unexpected error in nutrition lookup for %s: %s", crop_name, e)
+        logger.warning("Nutrition lookup failed for %s: %s", crop_name, e)
     return None
 
+
 # ═══════════════════════════════════════════════════════════════════════════
-# ENDPOINTS
+# MODEL CLASSES — loaded ONCE at startup, immutable
+# ═══════════════════════════════════════════════════════════════════════════
+
+class OriginalPredictor:
+    """V3 Stacked Ensemble — 19 real-world crops, 11 features."""
+
+    def __init__(self):
+        t0 = time.time()
+        model_file = "stacked_ensemble_v3.joblib"
+        encoder_file = "label_encoder_v3.joblib"
+        config_file = "stacked_v3_config.joblib"
+
+        stacked = joblib.load(model_file)
+        self.fold_models = stacked["fold_models"]
+        self.meta_learner = stacked["meta_learner"]
+        self.label_encoder = joblib.load(encoder_file)
+        config = joblib.load(config_file)
+        self.features = config["feature_names"]  # lowercase n,p,k,...
+        self.temperature_param = config.get("temperature", 1.0)
+
+        self.crops = list(self.label_encoder.classes_)
+        self.crop_count = len(self.crops)
+        self.checksum = file_checksum(model_file)
+
+        elapsed = (time.time() - t0) * 1000
+        logger.info(
+            "Original model loaded: %d crops, %d features, checksum=%s (%.0fms)",
+            self.crop_count, len(self.features), self.checksum, elapsed,
+        )
+
+    def predict_proba(self, input_dict: dict) -> np.ndarray:
+        X = pd.DataFrame([input_dict])[self.features]
+
+        base_preds = []
+        for name in ["BalancedRF", "XGBoost", "LightGBM"]:
+            fold_probs = np.mean(
+                [m.predict_proba(X)[0] for m in self.fold_models[name]], axis=0
+            )
+            base_preds.append(fold_probs)
+
+        meta_features = np.hstack(base_preds).reshape(1, -1)
+        proba = self.meta_learner.predict_proba(meta_features)[0]
+
+        # Temperature scaling only — the sole statistically-validated post-process
+        if self.temperature_param != 1.0:
+            log_p = np.log(np.clip(proba, 1e-10, 1.0))
+            scaled = log_p / self.temperature_param
+            scaled -= scaled.max()
+            e = np.exp(scaled)
+            proba = e / e.sum()
+
+        return proba
+
+
+class SyntheticPredictor:
+    """Calibrated Random Forest — 51 synthetic crops, 10 features."""
+
+    def __init__(self):
+        t0 = time.time()
+        model_file = "model_rf.joblib"
+        encoder_file = "label_encoder.joblib"
+
+        self.model = joblib.load(model_file)
+        self.label_encoder = joblib.load(encoder_file)
+        self.features = [
+            "N", "P", "K", "temperature", "humidity",
+            "ph", "rainfall", "season", "soil_type", "irrigation",
+        ]
+
+        self.crops = list(self.label_encoder.classes_)
+        self.crop_count = len(self.crops)
+        self.checksum = file_checksum(model_file)
+
+        elapsed = (time.time() - t0) * 1000
+        logger.info(
+            "Synthetic model loaded: %d crops, %d features, checksum=%s (%.0fms)",
+            self.crop_count, len(self.features), self.checksum, elapsed,
+        )
+
+    def predict_proba(self, input_dict: dict) -> np.ndarray:
+        X = pd.DataFrame([input_dict])[self.features]
+        return self.model.predict_proba(X)[0]
+
+
+class BothPredictor:
+    """Confidence-adaptive blend of original + synthetic models."""
+
+    REAL_WEIGHT = 0.6
+    SYNTH_WEIGHT = 0.4
+    CONFIDENCE_THRESHOLD = 0.3
+
+    def __init__(self, original: OriginalPredictor, synthetic: SyntheticPredictor):
+        self.original = original
+        self.synthetic = synthetic
+
+        real_set = set(original.crops)
+        synth_set = set(synthetic.crops)
+        self.unified_crops = sorted(real_set | synth_set)
+        self.crop_count = len(self.unified_crops)
+        self.crop_to_idx = {c: i for i, c in enumerate(self.unified_crops)}
+
+        logger.info(
+            "Hybrid predictor ready: %d crops (real=%d, synth=%d, overlap=%d)",
+            self.crop_count, len(real_set), len(synth_set), len(real_set & synth_set),
+        )
+
+    def predict_proba(self, orig_input: dict, synth_input: dict) -> np.ndarray:
+        real_proba = self.original.predict_proba(orig_input)
+        synth_proba = self.synthetic.predict_proba(synth_input)
+
+        rc = float(np.max(real_proba))
+        sc = float(np.max(synth_proba))
+
+        if rc > self.CONFIDENCE_THRESHOLD and sc > self.CONFIDENCE_THRESHOLD:
+            rw, sw = self.REAL_WEIGHT, self.SYNTH_WEIGHT
+        elif rc > self.CONFIDENCE_THRESHOLD:
+            rw, sw = 0.8, 0.2
+        elif sc > self.CONFIDENCE_THRESHOLD:
+            rw, sw = 0.2, 0.8
+        else:
+            rw, sw = 0.5, 0.5
+
+        unified = np.zeros(self.crop_count)
+        for i, crop in enumerate(self.original.crops):
+            if crop in self.crop_to_idx:
+                unified[self.crop_to_idx[crop]] += real_proba[i] * rw
+        for i, crop in enumerate(self.synthetic.crops):
+            if crop in self.crop_to_idx:
+                unified[self.crop_to_idx[crop]] += synth_proba[i] * sw
+
+        total = unified.sum()
+        if total > 0:
+            unified /= total
+        return unified
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LOAD ALL MODELS AT STARTUP
+# ═══════════════════════════════════════════════════════════════════════════
+
+_original: Optional[OriginalPredictor] = None
+_synthetic: Optional[SyntheticPredictor] = None
+_both: Optional[BothPredictor] = None
+
+try:
+    _original = OriginalPredictor()
+except Exception as e:
+    logger.error("FAILED to load original model: %s", e)
+
+try:
+    _synthetic = SyntheticPredictor()
+except Exception as e:
+    logger.error("FAILED to load synthetic model: %s", e)
+
+if _original and _synthetic:
+    _both = BothPredictor(_original, _synthetic)
+else:
+    logger.error("Cannot build hybrid predictor — missing base model(s)")
+
+
+# ── STARTUP ASSERTIONS ─────────────────────────────────────────────────
+
+def _assert_startup():
+    errors = []
+    if _original:
+        if _original.crop_count != 19:
+            errors.append(f"Original model has {_original.crop_count} crops, expected 19")
+    else:
+        errors.append("Original model not loaded")
+    if _synthetic:
+        if _synthetic.crop_count != 51:
+            errors.append(f"Synthetic model has {_synthetic.crop_count} crops, expected 51")
+    else:
+        errors.append("Synthetic model not loaded")
+    if not _both:
+        errors.append("Hybrid predictor not available")
+    for e in errors:
+        logger.error("STARTUP ASSERTION FAILED: %s", e)
+    if not errors:
+        logger.info("All startup assertions passed.")
+
+_assert_startup()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# API MODELS
+# ═══════════════════════════════════════════════════════════════════════════
+
+VALID_MODES = {"original", "synthetic", "both"}
+
+
+class PredictionInput(BaseModel):
+    N: float = Field(..., ge=0, le=300, description="Nitrogen (kg/ha)")
+    P: float = Field(..., ge=0, le=200, description="Phosphorus (kg/ha)")
+    K: float = Field(..., ge=0, le=300, description="Potassium (kg/ha)")
+    temperature: float = Field(..., ge=-10, le=55, description="Temperature (°C)")
+    humidity: float = Field(..., ge=0, le=100, description="Humidity (%)")
+    ph: float = Field(..., ge=3.0, le=10.0, description="Soil pH")
+    rainfall: float = Field(..., ge=0, le=1000, description="Rainfall (mm)")
+    moisture: Optional[float] = Field(43.5, ge=0, le=100, description="Soil moisture (%)")
+    season: Optional[int] = Field(None, ge=0, le=2, description="0=Kharif, 1=Rabi, 2=Zaid")
+    soil_type: Optional[int] = Field(1, ge=0, le=4, description="Soil type")
+    irrigation: Optional[int] = Field(0, ge=0, le=1, description="0=rainfed, 1=irrigated")
+    mode: Optional[str] = Field("original", description="original | synthetic | both")
+    top_n: Optional[int] = Field(3, ge=1, le=10, description="Top N predictions")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "message": "Invalid input"},
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PREDICT ENDPOINT
 # ═══════════════════════════════════════════════════════════════════════════
 
 @app.post("/predict")
 async def predict(data: PredictionInput):
+    start = time.time()
+    mode = (data.mode or "original").strip().lower()
+
+    if mode not in VALID_MODES:
+        raise HTTPException(400, f"Invalid mode '{mode}'. Use: {sorted(VALID_MODES)}")
+
+    # 1. Season
+    season = data.season if data.season is not None else infer_season(data.temperature)
+
+    # 2. Feature dicts (different key casing per model)
+    orig_input = {
+        "n": data.N, "p": data.P, "k": data.K,
+        "temperature": data.temperature, "humidity": data.humidity,
+        "ph": data.ph, "rainfall": data.rainfall,
+        "moisture": data.moisture, "season": season,
+        "soil_type": data.soil_type, "irrigation": data.irrigation,
+    }
+    synth_input = {
+        "N": data.N, "P": data.P, "K": data.K,
+        "temperature": data.temperature, "humidity": data.humidity,
+        "ph": data.ph, "rainfall": data.rainfall,
+        "season": season, "soil_type": data.soil_type,
+        "irrigation": data.irrigation,
+    }
+    canonical = {
+        "N": data.N, "P": data.P, "K": data.K,
+        "temperature": data.temperature, "humidity": data.humidity,
+        "ph": data.ph, "rainfall": data.rainfall,
+        "moisture": data.moisture,
+    }
+
+    # 3. Distribution validation — reject OOD
+    ood = validate_distribution(canonical, mode)
+    if ood is not None:
+        logger.warning("OOD rejected: %s", ood)
+        return JSONResponse(status_code=422, content=ood)
+
+    # 4. Inference
     try:
-        # 1. Prepare Features
-        season = data.season if data.season is not None else infer_season(data.temperature)
-        
-        # Map fields to match model's expected lower-case names
-        input_data = {
-            "n": data.N, "p": data.P, "k": data.K,
-            "temperature": data.temperature,
-            "humidity": data.humidity,
-            "ph": data.ph,
-            "rainfall": data.rainfall,
-            "moisture": data.moisture,
-            "season": season,
-            "soil_type": data.soil_type,
-            "irrigation": data.irrigation
-        }
-        
-        X = pd.DataFrame([input_data])[FEATURES]
-        
-        # 2. Base Model Predictions (OOO-style)
-        base_preds = []
-        for name in ["BalancedRF", "XGBoost", "LightGBM"]:
-            model_list = FOLD_MODELS[name]
-            # Average predictions across folds
-            fold_probs = np.mean([m.predict_proba(X)[0] for m in model_list], axis=0)
-            base_preds.append(fold_probs)
-        
-        # 3. Meta-Learner Prediction
-        meta_features = np.hstack(base_preds).reshape(1, -1)
-        proba = META_LEARNER.predict_proba(meta_features)[0]
-        
-        # 4. Post-processing
-        proba = apply_temperature(proba, TEMPERATURE)
-        proba = apply_inv_freq(proba, INV_FREQ_WEIGHTS)
-        
-        # Apply class thresholds if available
-        if len(CLASS_THRESHOLDS) > 0:
-            proba = proba / (CLASS_THRESHOLDS + 1e-10)
-            proba = proba / proba.sum()
-            
-        proba = apply_entropy_penalty(proba, ENTROPY_THRESHOLD, DOMINANCE_PENALTY)
-        
-        # 5. Format Response
-        top_n = data.top_n or 3
-        top_indices = np.argsort(proba)[-top_n:][::-1]
-        
-        predictions = []
-        for idx in top_indices:
-            crop_name = label_encoder.inverse_transform([idx])[0]
-            conf = float(proba[idx])
-            predictions.append({
-                "crop": crop_name,
-                "confidence": round(conf * 100, 2),
-                "nutrition": get_nutrition(crop_name)
-            })
-            
-        return {
-            "predictions": predictions,
-            "model_info": {
-                "version": "3.0",
-                "type": "stacked-ensemble-v3",
-                "features": len(FEATURES)
-            },
-            "environment_info": {
-                "season_used": ["Kharif", "Rabi", "Zaid"][season],
-                "inferred": data.season is None
-            }
-        }
+        if mode == "original":
+            if not _original:
+                raise HTTPException(503, "Original model unavailable")
+            proba = _original.predict_proba(orig_input)
+            crops_list = _original.crops
+            mtype = "stacked-ensemble-v3"
+            mchk = _original.checksum
+            mcrop = _original.crop_count
+            nfeat = len(_original.features)
+
+        elif mode == "synthetic":
+            if not _synthetic:
+                raise HTTPException(503, "Synthetic model unavailable")
+            proba = _synthetic.predict_proba(synth_input)
+            crops_list = _synthetic.crops
+            mtype = "calibrated-rf-synthetic"
+            mchk = _synthetic.checksum
+            mcrop = _synthetic.crop_count
+            nfeat = len(_synthetic.features)
+
+        else:  # both
+            if not _both:
+                raise HTTPException(503, "Hybrid model unavailable")
+            proba = _both.predict_proba(orig_input, synth_input)
+            crops_list = _both.unified_crops
+            mtype = "hybrid-blend"
+            mchk = f"{_original.checksum}+{_synthetic.checksum}"
+            mcrop = _both.crop_count
+            nfeat = 11
+
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.exception("Prediction failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Inference failed mode=%s", mode)
+        raise HTTPException(500, f"Inference error: {e}")
+
+    # 5. Confidence gating
+    top_prob = float(np.max(proba))
+    entropy = compute_entropy(proba)
+    low_conf = top_prob < MIN_CONFIDENCE_THRESHOLD
+
+    # 6. Build response
+    top_n = data.top_n or 3
+    top_idx = np.argsort(proba)[-top_n:][::-1]
+
+    predictions = []
+    for idx in top_idx:
+        if mode == "both":
+            cname = crops_list[idx]
+        elif mode == "original":
+            cname = _original.label_encoder.inverse_transform([idx])[0]
+        else:
+            cname = _synthetic.label_encoder.inverse_transform([idx])[0]
+
+        cpct = round(float(proba[idx]) * 100, 2)
+        predictions.append({
+            "crop": cname,
+            "confidence": cpct,
+            "risk_level": risk_level(cpct),
+            "nutrition": get_nutrition(cname),
+        })
+
+    latency = round((time.time() - start) * 1000, 1)
+
+    resp: Dict[str, Any] = {
+        "mode": mode,
+        "predictions": predictions,
+        "top_3": predictions[:3],
+        "model_info": {
+            "version": "5.0",
+            "type": mtype,
+            "crops": mcrop,
+            "checksum": mchk,
+            "features_used": nfeat,
+        },
+        "confidence_info": {
+            "top_probability": round(top_prob * 100, 2),
+            "entropy": round(entropy, 4),
+            "low_confidence": low_conf,
+        },
+        "environment_info": {
+            "season_used": get_season_name(season),
+            "season_inferred": data.season is None,
+            "soil_type": data.soil_type,
+            "irrigation": data.irrigation,
+            "moisture": data.moisture,
+        },
+        "latency_ms": latency,
+    }
+
+    if low_conf:
+        resp["warning"] = "Low confidence prediction. Conditions may be ambiguous."
+    if entropy > ENTROPY_WARNING_THRESHOLD:
+        w = resp.get("warning", "")
+        resp["warning"] = (w + " High entropy — model uncertain.").strip()
+
+    # 7. Full-vector logging
+    logger.info(
+        "PREDICT mode=%s crop=%s conf=%.1f%% entropy=%.3f ms=%.0f "
+        "N=%.1f P=%.1f K=%.1f T=%.1f H=%.1f pH=%.1f R=%.1f "
+        "moist=%.1f soil=%d irrig=%d season=%d",
+        mode, predictions[0]["crop"] if predictions else "-",
+        top_prob * 100, entropy, latency,
+        data.N, data.P, data.K, data.temperature, data.humidity,
+        data.ph, data.rainfall, data.moisture or 43.5,
+        data.soil_type or 1, data.irrigation or 0, season,
+    )
+
+    return resp
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# INFO ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
 
 @app.get("/predict")
 def predict_hint():
-    return {"message": "Use POST with JSON body.", "version": "3.0"}
+    return {"message": "Use POST with JSON body.", "version": "5.0", "modes": sorted(VALID_MODES)}
+
 
 @app.get("/")
 def health():
     return {
         "status": "online",
-        "version": "3.0",
-        "model": "Stacked Ensemble v3 (Optimized)",
-        "crops_supported": len(label_encoder.classes_)
+        "version": "5.0",
+        "models": {
+            "original": {
+                "loaded": _original is not None,
+                "crops": _original.crop_count if _original else 0,
+                "checksum": _original.checksum if _original else None,
+            },
+            "synthetic": {
+                "loaded": _synthetic is not None,
+                "crops": _synthetic.crop_count if _synthetic else 0,
+                "checksum": _synthetic.checksum if _synthetic else None,
+            },
+            "both": {
+                "loaded": _both is not None,
+                "crops": _both.crop_count if _both else 0,
+            },
+        },
     }
+
 
 @app.get("/crops")
 def get_crops():
-    return {"crops": sorted(list(label_encoder.classes_))}
+    out = {}
+    if _original:
+        out["original"] = sorted(_original.crops)
+    if _synthetic:
+        out["synthetic"] = sorted(_synthetic.crops)
+    if _both:
+        out["both"] = sorted(_both.unified_crops)
+    return out

@@ -149,6 +149,27 @@ class PredictionLog(models.Model):
     humidity = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)])
     ph = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(14)])
     rainfall = models.FloatField(validators=[MinValueValidator(0)])
+    moisture = models.FloatField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        null=True, blank=True,
+        help_text="Soil moisture (%)"
+    )
+    soil_type = models.IntegerField(
+        null=True, blank=True,
+        help_text="0=sandy, 1=loamy, 2=clay, 3=silty, 4=peaty"
+    )
+    irrigation = models.IntegerField(
+        null=True, blank=True,
+        help_text="0=rainfed, 1=irrigated"
+    )
+    mode = models.CharField(
+        max_length=20, default="original", blank=True,
+        help_text="original | synthetic | both"
+    )
+    model_version = models.CharField(
+        max_length=20, default="5.0", blank=True,
+        help_text="ML model version used"
+    )
     
     # Prediction results (stored as JSON string)
     predictions = models.JSONField(

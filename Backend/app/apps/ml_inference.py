@@ -2,14 +2,14 @@
 Crop Recommendation System — ML Inference (Gateway-Only Mode)
 ==============================================================
 All prediction requests are routed through the HuggingFace Space
-(v3 stacked ensemble).  Zero ML libraries are loaded locally to
+(V5 multi-mode serving).  Zero ML libraries are loaded locally to
 stay within Render's 512 MB free-tier RAM limit.
 
 Modes
 ─────
-  "original"  → HuggingFace v3 (19 real-world crops)
-  "synthetic" → Also routed to HF (same model)
-  "both"      → Also routed to HF (same model)
+  "original"  → V3 stacked ensemble (19 real-world crops)
+  "synthetic" → Calibrated RF (51 synthetic crops)
+  "both"      → Confidence-adaptive hybrid blend
 """
 
 import logging
@@ -34,12 +34,23 @@ def _risk_level(confidence: float) -> str:
 
 
 # ═════════════════════════════════════════════════════════════════════════
-# HuggingFace prediction (all modes)
+# HuggingFace prediction (V5 multi-mode)
 # ═════════════════════════════════════════════════════════════════════════
 
 def _predict_via_hf(payload: dict, mode: str = "original") -> Optional[Dict]:
     """
-    Call HuggingFace Space (v3 stacked ensemble) and normalise the response.
+    Call HuggingFace Space V5 and normalise the response.
+
+    V5 response format:
+    {
+        "mode": "original",
+        "predictions": [...],
+        "top_3": [...],
+        "model_info": {...},
+        "confidence_info": {...},
+        "environment_info": {...},
+        "warning": "..."  (optional)
+    }
 
     Returns normalised dict or None on failure.
     """
@@ -47,28 +58,49 @@ def _predict_via_hf(payload: dict, mode: str = "original") -> Optional[Dict]:
     if hf_resp is None:
         return None
 
-    # HF response: { top_3: [{crop, confidence}, ...], model_info: {...} }
+    # Check for OOD rejection (422-level error returned as JSON)
+    if "error" in hf_resp and "training_range" in hf_resp:
+        raise ValueError(
+            f"Input outside training distribution: {hf_resp['field']}="
+            f"{hf_resp['value']} (range {hf_resp['training_range']})"
+        )
+
+    # V5: top_3 already has crop, confidence, risk_level, nutrition
     top3_raw = hf_resp.get("top_3") or hf_resp.get("predictions") or []
     top3 = [
         {
             "crop": r.get("crop", "unknown"),
             "confidence": round(float(r.get("confidence", 0)), 2),
-            "risk_level": _risk_level(float(r.get("confidence", 0))),
+            "risk_level": r.get("risk_level") or _risk_level(float(r.get("confidence", 0))),
         }
         for r in top3_raw[:3]
     ]
 
     model_info = hf_resp.get("model_info", {})
+    confidence_info = hf_resp.get("confidence_info", {})
 
-    return {
-        "mode": mode,
+    result = {
+        "mode": hf_resp.get("mode", mode),
         "top_3": top3,
         "model_info": {
-            "type": model_info.get("type", "stacked-ensemble-v3"),
-            "coverage": model_info.get("coverage", 19),
-            "version": model_info.get("version", "3.0"),
+            "type": model_info.get("type", "unknown"),
+            "coverage": model_info.get("crops", model_info.get("coverage", 0)),
+            "version": model_info.get("version", "5.0"),
+            "checksum": model_info.get("checksum"),
+        },
+        "confidence_info": {
+            "top_probability": confidence_info.get("top_probability", 0),
+            "entropy": confidence_info.get("entropy", 0),
+            "low_confidence": confidence_info.get("low_confidence", False),
         },
     }
+
+    # Pass through any warnings from V5
+    warning = hf_resp.get("warning")
+    if warning:
+        result["warning"] = warning
+
+    return result
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -92,8 +124,8 @@ def predict_top_crops(
     """
     Convenience wrapper used by views.py.
 
-    All modes route to HuggingFace Space.  The *mode* tag is preserved
-    in the response so the frontend knows what was requested.
+    Each mode routes to HuggingFace Space where V5 dispatches to
+    the correct model.  Mode is sent as part of the payload.
     """
     payload = {
         "N": n, "P": p, "K": k,
@@ -104,6 +136,7 @@ def predict_top_crops(
         "moisture": moisture,
         "soil_type": soil_type,
         "irrigation": irrigation,
+        "mode": mode,
         "top_n": top_n,
     }
 
