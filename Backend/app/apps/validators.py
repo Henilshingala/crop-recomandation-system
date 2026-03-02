@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 SAFE_RANGES = {
     'N': {'min': 0, 'max': 300, 'unit': 'kg/ha'},
     'P': {'min': 0, 'max': 200, 'unit': 'kg/ha'}, 
-    'K': {'min': 0, 'max': 200, 'unit': 'kg/ha'},
+    'K': {'min': 0, 'max': 300, 'unit': 'kg/ha'},
     'temperature': {'min': -10, 'max': 55, 'unit': '°C'},
     'humidity': {'min': 0, 'max': 100, 'unit': '%'},
     'ph': {'min': 3.0, 'max': 10.0, 'unit': 'pH'},

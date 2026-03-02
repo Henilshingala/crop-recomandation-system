@@ -11,15 +11,15 @@ interface InputFormProps {
   isLoading?: boolean;
 }
 
-// Validation ranges
+// Validation ranges (aligned with backend SAFE_RANGES & AIML training data)
 const VALIDATION_RANGES = {
-  nitrogen: { min: 0, max: 150, unit: "kg/ha" },
-  phosphorus: { min: 0, max: 150, unit: "kg/ha" },
+  nitrogen: { min: 0, max: 300, unit: "kg/ha" },
+  phosphorus: { min: 0, max: 200, unit: "kg/ha" },
   potassium: { min: 0, max: 300, unit: "kg/ha" },
-  temperature: { min: 0, max: 50, unit: "°C" },
+  temperature: { min: -10, max: 55, unit: "°C" },
   humidity: { min: 0, max: 100, unit: "%" },
-  ph: { min: 3.5, max: 9.5, unit: "pH" },
-  rainfall: { min: 0, max: 3000, unit: "mm" },
+  ph: { min: 3.0, max: 10.0, unit: "pH" },
+  rainfall: { min: 0, max: 1000, unit: "mm" },
   moisture: { min: 0, max: 100, unit: "%" },
 };
 
@@ -81,8 +81,8 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
               Soil Nutrients
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FieldInput label="Nitrogen (N)" name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder="0-150" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Phosphorus (P)" name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder="0-150" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Nitrogen (N)" name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder="0-300" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Phosphorus (P)" name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder="0-200" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
               <FieldInput label="Potassium (K)" name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-600" />} placeholder="0-300" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
@@ -93,10 +93,10 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
               Environmental Conditions
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FieldInput label="Temperature" name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder="0-50" unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Temperature" name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder="-10 to 55" unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
               <FieldInput label="Humidity" name="humidity" icon={<Droplet className="w-4 h-4 text-blue-600" />} placeholder="0-100" unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Soil pH" name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder="3.5-9.5" unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Rainfall" name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder="0-3000" unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Soil pH" name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder="3.0-10.0" unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Rainfall" name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder="0-1000" unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
