@@ -234,9 +234,11 @@ _GITHUB_RAW_BASE = (
 # Map: crop_name → [image1, image2, image3]  (None = no image for that slot)
 # Derived from the actual files in Backend/app/media/crops/
 _CROP_IMAGES: Dict[str, List[str | None]] = {
-    "apple":        ["apple2.jpg", "apple3.jpg", None],
-    "banana":       ["b1.webp", "b2.jpg", None],
+    "apple":        ["apple2.jpg", "apple3.jpg", "apple1.jpeg"],
+    "banana":       ["banana1.webp", "banana2.jpg", "banana3.webp"],
     "barley":       ["c1.webp", "c2.jpg", "c3.jpg"],
+    "bajra":        ["bajra1.jpg", "bajra2.webp", "bajra3.avif"],
+    "ber":          ["ber1.webp", "ber2.jpg", "ber3.webp"],
     "blackgram":    ["blackgram2.webp", None, None],
     "brinjal":      ["brinjal1.avif", "brinjal2.jpg", "brinjal3.webp"],
     "carrot":       ["carrot1.webp", "carrot2.webp", "carrot3.jpg"],
@@ -262,12 +264,14 @@ _CROP_IMAGES: Dict[str, List[str | None]] = {
     "okra":         ["okra3.jpg", None, None],
     "onion":        ["onion1.jpg", "onion2.webp", "onion3.webp"],
     "papaya":       ["papaya1.jpg", "papaya3.webp", None],
+    "pigeonpea":    ["pigeonpeas1.jpg", "pigeonpeas2.jpg", None],
     "pigeonpeas":   ["pigeonpeas1.jpg", "pigeonpeas2.jpg", None],
     "pomegranate":  ["pomegranate.png", "pomegranate2.jpg", "pomegranate3.jpg"],
     "potato":       ["potato1.jpeg", "potato2.jpg", None],
     "radish":       ["radish3.jpg", None, None],
     "rice":         ["rice1.jpeg", "rice2.jpg", "rice3.avif"],
     "sapota":       ["sapota1.webp", "sapota3.webp", None],
+    "sesamum":      ["sesame1.jpg", "sesame2.webp", None],
     "sesame":       ["sesame1.jpg", "sesame2.webp", None],
     "soybean":      ["soybean1.webp", "soybean3.webp", None],
     "spinach":      ["spinach2.jpg", "spinach3.jpg", None],
