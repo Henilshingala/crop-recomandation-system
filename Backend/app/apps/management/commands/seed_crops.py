@@ -26,11 +26,15 @@ class Command(BaseCommand):
         'jowar': {'season': 'Kharif', 'expected_yield': '1.5-3 tons/hectare'},
         'bajra': {'season': 'Kharif', 'expected_yield': '1-2 tons/hectare'},
         'ragi': {'season': 'Kharif', 'expected_yield': '1-2 tons/hectare'},
+        'finger_millet': {'season': 'Kharif', 'expected_yield': '1-2 tons/hectare'},
+        'sorghum': {'season': 'Kharif', 'expected_yield': '1.5-3 tons/hectare'},
+        'pearl_millet': {'season': 'Kharif', 'expected_yield': '1-2 tons/hectare'},
         
         # Pulses
         'chickpea': {'season': 'Rabi', 'expected_yield': '0.8-1.5 tons/hectare'},
         'kidneybeans': {'season': 'Kharif', 'expected_yield': '1-1.5 tons/hectare'},
         'pigeonpeas': {'season': 'Kharif', 'expected_yield': '0.8-1.2 tons/hectare'},
+        'pigeonpea': {'season': 'Kharif', 'expected_yield': '0.8-1.2 tons/hectare'},
         'mothbeans': {'season': 'Kharif', 'expected_yield': '0.3-0.5 tons/hectare'},
         'mungbean': {'season': 'Kharif/Summer', 'expected_yield': '0.5-1 tons/hectare'},
         'blackgram': {'season': 'Kharif', 'expected_yield': '0.5-1 tons/hectare'},
@@ -68,6 +72,7 @@ class Command(BaseCommand):
         'peas': {'season': 'Rabi', 'expected_yield': '8-12 tons/hectare'},
         'spinach': {'season': 'Rabi', 'expected_yield': '10-15 tons/hectare'},
         'ladyfinger': {'season': 'Summer/Kharif', 'expected_yield': '10-15 tons/hectare'},
+        'okra': {'season': 'Summer/Kharif', 'expected_yield': '10-15 tons/hectare'},
         'bottle_gourd': {'season': 'Summer', 'expected_yield': '25-35 tons/hectare'},
         'bitter_gourd': {'season': 'Summer', 'expected_yield': '10-15 tons/hectare'},
         'ridge_gourd': {'season': 'Summer', 'expected_yield': '12-18 tons/hectare'},
@@ -76,6 +81,7 @@ class Command(BaseCommand):
         
         # Spices
         'chilli': {'season': 'Kharif', 'expected_yield': '1.5-2.5 tons/hectare'},
+        'green_chilli': {'season': 'Kharif', 'expected_yield': '1.5-2.5 tons/hectare'},
         'turmeric': {'season': 'Kharif', 'expected_yield': '20-25 tons/hectare'},
         'ginger': {'season': 'Kharif', 'expected_yield': '15-25 tons/hectare'},
         'garlic': {'season': 'Rabi', 'expected_yield': '8-12 tons/hectare'},
@@ -93,6 +99,11 @@ class Command(BaseCommand):
         'sunflower': {'season': 'Rabi/Kharif', 'expected_yield': '1.5-2 tons/hectare'},
         'mustard': {'season': 'Rabi', 'expected_yield': '1-1.5 tons/hectare'},
         'sesame': {'season': 'Kharif', 'expected_yield': '0.3-0.5 tons/hectare'},
+        'sesamum': {'season': 'Kharif', 'expected_yield': '0.3-0.5 tons/hectare'},
+        'castor': {'season': 'Kharif', 'expected_yield': '1-1.5 tons/hectare'},
+        'linseed': {'season': 'Rabi', 'expected_yield': '0.8-1.2 tons/hectare'},
+        'safflower': {'season': 'Rabi', 'expected_yield': '0.8-1.5 tons/hectare'},
+        'tobacco': {'season': 'Rabi', 'expected_yield': '1.5-2.5 tons/hectare'},
         
         # Merged categories (from data augmentation)
         'gourd': {'season': 'Summer', 'expected_yield': '15-25 tons/hectare'},

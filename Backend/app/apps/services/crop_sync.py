@@ -113,11 +113,15 @@ _CROP_METADATA: Dict[str, Dict[str, str]] = {
     "barley":     {"season": "Rabi",        "yield": "2-3 tons/hectare"},
     "jowar":      {"season": "Kharif",      "yield": "1.5-3 tons/hectare"},
     "bajra":      {"season": "Kharif",      "yield": "1-2 tons/hectare"},
-    "ragi":       {"season": "Kharif",      "yield": "1-2 tons/hectare"},
+    "ragi":           {"season": "Kharif",      "yield": "1-2 tons/hectare"},
+    "finger_millet": {"season": "Kharif",      "yield": "1-2 tons/hectare"},
+    "sorghum":       {"season": "Kharif",      "yield": "1.5-3 tons/hectare"},
+    "pearl_millet":  {"season": "Kharif",      "yield": "1-2 tons/hectare"},
     # Pulses
     "chickpea":   {"season": "Rabi",            "yield": "0.8-1.5 tons/hectare"},
     "kidneybeans":{"season": "Kharif",          "yield": "1-1.5 tons/hectare"},
     "pigeonpeas": {"season": "Kharif",          "yield": "0.8-1.2 tons/hectare"},
+    "pigeonpea":  {"season": "Kharif",          "yield": "0.8-1.2 tons/hectare"},
     "mothbeans":  {"season": "Kharif",          "yield": "0.3-0.5 tons/hectare"},
     "mungbean":   {"season": "Kharif/Summer",   "yield": "0.5-1 tons/hectare"},
     "blackgram":  {"season": "Kharif",          "yield": "0.5-1 tons/hectare"},
@@ -159,7 +163,11 @@ _CROP_METADATA: Dict[str, Dict[str, str]] = {
     "groundnut":  {"season": "Kharif",      "yield": "1.5-2 tons/hectare"},
     "mustard":    {"season": "Rabi",        "yield": "1-1.5 tons/hectare"},
     "sesame":     {"season": "Kharif",      "yield": "0.3-0.5 tons/hectare"},
+    "sesamum":    {"season": "Kharif",      "yield": "0.3-0.5 tons/hectare"},
     "castor":     {"season": "Kharif",      "yield": "1-1.5 tons/hectare"},
+    "linseed":    {"season": "Rabi",        "yield": "0.8-1.2 tons/hectare"},
+    "safflower":  {"season": "Rabi",        "yield": "0.8-1.5 tons/hectare"},
+    "sunflower":  {"season": "Rabi/Kharif", "yield": "1.5-2 tons/hectare"},
     "tobacco":    {"season": "Rabi",        "yield": "1.5-2.5 tons/hectare"},
     # Merged categories
     "gourd":      {"season": "Summer",  "yield": "15-25 tons/hectare"},
@@ -204,18 +212,28 @@ def sync_crops_to_db(
 
     for crop_name in sorted(all_crops):
         meta = _CROP_METADATA.get(crop_name, {})
-        _, was_created = Crop.objects.get_or_create(
+        obj, was_created = Crop.objects.get_or_create(
             name__iexact=crop_name,
             defaults={
                 "name": crop_name,
-                "season": meta.get("season"),
-                "expected_yield": meta.get("yield"),
+                "season": meta.get("season", "Various"),
+                "expected_yield": meta.get("yield", "Varies"),
                 "description": f"Crop: {crop_name}",
             },
         )
         if was_created:
             created += 1
         else:
+            # Backfill missing season/yield for existing crops
+            updated = False
+            if not obj.season and meta.get("season"):
+                obj.season = meta["season"]
+                updated = True
+            if not obj.expected_yield and meta.get("yield"):
+                obj.expected_yield = meta["yield"]
+                updated = True
+            if updated:
+                obj.save()
             skipped += 1
 
     total = Crop.objects.count()
