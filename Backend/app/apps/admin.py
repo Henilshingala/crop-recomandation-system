@@ -62,7 +62,7 @@ class CropAdmin(admin.ModelAdmin):
     Admin interface for Crop model.
     
     Features:
-    - List view with image preview
+    - List view with image preview and image count
     - Search by crop name
     - Filter by season
     - Inline image preview in edit form
@@ -75,9 +75,11 @@ class CropAdmin(admin.ModelAdmin):
     # List display columns
     list_display = [
         'name',
+        'image_count',
         'image_1_preview',
         'image_2_preview',
         'image_3_preview',
+        'season',
         'created_at'
     ]
     
@@ -85,7 +87,7 @@ class CropAdmin(admin.ModelAdmin):
     search_fields = ['name']
     
     # Filter sidebar
-    list_filter = ['created_at']
+    list_filter = ['season', 'created_at']
     
     # Ordering
     ordering = ['name']
@@ -126,7 +128,25 @@ class CropAdmin(admin.ModelAdmin):
     ]
     
     # Items per page
-    list_per_page = 25
+    list_per_page = 50
+    
+    def image_count(self, obj):
+        """Show how many image slots are filled (out of 3)."""
+        count = 0
+        if (obj.image and hasattr(obj.image, 'url')) or obj.image_url:
+            count += 1
+        if (obj.image_2 and hasattr(obj.image_2, 'url')) or obj.image_2_url:
+            count += 1
+        if (obj.image_3 and hasattr(obj.image_3, 'url')) or obj.image_3_url:
+            count += 1
+        
+        if count == 3:
+            return format_html('<span style="color: #28a745; font-weight: bold;">✅ {}/3</span>', count)
+        elif count >= 1:
+            return format_html('<span style="color: #ffc107; font-weight: bold;">⚠️ {}/3</span>', count)
+        else:
+            return format_html('<span style="color: #dc3545; font-weight: bold;">❌ 0/3</span>')
+    image_count.short_description = 'Images'
     
     def image_1_preview(self, obj):
         """Show image 1 thumbnail in list view."""
