@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { type PredictionResponse, type CropRecommendation } from "@/app/services/api";
 import { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ResultsSectionProps {
   data: PredictionResponse;
@@ -50,6 +51,7 @@ function AutoCarousel({ images, alt }: { images: string[]; alt: string }) {
 /* ── Animated confidence bar ──────────────────────────────────────── */
 
 function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
+  const { t } = useTranslation();
   const [width, setWidth] = useState(0);
   useEffect(() => {
     const timer = setTimeout(() => setWidth(Math.min(value, 100)), 100);
@@ -69,7 +71,7 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
   return (
     <div className="w-full">
       <div className="flex justify-between text-sm mb-1.5">
-        <span className="font-medium text-gray-600">Confidence</span>
+        <span className="font-medium text-gray-600">{t("results.confidence")}</span>
         <span className={`font-bold ${textColor}`}>{value.toFixed(1)}%</span>
       </div>
       <div className={`w-full bg-gray-200 rounded-full ${h} overflow-hidden`}>
@@ -85,32 +87,40 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
 /* ── Advisory tier badge ──────────────────────────────────────────── */
 
 function AdvisoryBadge({ tier }: { tier?: string }) {
+  const { t } = useTranslation();
   if (!tier) return null;
-  const t = tier.toLowerCase();
-  if (t.includes("strongly")) {
+  const tl = tier.toLowerCase();
+
+  // Map API tier value to i18n key
+  const tierLabel = tl.includes("strongly") ? t("tiers.stronglyRecommended")
+    : tl === "recommended" ? t("tiers.recommended")
+    : tl.includes("conditional") ? t("tiers.conditional")
+    : t("tiers.notRecommended");
+
+  if (tl.includes("strongly")) {
     return (
       <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
-        {tier}
+        {tierLabel}
       </Badge>
     );
   }
-  if (t === "recommended") {
+  if (tl === "recommended") {
     return (
       <Badge className="bg-blue-100 text-blue-800 border border-blue-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
-        {tier}
+        {tierLabel}
       </Badge>
     );
   }
-  if (t.includes("conditional")) {
+  if (tl.includes("conditional")) {
     return (
       <Badge className="bg-amber-100 text-amber-800 border border-amber-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
-        {tier}
+        {tierLabel}
       </Badge>
     );
   }
   return (
     <Badge className="bg-red-100 text-red-800 border border-red-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
-      {tier}
+      {tierLabel}
     </Badge>
   );
 }
@@ -118,14 +128,20 @@ function AdvisoryBadge({ tier }: { tier?: string }) {
 /* ── Consensus pill ───────────────────────────────────────────────── */
 
 function ConsensusPill({ consensus }: { consensus?: string }) {
+  const { t } = useTranslation();
   if (!consensus) return null;
   const cls =
     consensus === "strong" ? "bg-green-100 text-green-700 border-green-200"
     : consensus === "moderate" ? "bg-yellow-100 text-yellow-700 border-yellow-200"
     : "bg-gray-100 text-gray-600 border-gray-200";
+
+  const label = consensus === "strong" ? t("consensus.strong")
+    : consensus === "moderate" ? t("consensus.moderate")
+    : t("consensus.weak");
+
   return (
     <Badge variant="outline" className={`text-[10px] px-2 py-0.5 capitalize ${cls}`}>
-      {consensus} consensus
+      {label}
     </Badge>
   );
 }
@@ -133,14 +149,15 @@ function ConsensusPill({ consensus }: { consensus?: string }) {
 /* ── Stress indicator badge with tooltip ──────────────────────────── */
 
 function StressBadge({ stressIndex }: { stressIndex?: number }) {
+  const { t } = useTranslation();
   if (stressIndex === undefined || stressIndex === null) return null;
   const [showTip, setShowTip] = useState(false);
 
   const label =
-    stressIndex < 0.2 ? "Low Stress"
-    : stressIndex < 0.4 ? "Moderate Stress"
-    : stressIndex < 0.6 ? "High Stress"
-    : "Extreme Stress";
+    stressIndex < 0.2 ? t("stress.low")
+    : stressIndex < 0.4 ? t("stress.moderate")
+    : stressIndex < 0.6 ? t("stress.high")
+    : t("stress.extreme");
 
   const cls =
     stressIndex < 0.2 ? "bg-green-100 text-green-700 border-green-300"
@@ -161,9 +178,9 @@ function StressBadge({ stressIndex }: { stressIndex?: number }) {
       </button>
       {showTip && (
         <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg pointer-events-none">
-          <p className="font-medium mb-1">Stress Index: {(stressIndex * 100).toFixed(0)}%</p>
+          <p className="font-medium mb-1">{t("stress.indexLabel", { value: (stressIndex * 100).toFixed(0) })}</p>
           <p className="text-gray-300 leading-relaxed">
-            Measures deviation from ideal growing conditions. Higher stress reduces confidence and may trigger tier downgrades.
+            {t("stress.description")}
           </p>
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
         </div>
@@ -175,6 +192,7 @@ function StressBadge({ stressIndex }: { stressIndex?: number }) {
 /* ── "Why this crop?" expandable section ──────────────────────────── */
 
 function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   if (!explanation) return null;
 
@@ -187,7 +205,7 @@ function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string
       >
         <span className="flex items-center gap-2">
           <Info className="w-4 h-4 text-green-600" />
-          Why {crop}?
+          {t("results.whyCrop", { crop })}
         </span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -207,6 +225,7 @@ function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string
 /* ── Main component ───────────────────────────────────────────────── */
 
 export function ResultsSection({ data }: ResultsSectionProps) {
+  const { t } = useTranslation();
   const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
@@ -226,7 +245,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
   if (!top_1 || !top_3?.length) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
-        No recommendations available. Please try again.
+        {t("results.noRecommendations")}
       </div>
     );
   }
@@ -258,8 +277,8 @@ export function ResultsSection({ data }: ResultsSectionProps) {
               )}
               <h2 className="text-2xl font-bold">
                 {isUnsuitableState
-                  ? "⚠ Unsuitable Conditions Detected"
-                  : selectedIdx === 0 ? "Top Recommendation" : "Selected Crop"}
+                  ? t("results.unsuitableDetected")
+                  : selectedIdx === 0 ? t("results.topRecommendation") : t("results.selectedCrop")}
               </h2>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -271,7 +290,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
           <div className="flex items-baseline gap-4 flex-wrap">
             <p className="text-5xl font-bold capitalize">{selected.crop}</p>
             <Badge className="bg-white/20 backdrop-blur text-white text-sm font-semibold px-3 py-1 border border-white/30">
-              {selected.confidence.toFixed(1)}% Match
+              {t("results.match", { value: selected.confidence.toFixed(1) })}
             </Badge>
             <ConsensusPill consensus={selected.model_consensus} />
           </div>
@@ -282,8 +301,8 @@ export function ResultsSection({ data }: ResultsSectionProps) {
           <div className="bg-amber-900/30 border-t border-amber-400/40 px-6 py-3">
             <p className="text-amber-100 text-sm leading-relaxed">
               {fallbackMode
-                ? "Environmental conditions are highly unsuitable for all crops. The following is the least unsuitable option, but corrective measures are strongly advised."
-                : "Environmental conditions are highly unsuitable for most crops. The following are the least unsuitable options, but corrective measures are strongly advised."}
+                ? t("results.unsuitableWarningAll")
+                : t("results.unsuitableWarningMost")}
             </p>
           </div>
         )}
@@ -314,15 +333,15 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Nutrition (per kg)
+                  {t("results.nutritionTitle")}
                 </h3>
                 <div className="space-y-1.5 text-sm">
                   {([
-                    ["Energy", selected.nutrition.energy_kcal, "kcal"],
-                    ["Protein", selected.nutrition.protein_g, "g"],
-                    ["Carbs", selected.nutrition.carbs_g, "g"],
-                    ["Fat", selected.nutrition.fat_g, "g"],
-                    ["Fiber", selected.nutrition.fiber_g, "g"],
+                    [t("results.energy"), selected.nutrition.energy_kcal, "kcal"],
+                    [t("results.protein"), selected.nutrition.protein_g, "g"],
+                    [t("results.carbs"), selected.nutrition.carbs_g, "g"],
+                    [t("results.fat"), selected.nutrition.fat_g, "g"],
+                    [t("results.fiber"), selected.nutrition.fiber_g, "g"],
                   ] as const).map(([k, v, u]) => (
                     <div key={k} className="flex justify-between">
                       <span className="text-gray-600">{k}:</span>
@@ -331,9 +350,9 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   ))}
                   <div className="h-px bg-green-200 my-1.5" />
                   {([
-                    ["Iron", selected.nutrition.iron_mg, "mg"],
-                    ["Calcium", selected.nutrition.calcium_mg, "mg"],
-                    ["Water", selected.nutrition.water_g, "g"],
+                    [t("results.iron"), selected.nutrition.iron_mg, "mg"],
+                    [t("results.calcium"), selected.nutrition.calcium_mg, "mg"],
+                    [t("results.water"), selected.nutrition.water_g, "g"],
                   ] as const).map(([k, v, u]) => (
                     <div key={k} className="flex justify-between">
                       <span className="text-gray-600">{k}:</span>
@@ -347,35 +366,26 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             {/* Details column */}
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">About {selected.crop}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {isUnsuitableState ? (
-                    <>
-                      Current conditions are outside the ideal range for most crops.{" "}
-                      <strong className="capitalize">{selected.crop}</strong> is the least unsuitable
-                      option with a {selected.confidence.toFixed(1)}% confidence match.
-                      Consider corrective measures before cultivation.
-                    </>
-                  ) : (
-                    <>
-                      Based on your soil nutrients and environmental conditions,{" "}
-                      <strong className="capitalize">{selected.crop}</strong> is the best suited crop
-                      with a {selected.confidence.toFixed(1)}% confidence match.
-                    </>
-                  )}
-                </p>
+                <h3 className="font-semibold text-gray-900 mb-2">{t("results.aboutCrop", { crop: selected.crop })}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed"
+                   dangerouslySetInnerHTML={{
+                     __html: isUnsuitableState
+                       ? t("results.aboutUnsuitable", { crop: selected.crop, confidence: selected.confidence.toFixed(1) })
+                       : t("results.aboutSuitable", { crop: selected.crop, confidence: selected.confidence.toFixed(1) })
+                   }}
+                />
               </div>
 
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="w-4 h-4 text-green-600" />
-                <span className="font-medium">Season:</span>
-                <span className="text-gray-700">{selected.season || "Not specified"}</span>
+                <span className="font-medium">{t("results.season")}:</span>
+                <span className="text-gray-700">{selected.season || t("results.seasonNotSpecified")}</span>
               </div>
 
               <div className="flex items-center gap-2 text-sm">
                 <TrendingUp className="w-4 h-4 text-green-600" />
-                <span className="font-medium">Expected Yield:</span>
-                <span className="text-gray-700">{selected.expected_yield || "Varies by conditions"}</span>
+                <span className="font-medium">{t("results.expectedYield")}:</span>
+                <span className="text-gray-700">{selected.expected_yield || t("results.yieldVaries")}</span>
               </div>
 
               {/* Animated confidence bar */}
@@ -393,7 +403,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             <div className="mt-6 bg-amber-50/70 backdrop-blur-sm border border-amber-200/60 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-amber-800">
-                <p className="font-semibold mb-1">Advisory Notice</p>
+                <p className="font-semibold mb-1">{t("results.advisoryNotice")}</p>
                 <p>{data.warning}</p>
               </div>
             </div>
@@ -413,19 +423,19 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             {isUnsuitableState ? (
               <>
                 <AlertCircle className="w-6 h-6" />
-                ⚠ No Suitable Crop Under Current Conditions
+                {t("results.noSuitable")}
               </>
             ) : (
               <>
                 <TrendingUp className="w-6 h-6" />
-                Top 3 Recommended Crops
+                {t("results.topRecommended")}
               </>
             )}
           </CardTitle>
           <p className={`text-sm mt-1 ${isUnsuitableState ? "text-amber-700" : "text-green-700"}`}>
             {isUnsuitableState
-              ? "Ranked by least unsuitability — corrective measures advised"
-              : "Click a crop to view details above"}
+              ? t("results.rankedByLeast")
+              : t("results.clickToView")}
           </p>
         </CardHeader>
         <CardContent className="p-6">
@@ -493,8 +503,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
       <div className="bg-blue-50/80 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
         <ShieldAlert className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-800 leading-relaxed">
-          <strong>Disclaimer:</strong> This AI advisory is based on provided environmental parameters.
-          Consult local agricultural experts before final decision.
+          <strong>{t("results.advisoryNotice")}:</strong> {t("disclaimer")}
         </p>
       </div>
 
@@ -504,7 +513,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
           onClick={() => window.location.reload()}
           className="px-6 py-3 border-2 border-green-600 text-green-700 rounded-lg font-semibold hover:bg-green-50 transition-all duration-200 hover:shadow-md"
         >
-          Try Another Analysis
+          {t("results.tryAnother")}
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
 import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { getModelLimits, type FeatureRange } from "@/app/services/api";
 
 interface InputFormProps {
@@ -34,6 +35,7 @@ const FIELD_TO_RANGE_KEY: Record<string, string> = {
 };
 
 export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
+  const { t } = useTranslation();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [acceptanceRanges, setAcceptanceRanges] = useState<Record<string, FeatureRange>>(FALLBACK_RANGES);
 
@@ -75,9 +77,9 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
 
     if (!range) return "";
     if (value === "" || value === undefined) return "";
-    if (isNaN(numValue)) return "Please enter a valid number";
-    if (numValue < range.min) return `Min: ${range.min} ${range.unit}`;
-    if (numValue > range.max) return `Max: ${range.max} ${range.unit}`;
+    if (isNaN(numValue)) return t("form.validNumber");
+    if (numValue < range.min) return `${t("form.min")}: ${range.min} ${range.unit}`;
+    if (numValue > range.max) return `${t("form.max")}: ${range.max} ${range.unit}`;
     return "";
   };
 
@@ -108,9 +110,9 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   return (
     <Card className="shadow-lg border-green-100/60 backdrop-blur-sm bg-white/80">
       <CardHeader className="bg-gradient-to-r from-green-50/80 to-emerald-50/80">
-        <CardTitle className="text-2xl text-green-900">Soil & Environmental Parameters</CardTitle>
+        <CardTitle className="text-2xl text-green-900">{t("form.title")}</CardTitle>
         <CardDescription className="text-green-700">
-          Enter your field's measurements to get personalized crop recommendations
+          {t("form.description")}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
@@ -119,25 +121,25 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
           {/* NPK Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
-              Soil Nutrients
+              {t("form.soilNutrients")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FieldInput label="Nitrogen (N)" name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.nitrogen.min}-${VALIDATION_RANGES.nitrogen.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Phosphorus (P)" name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder={`${VALIDATION_RANGES.phosphorus.min}-${VALIDATION_RANGES.phosphorus.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Potassium (K)" name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-600" />} placeholder={`${VALIDATION_RANGES.potassium.min}-${VALIDATION_RANGES.potassium.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.nitrogen")} name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.nitrogen.min}-${VALIDATION_RANGES.nitrogen.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.phosphorus")} name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder={`${VALIDATION_RANGES.phosphorus.min}-${VALIDATION_RANGES.phosphorus.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.potassium")} name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-600" />} placeholder={`${VALIDATION_RANGES.potassium.min}-${VALIDATION_RANGES.potassium.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
           {/* Environmental Conditions */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
-              Environmental Conditions
+              {t("form.envConditions")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FieldInput label="Temperature" name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder={`${VALIDATION_RANGES.temperature.min} to ${VALIDATION_RANGES.temperature.max}`} unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Humidity" name="humidity" icon={<Droplet className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.humidity.min}-${VALIDATION_RANGES.humidity.max}`} unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Soil pH" name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder={`${VALIDATION_RANGES.ph.min}-${VALIDATION_RANGES.ph.max}`} unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Rainfall" name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder={`${VALIDATION_RANGES.rainfall.min}-${VALIDATION_RANGES.rainfall.max}`} unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.temperature")} name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder={`${VALIDATION_RANGES.temperature.min} to ${VALIDATION_RANGES.temperature.max}`} unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.humidity")} name="humidity" icon={<Droplet className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.humidity.min}-${VALIDATION_RANGES.humidity.max}`} unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.ph")} name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder={`${VALIDATION_RANGES.ph.min}-${VALIDATION_RANGES.ph.max}`} unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label={t("form.rainfall")} name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder={`${VALIDATION_RANGES.rainfall.min}-${VALIDATION_RANGES.rainfall.max}`} unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
@@ -150,10 +152,10 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Analyzing...
+                {t("form.analyzing")}
               </>
             ) : (
-              'Get Crop Recommendation'
+              t("form.submit")
             )}
           </Button>
         </form>

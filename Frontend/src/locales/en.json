@@ -1,0 +1,100 @@
+{
+  "app": {
+    "title": "Crop Recommendation System",
+    "subtitle": "Smart farming decisions powered by AI analysis"
+  },
+  "nav": {
+    "language": "Language"
+  },
+  "form": {
+    "title": "Soil & Environmental Parameters",
+    "description": "Enter your field's measurements to get personalized crop recommendations",
+    "soilNutrients": "Soil Nutrients",
+    "envConditions": "Environmental Conditions",
+    "nitrogen": "Nitrogen (N)",
+    "phosphorus": "Phosphorus (P)",
+    "potassium": "Potassium (K)",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "ph": "Soil pH",
+    "rainfall": "Rainfall",
+    "submit": "Get Crop Recommendation",
+    "analyzing": "Analyzing...",
+    "validNumber": "Please enter a valid number",
+    "min": "Min",
+    "max": "Max",
+    "placeholder": {
+      "range": "{{min}}-{{max}}",
+      "rangeTo": "{{min}} to {{max}}"
+    }
+  },
+  "results": {
+    "topRecommendation": "Top Recommendation",
+    "selectedCrop": "Selected Crop",
+    "unsuitableDetected": "⚠ Unsuitable Conditions Detected",
+    "topRecommended": "Top 3 Recommended Crops",
+    "noSuitable": "⚠ No Suitable Crop Under Current Conditions",
+    "clickToView": "Click a crop to view details above",
+    "rankedByLeast": "Ranked by least unsuitability — corrective measures advised",
+    "unsuitableWarningAll": "Environmental conditions are highly unsuitable for all crops. The following is the least unsuitable option, but corrective measures are strongly advised.",
+    "unsuitableWarningMost": "Environmental conditions are highly unsuitable for most crops. The following are the least unsuitable options, but corrective measures are strongly advised.",
+    "noRecommendations": "No recommendations available. Please try again.",
+    "confidence": "Confidence",
+    "match": "{{value}}% Match",
+    "aboutCrop": "About {{crop}}",
+    "aboutSuitable": "Based on your soil nutrients and environmental conditions, <strong>{{crop}}</strong> is the best suited crop with a {{confidence}}% confidence match.",
+    "aboutUnsuitable": "Current conditions are outside the ideal range for most crops. <strong>{{crop}}</strong> is the least unsuitable option with a {{confidence}}% confidence match. Consider corrective measures before cultivation.",
+    "season": "Season",
+    "seasonNotSpecified": "Not specified",
+    "expectedYield": "Expected Yield",
+    "yieldVaries": "Varies by conditions",
+    "nutritionTitle": "Nutrition (per kg)",
+    "energy": "Energy",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "fiber": "Fiber",
+    "iron": "Iron",
+    "calcium": "Calcium",
+    "water": "Water",
+    "whyCrop": "Why {{crop}}?",
+    "tryAnother": "Try Another Analysis",
+    "advisoryNotice": "Advisory Notice"
+  },
+  "tiers": {
+    "stronglyRecommended": "Strongly Recommended",
+    "recommended": "Recommended",
+    "conditional": "Conditional / Trial Basis",
+    "notRecommended": "Not Recommended"
+  },
+  "stress": {
+    "low": "Low Stress",
+    "moderate": "Moderate Stress",
+    "high": "High Stress",
+    "extreme": "Extreme Stress",
+    "indexLabel": "Stress Index: {{value}}%",
+    "description": "Measures deviation from ideal growing conditions. Higher stress reduces confidence and may trigger tier downgrades."
+  },
+  "consensus": {
+    "strong": "strong consensus",
+    "moderate": "moderate consensus",
+    "weak": "weak consensus"
+  },
+  "disclaimer": "This AI advisory is based on provided environmental parameters. Consult local agricultural experts before final decision.",
+  "footer": {
+    "copyright": "© 2026 Crop Recommendation System • Empowering farmers with data-driven decisions"
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "description": "Our intelligent system analyzes your soil nutrients (N, P, K), environmental conditions (temperature, humidity, rainfall), and soil pH to recommend the most suitable crop for your field.",
+    "getStarted": "<strong>Get started:</strong> Fill in the form above with your field measurements and click the submit button to receive personalized crop recommendations along with cultivation tips and expected yield information."
+  },
+  "errors": {
+    "title": "Error",
+    "generic": "Failed to get recommendations",
+    "serverHint": "Make sure the backend server is reachable. If you're running locally, ensure Django is started.",
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Try again"
+  },
+  "loading": "Analyzing your soil data..."
+}

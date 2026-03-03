@@ -1,10 +1,25 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
-import { Sprout, Wheat, Loader2, ShieldAlert } from "lucide-react";
+import { Sprout, Wheat, Loader2, ShieldAlert, Globe } from "lucide-react";
 import { getPrediction, type PredictionResponse } from "@/app/services/api";
 
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "hi", label: "हिन्दी" },
+  { code: "gu", label: "ગુજરાતી" },
+  { code: "mr", label: "मराठी" },
+  { code: "pa", label: "ਪੰਜਾਬੀ" },
+  { code: "ta", label: "தமிழ்" },
+  { code: "te", label: "తెలుగు" },
+  { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "bn", label: "বাংলা" },
+  { code: "or", label: "ଓଡ଼ିଆ" },
+];
+
 export default function App() {
+  const { t, i18n } = useTranslation();
   const [results, setResults] = useState<PredictionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +51,7 @@ export default function App() {
         throw new Error('Invalid response structure from API');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get recommendations';
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic');
       setError(errorMessage);
       setResults(null);
     } finally {
@@ -49,16 +64,38 @@ export default function App() {
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md shadow-md border-b-4 border-green-600 sticky top-0 z-30">
         <div className="container mx-auto px-4 py-5">
-          <div className="flex items-center justify-center gap-4">
-            <div className="bg-green-600 p-3 rounded-full shadow-lg">
-              <Wheat className="w-7 h-7 text-white" />
+          <div className="flex items-center justify-between gap-4">
+            {/* Left spacer for centering */}
+            <div className="hidden sm:block w-[160px]" />
+
+            <div className="flex items-center gap-4 flex-1 justify-center">
+              <div className="bg-green-600 p-3 rounded-full shadow-lg">
+                <Wheat className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-center">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{t("app.title")}</h1>
+                <p className="text-gray-600 mt-1 text-sm">{t("app.subtitle")}</p>
+              </div>
+              <div className="bg-green-600 p-3 rounded-full shadow-lg">
+                <Sprout className="w-7 h-7 text-white" />
+              </div>
             </div>
-            <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Crop Recommendation System</h1>
-              <p className="text-gray-600 mt-1 text-sm">Smart farming decisions powered by AI analysis</p>
-            </div>
-            <div className="bg-green-600 p-3 rounded-full shadow-lg">
-              <Sprout className="w-7 h-7 text-white" />
+
+            {/* Language Switcher */}
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-green-700 hidden sm:block" />
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                className="bg-green-50 border border-green-300 text-green-800 text-sm rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer"
+                aria-label={t("nav.language")}
+              >
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -72,15 +109,15 @@ export default function App() {
           {isLoading && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
-              <span className="ml-3 text-lg text-gray-600">Analyzing your soil data...</span>
+              <span className="ml-3 text-lg text-gray-600">{t("loading")}</span>
             </div>
           )}
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-              <p className="font-semibold">Error</p>
+              <p className="font-semibold">{t("errors.title")}</p>
               <p>{error}</p>
-              <p className="text-sm mt-2">Make sure the backend server is reachable. If you're running locally, ensure Django is started.</p>
+              <p className="text-sm mt-2">{t("errors.serverHint")}</p>
             </div>
           )}
 
@@ -90,17 +127,11 @@ export default function App() {
             <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6 border-l-4 border-green-600">
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Sprout className="w-5 h-5 text-green-600" />
-                How It Works
+                {t("howItWorks.title")}
               </h3>
               <div className="text-sm text-gray-700 space-y-2">
-                <p>
-                  Our intelligent system analyzes your soil nutrients (N, P, K), environmental conditions (temperature, humidity, rainfall),
-                  and soil pH to recommend the most suitable crop for your field.
-                </p>
-                <p className="pt-2">
-                  <strong>Get started:</strong> Fill in the form above with your field measurements and click the submit button to receive
-                  personalized crop recommendations along with cultivation tips and expected yield information.
-                </p>
+                <p>{t("howItWorks.description")}</p>
+                <p className="pt-2" dangerouslySetInnerHTML={{ __html: t("howItWorks.getStarted") }} />
               </div>
             </div>
           )}
@@ -112,13 +143,10 @@ export default function App() {
           {/* Safety Disclaimer — always visible */}
           <div className="flex items-start justify-center gap-2 text-green-200 text-xs leading-relaxed max-w-2xl mx-auto">
             <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <p>
-              This AI advisory is based on provided environmental parameters.
-              Consult local agricultural experts before final decision.
-            </p>
+            <p>{t("disclaimer")}</p>
           </div>
           <p className="text-sm text-center text-green-300">
-            &copy; 2026 Crop Recommendation System &bull; Empowering farmers with data-driven decisions
+            {t("footer.copyright")}
           </p>
         </div>
       </footer>
