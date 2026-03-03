@@ -126,3 +126,37 @@ export async function getAvailableCrops(mode: string = 'original'): Promise<stri
   const data = await response.json();
   return data.crops;
 }
+
+/* ── Feature-range types ──────────────────────────────────────────── */
+
+export interface FeatureRange {
+  min: number;
+  max: number;
+  unit?: string;
+}
+
+export interface ModelLimitsResponse {
+  acceptance: Record<string, FeatureRange>;
+  original?: {
+    dataset: string;
+    rows: number;
+    crops: number;
+    features: Record<string, FeatureRange & { p1: number; p99: number; mean: number; std: number }>;
+  };
+  synthetic?: {
+    dataset: string;
+    rows: number;
+    crops: number;
+    features: Record<string, FeatureRange & { p1: number; p99: number; mean: number; std: number }>;
+  };
+}
+
+/**
+ * Fetch feature validation ranges from the backend (single source of truth).
+ * Used by InputForm to set dynamic min/max on number fields.
+ */
+export async function getModelLimits(): Promise<ModelLimitsResponse> {
+  const response = await fetch(`${API_BASE_URL}/model/limits/`);
+  if (!response.ok) throw new Error('Failed to fetch model limits');
+  return response.json();
+}

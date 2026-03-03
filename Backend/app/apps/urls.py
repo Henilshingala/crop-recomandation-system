@@ -13,6 +13,7 @@ from .views import (
     PredictionLogViewSet,
     health_check,
     available_crops,
+    model_limits,
     index
 )
 
@@ -31,6 +32,9 @@ urlpatterns = [
     
     # Available crops from ML model (GET)
     path('crops/available/', available_crops, name='available-crops'),
+    
+    # Feature validation ranges (GET) — single source of truth
+    path('model/limits/', model_limits, name='model-limits'),
     
     # Index page
     path('index/', index, name='index'),

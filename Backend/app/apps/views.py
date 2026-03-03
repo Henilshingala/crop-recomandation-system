@@ -25,7 +25,7 @@ from rest_framework import serializers
 from .models import Crop, PredictionLog
 from .ml_inference import predict_top_crops, get_predictor, get_available_crops
 from .serializers import CropSerializer, PredictionLogSerializer
-from .validators import SecurePredictionSerializer
+from .validators import SecurePredictionSerializer, FEATURE_RANGES, SAFE_RANGES
 from .nutrition import get_nutrition_data
 
 logger = logging.getLogger(__name__)
@@ -327,6 +327,22 @@ def available_crops(request):
         return Response({"mode": mode, "count": len(crops), "crops": crops})
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def model_limits(request):
+    """GET /api/model/limits/ — single source of truth for feature validation ranges.
+
+    Returns the full feature_ranges.json content including:
+      - acceptance: hard input limits used by Pydantic, Django, and the frontend
+      - original:   per-feature training statistics for V3 stacked ensemble
+      - synthetic:   per-feature training statistics for calibrated RF
+    """
+    if FEATURE_RANGES:
+        return Response(FEATURE_RANGES)
+    # Fallback: return acceptance ranges only
+    return Response({"acceptance": SAFE_RANGES})
 
 
 class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):

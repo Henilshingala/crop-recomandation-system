@@ -1,30 +1,61 @@
 """
 Input Validation Utilities for Crop Recommendation API
 ====================================================
-Comprehensive validation to prevent injection attacks and model poisoning.
+Ranges loaded from feature_ranges.json — single source of truth.
 """
 
+import json
 import logging
+import os
 from typing import Dict, Any, List, Optional
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
 
-# Safe ranges for agricultural parameters
-SAFE_RANGES = {
-    'N': {'min': 0, 'max': 300, 'unit': 'kg/ha'},
-    'P': {'min': 0, 'max': 200, 'unit': 'kg/ha'}, 
-    'K': {'min': 0, 'max': 300, 'unit': 'kg/ha'},
-    'temperature': {'min': -10, 'max': 55, 'unit': '°C'},
-    'humidity': {'min': 0, 'max': 100, 'unit': '%'},
-    'ph': {'min': 3.0, 'max': 10.0, 'unit': 'pH'},
-    'rainfall': {'min': 0, 'max': 1000, 'unit': 'mm'},
-    'moisture': {'min': 0, 'max': 100, 'unit': '%'},
-    'soil_type': {'min': 0, 'max': 4, 'unit': 'type'},
-    'irrigation': {'min': 0, 'max': 1, 'unit': 'type'},
-    'season': {'min': 0, 'max': 2, 'unit': 'type'},
-}
+# ── Load feature ranges from the shared JSON (single source of truth) ──
+_FEATURE_RANGES_PATHS = [
+    os.path.join(settings.BASE_DIR.parent.parent, "Aiml", "feature_ranges.json"),
+    os.path.join(settings.BASE_DIR.parent, "Aiml", "feature_ranges.json"),
+    os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "feature_ranges.json"),
+]
+
+FEATURE_RANGES: dict = {}
+for _p in _FEATURE_RANGES_PATHS:
+    if os.path.isfile(_p):
+        with open(_p, encoding="utf-8") as _f:
+            FEATURE_RANGES = json.load(_f)
+        logger.info("Loaded feature_ranges.json from %s", _p)
+        break
+else:
+    logger.warning("feature_ranges.json not found — using fallback acceptance ranges")
+
+# Build SAFE_RANGES from the acceptance section (or fallback)
+if FEATURE_RANGES and "acceptance" in FEATURE_RANGES:
+    _acc = FEATURE_RANGES["acceptance"]
+    SAFE_RANGES = {
+        k: {"min": v["min"], "max": v["max"], "unit": v.get("unit", "")}
+        for k, v in _acc.items()
+        if not k.startswith("_")
+    }
+else:
+    # Fallback — matches feature_ranges.json acceptance as of 2026-03-03
+    SAFE_RANGES = {
+        'N':           {'min': 0,    'max': 200,  'unit': 'kg/ha'},
+        'P':           {'min': 0,    'max': 110,  'unit': 'kg/ha'},
+        'K':           {'min': 0,    'max': 300,  'unit': 'kg/ha'},
+        'temperature': {'min': 7,    'max': 47,   'unit': '°C'},
+        'humidity':    {'min': 0,    'max': 100,  'unit': '%'},
+        'ph':          {'min': 3.5,  'max': 9.5,  'unit': 'pH'},
+        'rainfall':    {'min': 20,   'max': 3000, 'unit': 'mm'},
+        'moisture':    {'min': 0,    'max': 100,  'unit': '%'},
+        'soil_type':   {'min': 0,    'max': 4,    'unit': 'type'},
+        'irrigation':  {'min': 0,    'max': 1,    'unit': 'type'},
+        'season':      {'min': 0,    'max': 2,    'unit': 'type'},
+    }
+
+logger.info("SAFE_RANGES: %s", {k: [v['min'], v['max']] for k, v in SAFE_RANGES.items()})
 
 
 class PredictionInputValidator:

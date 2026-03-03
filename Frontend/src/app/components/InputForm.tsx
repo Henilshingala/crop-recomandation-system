@@ -4,29 +4,75 @@ import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
 import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2, ChevronDown, Shield, Layers, Combine } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { getModelLimits, type FeatureRange } from "@/app/services/api";
 
 interface InputFormProps {
   onSubmit: (e: React.FormEvent) => void;
   isLoading?: boolean;
 }
 
-// Validation ranges (aligned with backend SAFE_RANGES & AIML training data)
-const VALIDATION_RANGES = {
-  nitrogen: { min: 0, max: 300, unit: "kg/ha" },
-  phosphorus: { min: 0, max: 200, unit: "kg/ha" },
-  potassium: { min: 0, max: 300, unit: "kg/ha" },
-  temperature: { min: -10, max: 55, unit: "°C" },
-  humidity: { min: 0, max: 100, unit: "%" },
-  ph: { min: 3.0, max: 10.0, unit: "pH" },
-  rainfall: { min: 0, max: 1000, unit: "mm" },
-  moisture: { min: 0, max: 100, unit: "%" },
+// Fallback ranges (matches feature_ranges.json acceptance as of 2026-03-03)
+const FALLBACK_RANGES: Record<string, FeatureRange> = {
+  N:           { min: 0,   max: 200,  unit: "kg/ha" },
+  P:           { min: 0,   max: 110,  unit: "kg/ha" },
+  K:           { min: 0,   max: 300,  unit: "kg/ha" },
+  temperature: { min: 7,   max: 47,   unit: "°C" },
+  humidity:    { min: 0,   max: 100,  unit: "%" },
+  ph:          { min: 3.5, max: 9.5,  unit: "pH" },
+  rainfall:    { min: 20,  max: 3000, unit: "mm" },
+  moisture:    { min: 0,   max: 100,  unit: "%" },
+};
+
+// Map field names used in the form to the keys in feature_ranges.json
+const FIELD_TO_RANGE_KEY: Record<string, string> = {
+  nitrogen: "N",
+  phosphorus: "P",
+  potassium: "K",
+  temperature: "temperature",
+  humidity: "humidity",
+  ph: "ph",
+  rainfall: "rainfall",
+  moisture: "moisture",
 };
 
 export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [mode, setMode] = useState<'original' | 'synthetic' | 'both'>('original');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [acceptanceRanges, setAcceptanceRanges] = useState<Record<string, FeatureRange>>(FALLBACK_RANGES);
+
+  // Fetch real acceptance ranges from /api/model/limits/ on mount
+  useEffect(() => {
+    let cancelled = false;
+    getModelLimits()
+      .then((data) => {
+        if (!cancelled && data.acceptance) {
+          // Build ranges from API response, keeping unit from fallback where needed
+          const merged: Record<string, FeatureRange> = {};
+          for (const [key, fallback] of Object.entries(FALLBACK_RANGES)) {
+            const remote = data.acceptance[key];
+            merged[key] = remote
+              ? { min: remote.min, max: remote.max, unit: remote.unit ?? fallback.unit }
+              : fallback;
+          }
+          setAcceptanceRanges(merged);
+        }
+      })
+      .catch(() => {
+        // Silently keep fallback ranges
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Derive VALIDATION_RANGES mapping (form field name → range) dynamically
+  const VALIDATION_RANGES = useMemo(() => {
+    const out: Record<string, FeatureRange> = {};
+    for (const [field, rangeKey] of Object.entries(FIELD_TO_RANGE_KEY)) {
+      out[field] = acceptanceRanges[rangeKey] ?? FALLBACK_RANGES[rangeKey];
+    }
+    return out;
+  }, [acceptanceRanges]);
 
   const validateField = (name: string, value: string) => {
     const numValue = parseFloat(value);
@@ -81,9 +127,9 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
               Soil Nutrients
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FieldInput label="Nitrogen (N)" name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder="0-300" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Phosphorus (P)" name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder="0-200" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Potassium (K)" name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-600" />} placeholder="0-300" unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Nitrogen (N)" name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.nitrogen.min}-${VALIDATION_RANGES.nitrogen.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Phosphorus (P)" name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder={`${VALIDATION_RANGES.phosphorus.min}-${VALIDATION_RANGES.phosphorus.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Potassium (K)" name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-600" />} placeholder={`${VALIDATION_RANGES.potassium.min}-${VALIDATION_RANGES.potassium.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
@@ -93,10 +139,10 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
               Environmental Conditions
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FieldInput label="Temperature" name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder="-10 to 55" unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Humidity" name="humidity" icon={<Droplet className="w-4 h-4 text-blue-600" />} placeholder="0-100" unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Soil pH" name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder="3.0-10.0" unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label="Rainfall" name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder="0-1000" unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Temperature" name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder={`${VALIDATION_RANGES.temperature.min} to ${VALIDATION_RANGES.temperature.max}`} unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Humidity" name="humidity" icon={<Droplet className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.humidity.min}-${VALIDATION_RANGES.humidity.max}`} unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Soil pH" name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder={`${VALIDATION_RANGES.ph.min}-${VALIDATION_RANGES.ph.max}`} unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <FieldInput label="Rainfall" name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder={`${VALIDATION_RANGES.rainfall.min}-${VALIDATION_RANGES.rainfall.max}`} unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
@@ -147,7 +193,7 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
                 </div>
 
                 {/* Soil Moisture */}
-                <FieldInput label="Soil Moisture" name="moisture" icon={<Droplet className="w-4 h-4 text-teal-600" />} placeholder="0-100" unit="%" step="0.1" defaultValue="43.5" required={false} errors={errors} onBlur={handleInputBlur} />
+                <FieldInput label="Soil Moisture" name="moisture" icon={<Droplet className="w-4 h-4 text-teal-600" />} placeholder={`${VALIDATION_RANGES.moisture.min}-${VALIDATION_RANGES.moisture.max}`} unit="%" step="0.1" defaultValue="43.5" required={false} errors={errors} onBlur={handleInputBlur} />
               </div>
             )}
           </div>
