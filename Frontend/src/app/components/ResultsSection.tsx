@@ -226,6 +226,8 @@ function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string
 
 export function ResultsSection({ data }: ResultsSectionProps) {
   const { t } = useTranslation();
+  /** Translate an API crop name (e.g. "finger_millet") to the active locale */
+  const tc = (crop: string) => t(`crops.${crop}`, { defaultValue: crop });
   const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
@@ -288,7 +290,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
           </div>
 
           <div className="flex items-baseline gap-4 flex-wrap">
-            <p className="text-5xl font-bold capitalize">{selected.crop}</p>
+            <p className="text-5xl font-bold capitalize">{tc(selected.crop)}</p>
             <Badge className="bg-white/20 backdrop-blur text-white text-sm font-semibold px-3 py-1 border border-white/30">
               {t("results.match", { value: selected.confidence.toFixed(1) })}
             </Badge>
@@ -313,12 +315,12 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             {/* Image carousel */}
             <div className="rounded-xl overflow-hidden shadow-md bg-gray-100 max-w-sm mx-auto lg:mx-0">
               {selected.image_urls && selected.image_urls.length > 0 ? (
-                <AutoCarousel key={selected.crop} images={selected.image_urls} alt={selected.crop} />
+                <AutoCarousel key={selected.crop} images={selected.image_urls} alt={tc(selected.crop)} />
               ) : (
                 <div className="aspect-square">
                   <img
                     src={selected.image_url || `https://via.placeholder.com/400x400?text=${selected.crop}`}
-                    alt={selected.crop}
+                    alt={tc(selected.crop)}
                     className="w-full h-full object-cover"
                     onError={e => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x400?text=${selected.crop}`; }}
                   />
@@ -366,12 +368,12 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             {/* Details column */}
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">{t("results.aboutCrop", { crop: selected.crop })}</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">{t("results.aboutCrop", { crop: tc(selected.crop) })}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed"
                    dangerouslySetInnerHTML={{
                      __html: isUnsuitableState
-                       ? t("results.aboutUnsuitable", { crop: selected.crop, confidence: selected.confidence.toFixed(1) })
-                       : t("results.aboutSuitable", { crop: selected.crop, confidence: selected.confidence.toFixed(1) })
+                       ? t("results.aboutUnsuitable", { crop: tc(selected.crop), confidence: selected.confidence.toFixed(1) })
+                       : t("results.aboutSuitable", { crop: tc(selected.crop), confidence: selected.confidence.toFixed(1) })
                    }}
                 />
               </div>
@@ -394,7 +396,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
               </div>
 
               {/* "Why this crop?" expandable explanation */}
-              <WhyThisCrop explanation={selected.explanation} crop={selected.crop} />
+              <WhyThisCrop explanation={selected.explanation} crop={tc(selected.crop)} />
             </div>
           </div>
 
@@ -456,7 +458,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 <div className="w-full h-32 bg-gray-100 rounded-lg mb-3 overflow-hidden">
                   <img
                     src={crop.image_url || `https://via.placeholder.com/200x150?text=${crop.crop}`}
-                    alt={crop.crop}
+                    alt={tc(crop.crop)}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={e => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x150?text=${crop.crop}`; }}
                   />
@@ -477,7 +479,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   <AdvisoryBadge tier={crop.advisory_tier} />
                 </div>
 
-                <h4 className="font-semibold text-lg text-gray-900 mb-2 capitalize">{crop.crop}</h4>
+                <h4 className="font-semibold text-lg text-gray-900 mb-2 capitalize">{tc(crop.crop)}</h4>
 
                 {/* Animated confidence bar */}
                 <ConfidenceBar value={crop.confidence} size="sm" />
