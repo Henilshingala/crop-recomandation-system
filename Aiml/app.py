@@ -1240,3 +1240,232 @@ def get_limits():
 def get_constraints():
     """Per-crop agronomic constraint dictionary."""
     return CROP_AGRO_CONSTRAINTS
+
+
+# ===================================================================
+# /recommend — UNIFIED ADVISORY ENDPOINT (no mode exposed)
+# ===================================================================
+
+class RecommendInput(BaseModel):
+    """Input schema for /recommend — no mode field."""
+    N: float = Field(..., ge=_ACC["N"]["min"], le=_ACC["N"]["max"])
+    P: float = Field(..., ge=_ACC["P"]["min"], le=_ACC["P"]["max"])
+    K: float = Field(..., ge=_ACC["K"]["min"], le=_ACC["K"]["max"])
+    temperature: float = Field(..., ge=_ACC["temperature"]["min"],
+                               le=_ACC["temperature"]["max"])
+    humidity: float = Field(..., ge=_ACC["humidity"]["min"],
+                            le=_ACC["humidity"]["max"])
+    ph: float = Field(..., ge=_ACC["ph"]["min"], le=_ACC["ph"]["max"])
+    rainfall: float = Field(..., ge=_ACC["rainfall"]["min"],
+                            le=_ACC["rainfall"]["max"])
+    moisture: Optional[float] = Field(43.5, ge=_ACC["moisture"]["min"],
+                                      le=_ACC["moisture"]["max"])
+    season: Optional[int] = Field(None, ge=_ACC["season"]["min"],
+                                  le=_ACC["season"]["max"])
+    soil_type: Optional[int] = Field(1, ge=_ACC["soil_type"]["min"],
+                                     le=_ACC["soil_type"]["max"])
+    irrigation: Optional[int] = Field(0, ge=_ACC["irrigation"]["min"],
+                                      le=_ACC["irrigation"]["max"])
+
+
+def _consensus_label(vote_count: int, total_models: int) -> str:
+    """Classify model agreement strength."""
+    if vote_count >= total_models:
+        return "strong"
+    if vote_count >= 2:
+        return "moderate"
+    return "weak"
+
+
+@app.post("/recommend")
+async def recommend(data: RecommendInput):
+    """
+    Unified advisory endpoint.
+
+    Runs all 3 internal models, collects 3×Top-3 = 9 candidates,
+    scores them with the aggregation formula, and returns the
+    global Top-3 with no model architecture exposed.
+    """
+    start = time.time()
+
+    season = (data.season if data.season is not None
+              else infer_season(data.temperature))
+
+    input_dict = {
+        "N": data.N, "P": data.P, "K": data.K,
+        "temperature": data.temperature, "humidity": data.humidity,
+        "ph": data.ph, "rainfall": data.rainfall,
+        "season": season,
+        "soil_type": data.soil_type,
+        "irrigation": data.irrigation,
+    }
+
+    canonical = {
+        "N": data.N, "P": data.P, "K": data.K,
+        "temperature": data.temperature, "humidity": data.humidity,
+        "ph": data.ph, "rainfall": data.rainfall,
+    }
+
+    # Pre-compute shared signals
+    ood_warnings = validate_distribution(canonical, "soil")
+    is_ood = len(ood_warnings) > 0
+    stress_index, stress_per_feature = compute_stress_index(canonical)
+
+    pkw = dict(
+        input_dict=input_dict,
+        ood_warnings=ood_warnings,
+        stress_index=stress_index,
+        stress_per_feature=stress_per_feature,
+    )
+
+    # Run all 3 models through V7 pipeline
+    model_results: Dict[str, dict] = {}
+    model_configs = []
+    if _soil:
+        model_configs.append(("soil", _soil, _soil.crops, "stacked-ensemble-v6",
+                              _soil.checksum, len(_soil.features), _soil.label_encoder))
+    if _extended:
+        model_configs.append(("extended", _extended, _extended.crops, "calibrated-rf",
+                              _extended.checksum, len(_extended.features), _extended.label_encoder))
+    if _hybrid:
+        model_configs.append(("hybrid", _hybrid, _hybrid.unified_crops, "hybrid-v6-rf",
+                              f"{_soil.checksum}+{_extended.checksum}" if _soil and _extended else "n/a",
+                              10, None))
+
+    for mname, pred, crops, mtype, chk, fcnt, le in model_configs:
+        try:
+            model_results[mname] = run_model_pipeline(
+                predictor=pred, crops_list=crops,
+                model_name=mname, model_type=mtype,
+                checksum=chk, feature_count=fcnt,
+                label_encoder=le, **pkw,
+            )
+        except Exception as e:
+            logger.warning("%s pipeline failed: %s", mname, e)
+
+    if not model_results:
+        raise HTTPException(503, "All models failed")
+
+    total_models = len(model_results)
+
+    # Collect 9 candidates (3 models × top 3)
+    # Track how many models agree on each crop
+    crop_votes: Dict[str, int] = {}
+    for mres in model_results.values():
+        seen_in_model = set()
+        for entry in mres.get("top_3", []):
+            cname = entry["crop"]
+            if cname not in seen_in_model:
+                crop_votes[cname] = crop_votes.get(cname, 0) + 1
+                seen_in_model.add(cname)
+
+    # Build candidate list — deduplicate by crop, keep best confidence
+    candidates: Dict[str, dict] = {}
+    for mname, mres in model_results.items():
+        for entry in mres.get("top_3", []):
+            cname = entry["crop"]
+            conf = entry["confidence"] / 100.0  # normalise to 0-1
+
+            # Agreement bonus: +10% if 2+ models have this crop in top-3
+            agreement = 0.10 if crop_votes.get(cname, 0) >= 2 else 0.0
+
+            # Inverse entropy (from the model that produced this candidate)
+            num_classes = mres.get("num_classes", 51)
+            max_ent = float(np.log(num_classes)) if num_classes > 1 else 1.0
+            entropy = mres.get("entropy", 0)
+            inv_entropy = max(0.0, 1.0 - (entropy / max_ent)) if max_ent > 0 else 0.0
+
+            # Low stress bonus
+            low_stress = 0.10 if stress_index < 0.3 else 0.0
+
+            # Final score
+            score = (
+                0.5 * conf
+                + 0.2 * agreement
+                + 0.2 * inv_entropy
+                + 0.1 * low_stress
+            )
+            score = min(score, HARD_CONFIDENCE_CAP)
+
+            if cname not in candidates or score > candidates[cname]["_score"]:
+                tier_pct = round(score * 100, 2)
+                candidates[cname] = {
+                    "crop": cname,
+                    "confidence": tier_pct,
+                    "advisory_tier": advisory_tier(tier_pct, is_ood),
+                    "stress_index": stress_index,
+                    "explanation": generate_explanation(
+                        crop=cname,
+                        input_dict=canonical,
+                        stress_per_feature=stress_per_feature,
+                        agro_violations=mres.get("agro_violations", {}),
+                        confidence_pct=tier_pct,
+                        is_ood=is_ood,
+                        tier=advisory_tier(tier_pct, is_ood),
+                    ),
+                    "model_consensus": _consensus_label(
+                        crop_votes.get(cname, 0), total_models,
+                    ),
+                    "nutrition": get_nutrition(cname),
+                    "_score": score,
+                }
+
+    # Sort by score descending, take top 3
+    ranked = sorted(candidates.values(), key=lambda c: c["_score"], reverse=True)[:3]
+
+    # Strip internal scoring field
+    top_recommendations = []
+    for c in ranked:
+        c.pop("_score", None)
+        top_recommendations.append(c)
+
+    latency = round((time.time() - start) * 1000, 1)
+
+    resp: Dict[str, Any] = {
+        "top_recommendations": top_recommendations,
+        "stress_index": stress_index,
+        "stress_per_feature": stress_per_feature,
+        "environment_info": {
+            "season_used": get_season_name(season),
+            "season_inferred": data.season is None,
+            "soil_type": data.soil_type,
+            "irrigation": data.irrigation,
+            "moisture": data.moisture,
+        },
+        "latency_ms": latency,
+    }
+
+    warning_parts = []
+    if ood_warnings:
+        fields = ", ".join(w["field"] for w in ood_warnings)
+        warning_parts.append(f"Some values ({fields}) fall outside typical ranges. Confidence adjusted.")
+    if stress_index > STRESS_HIGH_THRESHOLD:
+        warning_parts.append(
+            f"High agricultural stress detected (index={stress_index:.2f}). "
+            "Recommendations may have reduced confidence."
+        )
+    if top_recommendations and top_recommendations[0]["confidence"] < 40:
+        warning_parts.append("Conditions may be challenging for most crops. Consider consulting local experts.")
+    if warning_parts:
+        resp["warning"] = " ".join(warning_parts)
+
+    logger.info(
+        "RECOMMEND top=%s conf=%.1f%% consensus=%s stress=%.2f ood=%d ms=%.0f",
+        top_recommendations[0]["crop"] if top_recommendations else "?",
+        top_recommendations[0]["confidence"] if top_recommendations else 0,
+        top_recommendations[0]["model_consensus"] if top_recommendations else "?",
+        stress_index, len(ood_warnings), latency,
+    )
+
+    return resp
+
+
+@app.get("/recommend")
+def recommend_hint():
+    return {
+        "message": "Use POST with JSON body.",
+        "version": "7.1",
+        "description": "Unified advisory engine — no model selection required.",
+        "required_fields": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"],
+        "optional_fields": ["soil_type", "irrigation", "moisture", "season"],
+    }

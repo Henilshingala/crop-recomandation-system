@@ -19,7 +19,6 @@ export interface PredictionInput {
   humidity: number;
   ph: number;
   rainfall: number;
-  mode?: 'soil' | 'extended' | 'both';
   soil_type?: number;
   irrigation?: number;
   moisture?: number;
@@ -31,6 +30,10 @@ export interface CropRecommendation {
   crop: string;
   confidence: number;
   risk_level?: 'low' | 'medium' | 'high';
+  advisory_tier?: string;
+  stress_index?: number;
+  explanation?: string;
+  model_consensus?: 'strong' | 'moderate' | 'weak';
   image_url?: string;
   image_urls?: string[];
   expected_yield?: string | null;
@@ -56,10 +59,12 @@ export interface ModelInfo {
 }
 
 export interface PredictionResponse {
-  mode: string;
   top_1: CropRecommendation;
   top_3: CropRecommendation[];
   model_info: ModelInfo;
+  stress_index?: number;
+  environment_info?: Record<string, unknown>;
+  warning?: string;
 }
 
 export interface HealthResponse {
@@ -69,7 +74,6 @@ export interface HealthResponse {
   crop_count?: number;
   soil_crops?: number;
   extended_crops?: number;
-  modes?: string[];
 }
 
 /* ── API calls ────────────────────────────────────────────────────── */
@@ -120,8 +124,8 @@ export async function checkHealth(): Promise<HealthResponse> {
 /**
  * Get list of available crops from ML model
  */
-export async function getAvailableCrops(mode: string = 'soil'): Promise<string[]> {
-  const response = await fetch(`${API_BASE_URL}/crops/available/?mode=${mode}`);
+export async function getAvailableCrops(): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/crops/available/`);
   if (!response.ok) throw new Error('Failed to fetch available crops');
   const data = await response.json();
   return data.crops;

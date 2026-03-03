@@ -2,8 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
-import { Badge } from "@/app/components/ui/badge";
-import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2, ChevronDown, Shield, Layers, Combine } from "lucide-react";
+import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2, ChevronDown } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { getModelLimits, type FeatureRange } from "@/app/services/api";
 
@@ -38,7 +37,6 @@ const FIELD_TO_RANGE_KEY: Record<string, string> = {
 
 export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [mode, setMode] = useState<'soil' | 'extended' | 'both'>('soil');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [acceptanceRanges, setAcceptanceRanges] = useState<Record<string, FeatureRange>>(FALLBACK_RANGES);
 
@@ -198,43 +196,6 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
             )}
           </div>
 
-          {/* ── Mode Selector ──────────────────────────────────────── */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
-              Prediction Mode
-            </h3>
-            <input type="hidden" name="mode" value={mode} />
-            <div className="grid grid-cols-3 gap-3">
-              <ModeCard
-                active={mode === 'soil'}
-                onClick={() => setMode('soil')}
-                icon={<Shield className="w-5 h-5" />}
-                title="Soil"
-                subtitle="51 crops (V6 ensemble)"
-                badge="Primary"
-                badgeClass="bg-emerald-100 text-emerald-700 border-emerald-200"
-              />
-              <ModeCard
-                active={mode === 'extended'}
-                onClick={() => setMode('extended')}
-                icon={<Layers className="w-5 h-5" />}
-                title="Extended"
-                subtitle="51 crops (RF)"
-                badge="Legacy"
-                badgeClass="bg-blue-100 text-blue-700 border-blue-200"
-              />
-              <ModeCard
-                active={mode === 'both'}
-                onClick={() => setMode('both')}
-                icon={<Combine className="w-5 h-5" />}
-                title="Both"
-                subtitle="51 blended crops"
-                badge="Hybrid"
-                badgeClass="bg-purple-100 text-purple-700 border-purple-200"
-              />
-            </div>
-          </div>
-
           {/* Submit Button */}
           <Button
             type="submit"
@@ -289,39 +250,3 @@ function FieldInput({
   );
 }
 
-/* ── Mode toggle card ─────────────────────────────────────────────── */
-
-function ModeCard({
-  active, onClick, icon, title, subtitle, badge, badgeClass,
-}: {
-  active: boolean; onClick: () => void; icon: React.ReactNode;
-  title: string; subtitle: string; badge: string; badgeClass: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200 text-center
-        ${active
-          ? 'border-green-500 bg-green-50/70 ring-2 ring-green-200 shadow-md'
-          : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30'
-        }`}
-    >
-      <div className={`rounded-full p-2 ${active ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-        {icon}
-      </div>
-      <div>
-        <p className={`font-semibold text-sm ${active ? 'text-green-900' : 'text-gray-700'}`}>{title}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
-      </div>
-      <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${badgeClass}`}>{badge}</Badge>
-      {active && (
-        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-600 flex items-center justify-center">
-          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-      )}
-    </button>
-  );
-}

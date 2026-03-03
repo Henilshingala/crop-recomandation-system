@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { Sprout, TrendingUp, AlertCircle, Calendar, Shield, Layers, Combine } from "lucide-react";
+import { Sprout, TrendingUp, AlertCircle, Calendar } from "lucide-react";
 import { type PredictionResponse, type CropRecommendation } from "@/app/services/api";
 import { useEffect, useState, useMemo } from "react";
 
@@ -73,29 +73,43 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
   );
 }
 
-/* ── Mode badge ───────────────────────────────────────────────────── */
+/* ── Advisory tier badge ──────────────────────────────────────────── */
 
-function ModeBadge({ mode }: { mode: string }) {
-  if (mode === "soil" || mode === "original") {
+function AdvisoryBadge({ tier }: { tier?: string }) {
+  if (!tier) return null;
+  const t = tier.toLowerCase();
+  if (t.includes("strongly")) {
     return (
       <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1.5 px-3 py-1 text-xs font-medium">
-        <Shield className="w-3 h-3" />
-        Soil — V6 stacked ensemble (51 crops)
+        {tier}
       </Badge>
     );
   }
-  if (mode === "extended" || mode === "synthetic") {
+  if (t.includes("monitoring") || t.includes("conditional")) {
     return (
-      <Badge className="bg-blue-100 text-blue-800 border border-blue-300 gap-1.5 px-3 py-1 text-xs font-medium">
-        <Layers className="w-3 h-3" />
-        Extended — calibrated RF (51 crops)
+      <Badge className="bg-amber-100 text-amber-800 border border-amber-300 gap-1.5 px-3 py-1 text-xs font-medium">
+        {tier}
       </Badge>
     );
   }
   return (
-    <Badge className="bg-purple-100 text-purple-800 border border-purple-300 gap-1.5 px-3 py-1 text-xs font-medium">
-      <Combine className="w-3 h-3" />
-      Both — hybrid blend (51 crops)
+    <Badge className="bg-red-100 text-red-800 border border-red-300 gap-1.5 px-3 py-1 text-xs font-medium">
+      {tier}
+    </Badge>
+  );
+}
+
+/* ── Consensus pill ───────────────────────────────────────────────── */
+
+function ConsensusPill({ consensus }: { consensus?: string }) {
+  if (!consensus) return null;
+  const cls =
+    consensus === "strong" ? "bg-green-100 text-green-700 border-green-200"
+    : consensus === "moderate" ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+    : "bg-gray-100 text-gray-600 border-gray-200";
+  return (
+    <Badge variant="outline" className={`text-[10px] px-2 py-0.5 capitalize ${cls}`}>
+      {consensus} consensus
     </Badge>
   );
 }
@@ -103,7 +117,7 @@ function ModeBadge({ mode }: { mode: string }) {
 /* ── Main component ───────────────────────────────────────────────── */
 
 export function ResultsSection({ data }: ResultsSectionProps) {
-  const { mode, top_1, top_3, model_info } = data;
+  const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
 
@@ -129,7 +143,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 {selectedIdx === 0 ? "Top Recommendation" : "Selected Crop"}
               </h2>
             </div>
-            <ModeBadge mode={mode} />
+            <AdvisoryBadge tier={selected.advisory_tier} />
           </div>
 
           <div className="flex items-baseline gap-4">
@@ -226,12 +240,14 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 <ConfidenceBar value={selected.confidence} />
               </div>
 
-              {/* Model coverage pill */}
+              {/* Explanation */}
+              {selected.explanation && (
+                <p className="text-sm text-gray-600 italic mt-2">{selected.explanation}</p>
+              )}
+
+              {/* Consensus */}
               <div className="flex items-center gap-2 pt-1">
-                <span className="text-xs text-gray-500">Model coverage:</span>
-                <Badge variant="outline" className="text-[10px] border-gray-300 text-gray-600">
-                  {model_info.coverage} crops &middot; {model_info.type}
-                </Badge>
+                <ConsensusPill consensus={selected.model_consensus} />
               </div>
             </div>
           </div>

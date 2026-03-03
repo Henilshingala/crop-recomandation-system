@@ -85,14 +85,6 @@ class PredictionInputValidator:
         return value
     
     @staticmethod
-    def validate_mode(mode: str) -> str:
-        """Validate prediction mode (V6 canonical + backward-compatible aliases)."""
-        valid_modes = ['soil', 'extended', 'both', 'original', 'synthetic']
-        if mode not in valid_modes:
-            raise ValidationError(f"Invalid mode '{mode}'. Must be one of: {valid_modes}")
-        return mode
-    
-    @staticmethod
     def sanitize_input(data: Dict[str, Any]) -> Dict[str, Any]:
         """Sanitize and validate all input data."""
         sanitized = {}
@@ -119,11 +111,6 @@ class PredictionInputValidator:
                 defaults = {'moisture': 43.5, 'soil_type': 1, 'irrigation': 0}
                 if param in defaults:
                     sanitized[param] = defaults[param]
-        
-        # Validate mode
-        sanitized['mode'] = PredictionInputValidator.validate_mode(
-            data.get('mode', 'soil')
-        )
         
         # Validate top_n
         if 'top_n' in data:
@@ -226,11 +213,7 @@ class SecurePredictionSerializer(serializers.Serializer):
         required=False,
         help_text="Season (0=Kharif, 1=Rabi, 2=Zaid)"
     )
-    mode = serializers.ChoiceField(
-        choices=['soil', 'extended', 'both', 'original', 'synthetic'],
-        default='soil',
-        help_text="Prediction mode (V6: soil/extended/both; aliases: original→soil, synthetic→extended)"
-    )
+    # mode removed in V7 — system runs all models internally
     top_n = serializers.IntegerField(
         min_value=1,
         max_value=10,

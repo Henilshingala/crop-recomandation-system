@@ -25,6 +25,15 @@ def _get_hf_url() -> str:
     return f"{base}/predict"
 
 
+def _get_hf_recommend_url() -> str:
+    """Return the HF /recommend endpoint URL from settings."""
+    base = getattr(settings, "HF_MODEL_URL", "") or ""
+    base = base.rstrip("/")
+    if not base:
+        raise RuntimeError("HF_MODEL_URL is not configured")
+    return f"{base}/recommend"
+
+
 def _get_hf_headers() -> dict:
     """Return request headers, including auth if HF_TOKEN is set."""
     headers = {"Content-Type": "application/json"}
@@ -81,4 +90,41 @@ def call_hf_model(payload: dict) -> Optional[dict]:
             last_exc = RuntimeError("ML service error")
 
     logger.error("All %d HF call attempts failed", _MAX_RETRIES)
+    return None
+
+
+def call_hf_recommend(payload: dict) -> Optional[dict]:
+    """
+    POST *payload* to the HuggingFace Space /recommend endpoint (V7 unified).
+    Same retry logic as call_hf_model but targets the /recommend route.
+    """
+    url = _get_hf_recommend_url()
+    headers = _get_hf_headers()
+    last_exc: Optional[Exception] = None
+
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            resp = requests.post(url, json=payload, headers=headers, timeout=_TIMEOUT)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.exceptions.Timeout:
+            logger.warning("HF /recommend attempt %d/%d timed out", attempt, _MAX_RETRIES)
+            last_exc = TimeoutError("ML service timeout")
+        except requests.exceptions.ConnectionError:
+            logger.warning("HF /recommend attempt %d/%d connection failed", attempt, _MAX_RETRIES)
+            last_exc = ConnectionError("ML service unavailable")
+        except requests.exceptions.HTTPError as exc:
+            status_code = exc.response.status_code if exc.response is not None else "unknown"
+            logger.error("HF /recommend attempt %d/%d HTTP %s", attempt, _MAX_RETRIES, status_code)
+            if exc.response is not None and 400 <= exc.response.status_code < 500:
+                try:
+                    return exc.response.json()
+                except Exception:
+                    pass
+            last_exc = ConnectionError(f"ML service error: HTTP {status_code}")
+        except Exception as exc:
+            logger.error("HF /recommend attempt %d/%d unexpected: %s", attempt, _MAX_RETRIES, type(exc).__name__)
+            last_exc = RuntimeError("ML service error")
+
+    logger.error("All %d HF /recommend attempts failed", _MAX_RETRIES)
     return None

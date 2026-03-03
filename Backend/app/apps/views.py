@@ -3,9 +3,8 @@ Crop Recommendation System - API Views
 ======================================
 REST API endpoints for crop prediction and management.
 
-Prediction modes (V6):
-  POST /api/predict/  { ..., "mode": "soil" | "extended" | "both" }
-  (aliases: "original" → "soil", "synthetic" → "extended")
+V7 Unified Advisory:
+  POST /api/predict/  → calls HF /recommend (no mode exposed)
 """
 
 import csv
@@ -24,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework import serializers
 
 from .models import Crop, PredictionLog
-from .ml_inference import predict_top_crops, get_predictor, get_available_crops
+from .ml_inference import recommend_crops, predict_top_crops, get_predictor, get_available_crops
 from .serializers import CropSerializer, PredictionLogSerializer
 from .validators import SecurePredictionSerializer, FEATURE_RANGES, SAFE_RANGES
 from .nutrition import get_nutrition_data
@@ -90,15 +89,16 @@ class CropPredictionView(APIView):
             )
 
         vd = serializer.validated_data
-        mode = vd.get("mode", "soil")
-        
+
         # Add security warnings if any
         response_data = {}
         if hasattr(serializer, '_warnings'):
             response_data['security_warnings'] = serializer._warnings
 
         try:
-            result = predict_top_crops(
+            # V7 unified recommendation — no mode parameter.
+            # All 3 models run internally; aggregated Top-3 returned.
+            result = recommend_crops(
                 n=vd["N"],
                 p=vd["P"],
                 k=vd["K"],
@@ -109,22 +109,18 @@ class CropPredictionView(APIView):
                 soil_type=vd.get("soil_type", 1),
                 irrigation=vd.get("irrigation", 0),
                 moisture=vd.get("moisture", 43.5),
-                mode=mode,
             )
 
-            # Enrich top_3 with DB metadata + nutrition
+            # Enrich top_3 with DB metadata (images, yield, season)
             result["top_3"] = [self._enrich(request, r) for r in result["top_3"]]
 
-            # Derive top_1 from top_3[0]
+            # Derive top_1 from top_3[0] for backward compat
             if result["top_3"]:
                 result["top_1"] = result["top_3"][0]
             else:
                 result["top_1"] = {"crop": "unknown", "confidence": 0, "risk_level": "high"}
 
-            # Pass through confidence_info and warnings from ML service
-            # (already present in result from V5 HF response)
-
-            # Log prediction (now with all fields including mode, moisture, etc.)
+            # Log prediction
             self._log_prediction(request, vd, result)
 
             # Merge with any security warnings
@@ -207,8 +203,8 @@ class CropPredictionView(APIView):
                 moisture=input_data.get("moisture"),
                 soil_type=input_data.get("soil_type"),
                 irrigation=input_data.get("irrigation"),
-                mode=input_data.get("mode", "soil"),
-                model_version=result.get("model_info", {}).get("version", "6.0"),
+                mode="unified",
+                model_version=result.get("model_info", {}).get("version", "7.1"),
                 predictions=result.get("top_3", []),
                 ip_address=ip,
             )

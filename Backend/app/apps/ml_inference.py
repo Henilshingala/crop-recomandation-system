@@ -2,22 +2,20 @@
 Crop Recommendation System — ML Inference (Gateway-Only Mode)
 ==============================================================
 All prediction requests are routed through the HuggingFace Space
-(V6 multi-mode serving).  Zero ML libraries are loaded locally to
-stay within Render's 512 MB free-tier RAM limit.
+(V7 unified advisory engine).  Zero ML libraries are loaded locally
+to stay within Render's 512 MB free-tier RAM limit.
 
-Modes (V6)
-──────────
-  "soil"     → V6 stacked ensemble (51 crops, Crop_recommendation_v2.csv)
-  "extended" → Calibrated RF (51 crops, legacy fallback)
-  "both"     → Confidence-adaptive hybrid blend
-
-Deprecated aliases: "original" → "soil", "synthetic" → "extended"
+V7 Architecture
+───────────────
+  POST /recommend  → Unified endpoint (runs all 3 models internally,
+                     returns aggregated Top-3 with no model exposure)
+  POST /predict    → Legacy endpoint (kept for backward compat)
 """
 
 import logging
 from typing import Dict, List, Optional
 
-from .services.hf_service import call_hf_model
+from .services.hf_service import call_hf_model, call_hf_recommend
 
 logger = logging.getLogger(__name__)
 
@@ -35,32 +33,90 @@ def _risk_level(confidence: float) -> str:
     return "high"
 
 
+def _tier_to_risk(tier: str) -> str:
+    """Map advisory_tier to legacy risk_level."""
+    if "Strongly" in tier:
+        return "low"
+    if "Monitoring" in tier:
+        return "low"
+    if "Conditional" in tier:
+        return "medium"
+    return "high"
+
+
 # ═════════════════════════════════════════════════════════════════════════
-# HuggingFace prediction (V5 multi-mode)
+# V7 Unified recommendation (calls /recommend)
+# ═════════════════════════════════════════════════════════════════════════
+
+def _recommend_via_hf(payload: dict) -> Optional[Dict]:
+    """
+    Call HuggingFace Space /recommend and normalise the response
+    to the format expected by views.py.
+
+    V7 /recommend response:
+    {
+        "top_recommendations": [
+            {
+                "crop": "...", "confidence": ..., "advisory_tier": "...",
+                "stress_index": ..., "explanation": "...",
+                "model_consensus": "strong/moderate/weak",
+                "nutrition": {...}
+            }
+        ],
+        "stress_index": ...,
+        "environment_info": {...},
+        "warning": "..."
+    }
+    """
+    hf_resp = call_hf_recommend(payload)
+    if hf_resp is None:
+        return None
+
+    top_recs = hf_resp.get("top_recommendations", [])
+    top3 = []
+    for r in top_recs[:3]:
+        top3.append({
+            "crop": r.get("crop", "unknown"),
+            "confidence": round(float(r.get("confidence", 0)), 2),
+            "advisory_tier": r.get("advisory_tier", "Not Recommended"),
+            "risk_level": _tier_to_risk(r.get("advisory_tier", "")),
+            "stress_index": r.get("stress_index", 0),
+            "explanation": r.get("explanation", ""),
+            "model_consensus": r.get("model_consensus", "weak"),
+            "nutrition": r.get("nutrition"),
+        })
+
+    result = {
+        "top_3": top3,
+        "model_info": {
+            "type": "unified-advisory-v7",
+            "coverage": 51,
+            "version": "7.1",
+        },
+        "stress_index": hf_resp.get("stress_index", 0),
+        "stress_per_feature": hf_resp.get("stress_per_feature", {}),
+        "environment_info": hf_resp.get("environment_info", {}),
+    }
+
+    warning = hf_resp.get("warning")
+    if warning:
+        result["warning"] = warning
+
+    return result
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# Legacy HF prediction (V6/V7 /predict — kept for compat)
 # ═════════════════════════════════════════════════════════════════════════
 
 def _predict_via_hf(payload: dict, mode: str = "soil") -> Optional[Dict]:
     """
-    Call HuggingFace Space V6 and normalise the response.
-
-    V6 response format:
-    {
-        "mode": "soil",
-        "predictions": [...],
-        "top_3": [...],
-        "model_info": {...},
-        "confidence_info": {...},
-        "environment_info": {...},
-        "warning": "..."  (optional)
-    }
-
-    Returns normalised dict or None on failure.
+    Call HuggingFace Space V7 /predict and normalise the response.
     """
     hf_resp = call_hf_model(payload)
     if hf_resp is None:
         return None
 
-    # V5: top_3 already has crop, confidence, risk_level, nutrition
     top3_raw = hf_resp.get("top_3") or hf_resp.get("predictions") or []
     top3 = [
         {
@@ -72,7 +128,6 @@ def _predict_via_hf(payload: dict, mode: str = "soil") -> Optional[Dict]:
     ]
 
     model_info = hf_resp.get("model_info", {})
-    confidence_info = hf_resp.get("confidence_info", {})
 
     result = {
         "mode": hf_resp.get("mode", mode),
@@ -80,17 +135,11 @@ def _predict_via_hf(payload: dict, mode: str = "soil") -> Optional[Dict]:
         "model_info": {
             "type": model_info.get("type", "unknown"),
             "coverage": model_info.get("crops", model_info.get("coverage", 0)),
-            "version": model_info.get("version", "6.0"),
+            "version": model_info.get("version", "7.0"),
             "checksum": model_info.get("checksum"),
-        },
-        "confidence_info": {
-            "top_probability": confidence_info.get("top_probability", 0),
-            "entropy": confidence_info.get("entropy", 0),
-            "low_confidence": confidence_info.get("low_confidence", False),
         },
     }
 
-    # Pass through any warnings from V5
     warning = hf_resp.get("warning")
     if warning:
         result["warning"] = warning
@@ -101,6 +150,40 @@ def _predict_via_hf(payload: dict, mode: str = "soil") -> Optional[Dict]:
 # ═════════════════════════════════════════════════════════════════════════
 # Public API  (called by views.py)
 # ═════════════════════════════════════════════════════════════════════════
+
+def recommend_crops(
+    n: float,
+    p: float,
+    k: float,
+    temperature: float,
+    humidity: float,
+    ph: float,
+    rainfall: float,
+    soil_type: int = 1,
+    irrigation: int = 0,
+    moisture: float = 43.5,
+) -> dict:
+    """
+    V7 unified recommendation — calls /recommend (no mode).
+    All 3 models run internally; returns aggregated top-3.
+    """
+    payload = {
+        "N": n, "P": p, "K": k,
+        "temperature": temperature,
+        "humidity": humidity,
+        "ph": ph,
+        "rainfall": rainfall,
+        "moisture": moisture,
+        "soil_type": soil_type,
+        "irrigation": irrigation,
+    }
+
+    result = _recommend_via_hf(payload)
+    if result is not None:
+        return result
+
+    raise ConnectionError("HuggingFace Space is unreachable after retries")
+
 
 def predict_top_crops(
     n: float,
@@ -117,10 +200,8 @@ def predict_top_crops(
     mode: str = "soil",
 ) -> dict:
     """
-    Convenience wrapper used by views.py.
-
-    Each mode routes to HuggingFace Space where V6 dispatches to
-    the correct model.  Mode is sent as part of the payload.
+    Legacy wrapper — kept for backward compat.
+    Calls /predict with mode parameter.
     """
     payload = {
         "N": n, "P": p, "K": k,
@@ -139,7 +220,6 @@ def predict_top_crops(
     if result is not None:
         return result
 
-    # HF is down — return a minimal error payload so the view can 503
     raise ConnectionError("HuggingFace Space is unreachable after retries")
 
 
