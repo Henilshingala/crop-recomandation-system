@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Button } from "@/app/components/ui/button";
-import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2, ChevronDown } from "lucide-react";
+import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { getModelLimits, type FeatureRange } from "@/app/services/api";
 
@@ -20,7 +20,6 @@ const FALLBACK_RANGES: Record<string, FeatureRange> = {
   humidity:    { min: 0,   max: 100,  unit: "%" },
   ph:          { min: 3.0, max: 10.0, unit: "pH" },
   rainfall:    { min: 0,   max: 3200, unit: "mm" },
-  moisture:    { min: 0,   max: 100,  unit: "%" },
 };
 
 // Map field names used in the form to the keys in feature_ranges.json
@@ -32,12 +31,10 @@ const FIELD_TO_RANGE_KEY: Record<string, string> = {
   humidity: "humidity",
   ph: "ph",
   rainfall: "rainfall",
-  moisture: "moisture",
 };
 
 export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [acceptanceRanges, setAcceptanceRanges] = useState<Record<string, FeatureRange>>(FALLBACK_RANGES);
 
   // Fetch real acceptance ranges from /api/model/limits/ on mount
@@ -142,58 +139,6 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
               <FieldInput label="Soil pH" name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder={`${VALIDATION_RANGES.ph.min}-${VALIDATION_RANGES.ph.max}`} unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
               <FieldInput label="Rainfall" name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder={`${VALIDATION_RANGES.rainfall.min}-${VALIDATION_RANGES.rainfall.max}`} unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
             </div>
-          </div>
-
-          {/* Advanced Parameters (collapsible) */}
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(v => !v)}
-              className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-green-700 transition-colors uppercase tracking-wide"
-            >
-              <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-              Advanced Soil Parameters
-            </button>
-
-            {showAdvanced && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 animate-in slide-in-from-top-2 duration-200">
-                {/* Soil Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="soil_type" className="flex items-center gap-2 text-gray-700 text-sm">
-                    Soil Type
-                  </Label>
-                  <select
-                    id="soil_type"
-                    name="soil_type"
-                    defaultValue="1"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                  >
-                    <option value="0">Sandy</option>
-                    <option value="1">Loamy</option>
-                    <option value="2">Clay</option>
-                  </select>
-                </div>
-
-                {/* Irrigation */}
-                <div className="space-y-2">
-                  <Label htmlFor="irrigation" className="flex items-center gap-2 text-gray-700 text-sm">
-                    Irrigation
-                  </Label>
-                  <select
-                    id="irrigation"
-                    name="irrigation"
-                    defaultValue="0"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
-                  >
-                    <option value="0">Rainfed</option>
-                    <option value="1">Irrigated</option>
-                  </select>
-                </div>
-
-                {/* Soil Moisture */}
-                <FieldInput label="Soil Moisture" name="moisture" icon={<Droplet className="w-4 h-4 text-teal-600" />} placeholder={`${VALIDATION_RANGES.moisture.min}-${VALIDATION_RANGES.moisture.max}`} unit="%" step="0.1" defaultValue="43.5" required={false} errors={errors} onBlur={handleInputBlur} />
-              </div>
-            )}
           </div>
 
           {/* Submit Button */}

@@ -26,9 +26,6 @@ export default function App() {
       humidity: parseFloat(fd.get('humidity') as string),
       ph: parseFloat(fd.get('ph') as string),
       rainfall: parseFloat(fd.get('rainfall') as string),
-      soil_type: parseInt(fd.get('soil_type') as string) || 1,
-      irrigation: parseInt(fd.get('irrigation') as string) || 0,
-      moisture: parseFloat(fd.get('moisture') as string) || 43.5,
     };
 
     try {

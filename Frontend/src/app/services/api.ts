@@ -19,9 +19,6 @@ export interface PredictionInput {
   humidity: number;
   ph: number;
   rainfall: number;
-  soil_type?: number;
-  irrigation?: number;
-  moisture?: number;
 }
 
 /* ── Response types ───────────────────────────────────────────────── */
