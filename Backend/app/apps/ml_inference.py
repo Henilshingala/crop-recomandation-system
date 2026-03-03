@@ -89,13 +89,16 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
     result = {
         "top_3": top3,
         "model_info": {
-            "type": "unified-advisory-v7",
+            "type": "unified-advisory-v8.1",
             "coverage": 51,
-            "version": "7.1",
+            "version": "8.1",
         },
         "stress_index": hf_resp.get("stress_index", 0),
         "stress_per_feature": hf_resp.get("stress_per_feature", {}),
         "environment_info": hf_resp.get("environment_info", {}),
+        "fallback_mode": hf_resp.get("fallback_mode", False),
+        "all_not_recommended": hf_resp.get("all_not_recommended", False),
+        "disclaimer": hf_resp.get("disclaimer", ""),
     }
 
     warning = hf_resp.get("warning")

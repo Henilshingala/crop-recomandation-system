@@ -217,6 +217,12 @@ export function ResultsSection({ data }: ResultsSectionProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  // V8.1: Detect all-not-recommended / fallback states
+  const allNotRecommended = data.all_not_recommended
+    ?? top_3.every(c => c.advisory_tier?.toLowerCase().includes("not recommended"));
+  const fallbackMode = data.fallback_mode ?? false;
+  const isUnsuitableState = allNotRecommended || fallbackMode;
+
   if (!top_1 || !top_3?.length) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">
@@ -225,18 +231,35 @@ export function ResultsSection({ data }: ResultsSectionProps) {
     );
   }
 
+  // Dynamic header gradient / border colors based on suitability
+  const heroGradient = isUnsuitableState
+    ? "from-amber-600 via-orange-600 to-red-600"
+    : "from-green-600 via-emerald-600 to-teal-600";
+  const cardSelectedBorder = isUnsuitableState
+    ? "border-amber-400 bg-amber-50/70 ring-2 ring-amber-200 shadow-md"
+    : "border-green-500 bg-green-50/70 ring-2 ring-green-200 shadow-md";
+  const cardHoverBorder = isUnsuitableState
+    ? "border-gray-200 bg-white/70 hover:border-amber-300"
+    : "border-gray-200 bg-white/70 hover:border-green-300";
+
   return (
     <div className={`space-y-6 transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
       {/* ── Top-1 Hero Card ────────────────────────────────────────── */}
       <Card className="shadow-xl border-0 overflow-hidden bg-white/80 backdrop-blur-sm">
         {/* Header gradient */}
-        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white px-6 py-8">
+        <div className={`bg-gradient-to-r ${heroGradient} text-white px-6 py-8`}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              <Sprout className="w-8 h-8" />
+              {isUnsuitableState ? (
+                <AlertCircle className="w-8 h-8" />
+              ) : (
+                <Sprout className="w-8 h-8" />
+              )}
               <h2 className="text-2xl font-bold">
-                {selectedIdx === 0 ? "Top Recommendation" : "Selected Crop"}
+                {isUnsuitableState
+                  ? "⚠ Unsuitable Conditions Detected"
+                  : selectedIdx === 0 ? "Top Recommendation" : "Selected Crop"}
               </h2>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -253,6 +276,17 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             <ConsensusPill consensus={selected.model_consensus} />
           </div>
         </div>
+
+        {/* V8.1: Unsuitable conditions warning banner */}
+        {isUnsuitableState && (
+          <div className="bg-amber-900/30 border-t border-amber-400/40 px-6 py-3">
+            <p className="text-amber-100 text-sm leading-relaxed">
+              {fallbackMode
+                ? "Environmental conditions are highly unsuitable for all crops. The following is the least unsuitable option, but corrective measures are strongly advised."
+                : "Environmental conditions are highly unsuitable for most crops. The following are the least unsuitable options, but corrective measures are strongly advised."}
+            </p>
+          </div>
+        )}
 
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -315,9 +349,20 @@ export function ResultsSection({ data }: ResultsSectionProps) {
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">About {selected.crop}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Based on your soil nutrients and environmental conditions,{" "}
-                  <strong className="capitalize">{selected.crop}</strong> is the best suited crop
-                  with a {selected.confidence.toFixed(1)}% confidence match.
+                  {isUnsuitableState ? (
+                    <>
+                      Current conditions are outside the ideal range for most crops.{" "}
+                      <strong className="capitalize">{selected.crop}</strong> is the least unsuitable
+                      option with a {selected.confidence.toFixed(1)}% confidence match.
+                      Consider corrective measures before cultivation.
+                    </>
+                  ) : (
+                    <>
+                      Based on your soil nutrients and environmental conditions,{" "}
+                      <strong className="capitalize">{selected.crop}</strong> is the best suited crop
+                      with a {selected.confidence.toFixed(1)}% confidence match.
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -358,12 +403,30 @@ export function ResultsSection({ data }: ResultsSectionProps) {
 
       {/* ── Top-3 Ranked List ─────────────────────────────────────── */}
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-green-50/80 to-emerald-50/80">
-          <CardTitle className="text-xl text-green-900 flex items-center gap-2">
-            <TrendingUp className="w-6 h-6" />
-            Top 3 Recommended Crops
+        <CardHeader className={isUnsuitableState
+          ? "bg-gradient-to-r from-amber-50/80 to-orange-50/80"
+          : "bg-gradient-to-r from-green-50/80 to-emerald-50/80"
+        }>
+          <CardTitle className={`text-xl flex items-center gap-2 ${
+            isUnsuitableState ? "text-amber-900" : "text-green-900"
+          }`}>
+            {isUnsuitableState ? (
+              <>
+                <AlertCircle className="w-6 h-6" />
+                ⚠ No Suitable Crop Under Current Conditions
+              </>
+            ) : (
+              <>
+                <TrendingUp className="w-6 h-6" />
+                Top 3 Recommended Crops
+              </>
+            )}
           </CardTitle>
-          <p className="text-sm text-green-700 mt-1">Click a crop to view details above</p>
+          <p className={`text-sm mt-1 ${isUnsuitableState ? "text-amber-700" : "text-green-700"}`}>
+            {isUnsuitableState
+              ? "Ranked by least unsuitability — corrective measures advised"
+              : "Click a crop to view details above"}
+          </p>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -375,8 +438,8 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 className={`group text-left rounded-xl border-2 p-4 transition-all duration-200
                   hover:shadow-lg hover:scale-[1.02]
                   ${i === selectedIdx
-                    ? "border-green-500 bg-green-50/70 ring-2 ring-green-200 shadow-md"
-                    : "border-gray-200 bg-white/70 hover:border-green-300"
+                    ? cardSelectedBorder
+                    : cardHoverBorder
                   }`}
               >
                 {/* Image */}
@@ -430,8 +493,8 @@ export function ResultsSection({ data }: ResultsSectionProps) {
       <div className="bg-blue-50/80 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
         <ShieldAlert className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-800 leading-relaxed">
-          <strong>Disclaimer:</strong> This advisory is AI-assisted and based on environmental parameters.
-          Farmers should consult local agricultural officers for final decisions.
+          <strong>Disclaimer:</strong> This AI advisory is based on provided environmental parameters.
+          Consult local agricultural experts before final decision.
         </p>
       </div>
 

@@ -1,17 +1,18 @@
 """
-Crop Recommendation ML API — V7 Farmer Advisory Engine
-=======================================================
-Soil-driven stacked ensemble + agronomic feasibility constraints.
+Crop Recommendation ML API — V8.1 Production-Grade Farmer Advisory
+===================================================================
+Stabilized advisory system with guaranteed non-empty responses,
+consistent confidence caps, and fallback logic.
 
-Architecture upgrades over V6:
-  1. Agronomic hard constraint layer (per-crop pH/temp/rain/humidity limits)
-  2. OOD confidence dampening (30% penalty per OOD feature, 65% cap)
-  3. Stress score calculation (normalized distance from safe midpoints)
-  4. Calibrated confidence = 0.6*model + 0.2*agreement + 0.2*inv_entropy
-  5. Model selection rebalancing (blend on disagreement)
-  6. Advisory risk tiers (Strongly Recommended -> Not Recommended)
-  7. Structured agronomic explanation per crop
-  8. Hard confidence cap at 92%
+V8.1 phases:
+  1. Hard feasibility gate (±3°C temp, ±0.5 pH, <30% min rain)
+  2. Fallback: least-violating crop if all excluded (cap 35%)
+  3. Gradual stress penalty (weighted per-crop deviation)
+  4. Salinity stress override
+  5. Confidence caps (75% stress, 60% chaos, 85% hard max)
+  6. Tier downgrade (stress>0.4 → -1, >0.6 → -2)
+  7. Safety disclaimer in every response
+  8. Startup assertions (fail-fast validation)
 
 Models:
   "soil"      -> V6 stacked ensemble (51 crops)
@@ -41,7 +42,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ml_api_v7")
 
-app = FastAPI(title="Crop Recommendation ML API", version="8.0")
+app = FastAPI(title="Crop Recommendation ML API", version="8.1")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -68,11 +69,12 @@ logger.info("Loaded feature_ranges.json")
 # CONSTANTS — V7 ADVISORY ENGINE
 # ===================================================================
 
-HARD_CONFIDENCE_CAP = 0.92
+HARD_CONFIDENCE_CAP = 0.85          # V8.1: never allow >85% in any stress
 OOD_DAMPEN_FACTOR = 0.30
 OOD_CAP_THRESHOLD = 0.50
 OOD_MAX_CONFIDENCE = 0.65
 STRESS_HIGH_THRESHOLD = 0.60
+FALLBACK_CONFIDENCE_CAP = 35.0      # V8.1: fallback mode hard cap
 STRESS_REDUCTION_MIN = 0.20
 STRESS_REDUCTION_MAX = 0.40
 AGRONOMIC_PENALTY_MILD = 0.05
@@ -252,6 +254,76 @@ def _hard_feasibility_filter(
             cdata["confidence"] = min(cdata["confidence"], norm_conf) if cdata["confidence"] > 0 else 0.0
 
     return filtered
+
+
+def _fallback_least_violating(
+    candidates: dict,
+    temperature: float,
+    ph: float,
+    rainfall: float,
+) -> dict:
+    """
+    V8.1 Phase 2 — Guarantee non-empty response.
+
+    When the hard feasibility filter removes ALL crops, select the single
+    least-violating crop, cap confidence at 35%, and force "Not Recommended".
+    System must NEVER return blank results.
+    """
+    if not candidates:
+        return {}
+
+    scores: list = []
+    for cname, cdata in candidates.items():
+        agro = CROP_AGRO_CONSTRAINTS.get(cname)
+        if agro is None:
+            scores.append((0.0, cname, cdata))
+            continue
+
+        violation = 0.0
+
+        # Temperature violation magnitude
+        t_min, t_max = agro["temp_range"]
+        t_span = max(t_max - t_min, 1)
+        if temperature < t_min - 3:
+            violation += (t_min - 3 - temperature) / t_span
+        elif temperature > t_max + 3:
+            violation += (temperature - t_max - 3) / t_span
+
+        # pH violation magnitude
+        ph_min, ph_max = agro["ph_range"]
+        ph_span = max(ph_max - ph_min, 0.5)
+        if ph < ph_min - 0.5:
+            violation += (ph_min - 0.5 - ph) / ph_span
+        elif ph > ph_max + 0.5:
+            violation += (ph - ph_max - 0.5) / ph_span
+
+        # Rainfall violation magnitude
+        r_min = agro["rainfall_range"][0]
+        if r_min > 0 and rainfall < r_min * 0.3:
+            violation += (r_min * 0.3 - rainfall) / max(r_min, 100)
+
+        scores.append((violation, cname, cdata))
+
+    scores.sort(key=lambda x: x[0])
+    best_violation, best_name, best_data = scores[0]
+
+    best_data = dict(best_data)
+    best_data["confidence"] = min(best_data["confidence"], FALLBACK_CONFIDENCE_CAP)
+    best_data["advisory_tier"] = "Not Recommended"
+    best_data["explanation"] = (
+        "All crops violate critical environmental thresholds. "
+        "Soil and climate correction required. "
+        f"{best_name.replace('_', ' ').title()} is the least unsuitable option "
+        "under current conditions."
+    )
+    best_data["_score"] = best_data.get("_score", 0) * 0.3  # heavily penalise
+
+    logger.info(
+        "FALLBACK selected %s (violation=%.3f, conf=%.1f%%)",
+        best_name, best_violation, best_data["confidence"],
+    )
+
+    return {best_name: best_data}
 
 
 # ===================================================================
@@ -663,12 +735,21 @@ def advisory_tier(
     else:
         tier = "Not Recommended"
 
-    downgrades = 0
-    if is_ood:
-        downgrades += 1
-    if severe_count >= 2:
-        downgrades += 2
+    # V8.1 — stress-based downgrades (mutually exclusive tiers)
+    stress_down = 0
+    if stress_factor > 0.6:
+        stress_down = 2
     elif stress_factor > 0.4:
+        stress_down = 1
+
+    severe_down = 0
+    if severe_count >= 3:
+        severe_down = 2
+    elif severe_count >= 2:
+        severe_down = 1
+
+    downgrades = max(stress_down, severe_down)
+    if is_ood:
         downgrades += 1
 
     for _ in range(downgrades):
@@ -1494,7 +1575,7 @@ async def predict(data: PredictionInput):
 def predict_hint():
     return {
         "message": "Use POST with JSON body.",
-        "version": "8.0",
+        "version": "8.1",
         "modes": sorted(CANONICAL_MODES),
         "aliases": {"original": "soil", "synthetic": "extended"},
         "advisory_tiers": [
@@ -1510,8 +1591,8 @@ def predict_hint():
 def health():
     return {
         "status": "online",
-        "version": "8.0",
-        "architecture": "V8 Production-Grade Farmer Advisory",
+        "version": "8.1",
+        "architecture": "V8.1 Production-Grade Farmer Advisory",
         "phases": [
             "hard_feasibility_gate",
             "gradual_stress_penalty",
@@ -1752,6 +1833,18 @@ async def recommend(data: RecommendInput):
             excluded_count, len(candidates),
         )
 
+    # ── V8.1 Phase 2: Guarantee non-empty response ─────────────────
+    fallback_mode = False
+    if not viable and candidates:
+        viable = _fallback_least_violating(
+            candidates,
+            temperature=data.temperature,
+            ph=data.ph,
+            rainfall=data.rainfall,
+        )
+        fallback_mode = True
+        logger.info("FALLBACK MODE activated — all crops failed feasibility")
+
     # ── V8 Salinity Stress Override ──────────────────────────────
     viable = _salinity_stress_override(viable, ph=data.ph, rainfall=data.rainfall)
 
@@ -1769,6 +1862,15 @@ async def recommend(data: RecommendInput):
             c["confidence"], is_ood,
             stress_factor=sf, severe_count=sc,
         )
+        # V8.1: Fallback mode hard cap
+        if fallback_mode:
+            c["confidence"] = min(c["confidence"], FALLBACK_CONFIDENCE_CAP)
+            c["advisory_tier"] = "Not Recommended"
+
+    # Detect if ALL returned crops are "Not Recommended"
+    all_not_recommended = all(
+        c.get("advisory_tier") == "Not Recommended" for c in ranked
+    ) if ranked else True
 
     # Strip internal scoring fields
     top_recommendations = []
@@ -1784,6 +1886,8 @@ async def recommend(data: RecommendInput):
         "top_recommendations": top_recommendations,
         "stress_index": stress_index,
         "stress_per_feature": stress_per_feature,
+        "fallback_mode": fallback_mode,
+        "all_not_recommended": all_not_recommended,
         "environment_info": {
             "season_used": get_season_name(season),
             "season_inferred": data.season is None,
@@ -1792,14 +1896,19 @@ async def recommend(data: RecommendInput):
             "moisture": data.moisture,
         },
         "disclaimer": (
-            "This advisory is AI-assisted and based on environmental parameters. "
-            "Farmers should consult local agricultural officers for final decisions."
+            "This AI advisory is based on provided environmental parameters. "
+            "Consult local agricultural experts before final decision."
         ),
-        "version": "8.0",
+        "version": "8.1",
         "latency_ms": latency,
     }
 
     warning_parts = []
+    if fallback_mode:
+        warning_parts.append(
+            "All crops violate critical environmental thresholds. "
+            "Soil and climate correction required."
+        )
     if ood_warnings:
         fields = ", ".join(w["field"] for w in ood_warnings)
         warning_parts.append(f"Some values ({fields}) fall outside typical ranges. Confidence adjusted.")
@@ -1828,15 +1937,16 @@ async def recommend(data: RecommendInput):
 def recommend_hint():
     return {
         "message": "Use POST with JSON body.",
-        "version": "8.0",
-        "description": "V8 production-grade farmer advisory — no model selection required.",
+        "version": "8.1",
+        "description": "V8.1 production-grade farmer advisory — no model selection, guaranteed non-empty.",
         "required_fields": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"],
         "optional_fields": ["soil_type", "irrigation", "moisture", "season"],
         "phases": [
             "Hard feasibility gate (±3°C, ±0.5 pH, <30% min rain)",
+            "Fallback: least-violating crop if all excluded (cap 35%)",
             "Gradual stress penalty (per-crop weighted deviation)",
             "Salinity override (pH≥8.8 + rain≥2500)",
-            "Confidence caps (75% stress, 60% chaos, 80% universal)",
-            "Tier downgrade (stress>0.4 → -1, multi-severe → -2)",
+            "Confidence caps (75% stress, 60% chaos, 85% hard max)",
+            "Tier downgrade (stress>0.4 → -1, >0.6 → -2)",
         ],
     }

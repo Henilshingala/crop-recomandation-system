@@ -64,6 +64,8 @@ export interface PredictionResponse {
   warning?: string;
   disclaimer?: string;
   version?: string;
+  fallback_mode?: boolean;
+  all_not_recommended?: boolean;
 }
 
 export interface HealthResponse {

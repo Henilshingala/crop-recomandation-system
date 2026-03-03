@@ -113,8 +113,8 @@ export default function App() {
           <div className="flex items-start justify-center gap-2 text-green-200 text-xs leading-relaxed max-w-2xl mx-auto">
             <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <p>
-              This advisory is AI-assisted and based on environmental parameters.
-              Farmers should consult local agricultural officers for final decisions.
+              This AI advisory is based on provided environmental parameters.
+              Consult local agricultural experts before final decision.
             </p>
           </div>
           <p className="text-sm text-center text-green-300">
