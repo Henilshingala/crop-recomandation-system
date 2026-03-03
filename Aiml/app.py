@@ -121,25 +121,25 @@ def compute_entropy(proba: np.ndarray) -> float:
     return float(-np.sum(p * np.log(p)))
 
 
-def validate_distribution(input_dict: dict, mode: str) -> Optional[dict]:
+def validate_distribution(input_dict: dict, mode: str) -> list:
     """
-    Reject inputs that fall outside the training distribution for *mode*.
-    Returns None when valid, or an error dict when OOD.
+    Check if inputs fall outside the training distribution for *mode*.
+    Returns a list of warning dicts (empty when all inputs are in-distribution).
+    Does NOT reject — just warns.  The model can still predict on OOD inputs.
     """
+    warnings = []
     ranges = TRAINING_RANGES.get(mode, TRAINING_RANGES["original"])
     for field, bounds in ranges.items():
         if field not in input_dict:
             continue
         val = input_dict[field]
         if val < bounds["min"] or val > bounds["max"]:
-            return {
-                "error": "Input outside training distribution",
+            warnings.append({
                 "field": field,
                 "value": val,
                 "training_range": [bounds["min"], bounds["max"]],
-                "mode": mode,
-            }
-    return None
+            })
+    return warnings
 
 
 def risk_level(confidence_pct: float) -> str:
@@ -446,11 +446,10 @@ async def predict(data: PredictionInput):
         "moisture": data.moisture,
     }
 
-    # 3. Distribution validation — reject OOD
-    ood = validate_distribution(canonical, mode)
-    if ood is not None:
-        logger.warning("OOD rejected: %s", ood)
-        return JSONResponse(status_code=422, content=ood)
+    # 3. Distribution validation — warn (do NOT reject)
+    ood_warnings = validate_distribution(canonical, mode)
+    if ood_warnings:
+        logger.warning("OOD inputs for mode=%s: %s", mode, ood_warnings)
 
     # 4. Inference
     try:
@@ -544,8 +543,16 @@ async def predict(data: PredictionInput):
         "latency_ms": latency,
     }
 
+    if ood_warnings:
+        resp["ood_warnings"] = ood_warnings
+        resp["warning"] = (
+            f"Input(s) outside training distribution: "
+            f"{', '.join(w['field'] for w in ood_warnings)}. "
+            "Prediction may be less reliable."
+        )
     if low_conf:
-        resp["warning"] = "Low confidence prediction. Conditions may be ambiguous."
+        w = resp.get("warning", "")
+        resp["warning"] = (w + " Low confidence prediction. Conditions may be ambiguous.").strip()
     if entropy > ENTROPY_WARNING_THRESHOLD:
         w = resp.get("warning", "")
         resp["warning"] = (w + " High entropy — model uncertain.").strip()

@@ -65,8 +65,17 @@ def call_hf_model(payload: dict) -> Optional[dict]:
             logger.warning("HF call attempt %d/%d connection failed", attempt, _MAX_RETRIES)
             last_exc = ConnectionError("ML service unavailable")
         except requests.exceptions.HTTPError as exc:
-            logger.error("HF call attempt %d/%d HTTP error: %s", attempt, _MAX_RETRIES, exc.status_code)
-            last_exc = ConnectionError(f"ML service error: {exc.status_code}")
+            status_code = exc.response.status_code if exc.response is not None else "unknown"
+            logger.error("HF call attempt %d/%d HTTP %s", attempt, _MAX_RETRIES, status_code)
+            # For 4xx client errors, try to parse the JSON body — it may contain
+            # a meaningful error (e.g. OOD validation from V5).  Return it so the
+            # caller can decide what to do instead of blindly retrying.
+            if exc.response is not None and 400 <= exc.response.status_code < 500:
+                try:
+                    return exc.response.json()
+                except Exception:
+                    pass
+            last_exc = ConnectionError(f"ML service error: HTTP {status_code}")
         except Exception as exc:
             logger.error("HF call attempt %d/%d unexpected error: %s", attempt, _MAX_RETRIES, type(exc).__name__)
             last_exc = RuntimeError("ML service error")

@@ -58,13 +58,6 @@ def _predict_via_hf(payload: dict, mode: str = "original") -> Optional[Dict]:
     if hf_resp is None:
         return None
 
-    # Check for OOD rejection (422-level error returned as JSON)
-    if "error" in hf_resp and "training_range" in hf_resp:
-        raise ValueError(
-            f"Input outside training distribution: {hf_resp['field']}="
-            f"{hf_resp['value']} (range {hf_resp['training_range']})"
-        )
-
     # V5: top_3 already has crop, confidence, risk_level, nutrition
     top3_raw = hf_resp.get("top_3") or hf_resp.get("predictions") or []
     top3 = [
