@@ -76,26 +76,26 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
 /* ── Mode badge ───────────────────────────────────────────────────── */
 
 function ModeBadge({ mode }: { mode: string }) {
-  if (mode === "original") {
+  if (mode === "soil" || mode === "original") {
     return (
       <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1.5 px-3 py-1 text-xs font-medium">
         <Shield className="w-3 h-3" />
-        Original — 19 real-world crops
+        Soil — V6 stacked ensemble (51 crops)
       </Badge>
     );
   }
-  if (mode === "synthetic") {
+  if (mode === "extended" || mode === "synthetic") {
     return (
       <Badge className="bg-blue-100 text-blue-800 border border-blue-300 gap-1.5 px-3 py-1 text-xs font-medium">
         <Layers className="w-3 h-3" />
-        Synthetic — 51 augmented crops
+        Extended — calibrated RF (51 crops)
       </Badge>
     );
   }
   return (
     <Badge className="bg-purple-100 text-purple-800 border border-purple-300 gap-1.5 px-3 py-1 text-xs font-medium">
       <Combine className="w-3 h-3" />
-      Both — 59 merged crops
+      Both — hybrid blend (51 crops)
     </Badge>
   );
 }

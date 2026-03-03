@@ -2,14 +2,16 @@
 Crop Recommendation System — ML Inference (Gateway-Only Mode)
 ==============================================================
 All prediction requests are routed through the HuggingFace Space
-(V5 multi-mode serving).  Zero ML libraries are loaded locally to
+(V6 multi-mode serving).  Zero ML libraries are loaded locally to
 stay within Render's 512 MB free-tier RAM limit.
 
-Modes
-─────
-  "original"  → V3 stacked ensemble (19 real-world crops)
-  "synthetic" → Calibrated RF (51 synthetic crops)
-  "both"      → Confidence-adaptive hybrid blend
+Modes (V6)
+──────────
+  "soil"     → V6 stacked ensemble (51 crops, Crop_recommendation_v2.csv)
+  "extended" → Calibrated RF (51 crops, legacy fallback)
+  "both"     → Confidence-adaptive hybrid blend
+
+Deprecated aliases: "original" → "soil", "synthetic" → "extended"
 """
 
 import logging
@@ -37,13 +39,13 @@ def _risk_level(confidence: float) -> str:
 # HuggingFace prediction (V5 multi-mode)
 # ═════════════════════════════════════════════════════════════════════════
 
-def _predict_via_hf(payload: dict, mode: str = "original") -> Optional[Dict]:
+def _predict_via_hf(payload: dict, mode: str = "soil") -> Optional[Dict]:
     """
-    Call HuggingFace Space V5 and normalise the response.
+    Call HuggingFace Space V6 and normalise the response.
 
-    V5 response format:
+    V6 response format:
     {
-        "mode": "original",
+        "mode": "soil",
         "predictions": [...],
         "top_3": [...],
         "model_info": {...},
@@ -78,7 +80,7 @@ def _predict_via_hf(payload: dict, mode: str = "original") -> Optional[Dict]:
         "model_info": {
             "type": model_info.get("type", "unknown"),
             "coverage": model_info.get("crops", model_info.get("coverage", 0)),
-            "version": model_info.get("version", "5.0"),
+            "version": model_info.get("version", "6.0"),
             "checksum": model_info.get("checksum"),
         },
         "confidence_info": {
@@ -112,12 +114,12 @@ def predict_top_crops(
     soil_type: int = 1,
     irrigation: int = 0,
     moisture: float = 43.5,
-    mode: str = "original",
+    mode: str = "soil",
 ) -> dict:
     """
     Convenience wrapper used by views.py.
 
-    Each mode routes to HuggingFace Space where V5 dispatches to
+    Each mode routes to HuggingFace Space where V6 dispatches to
     the correct model.  Mode is sent as part of the payload.
     """
     payload = {
@@ -145,14 +147,8 @@ def predict_top_crops(
 # Crop lists (static — no model loading required)
 # ═════════════════════════════════════════════════════════════════════════
 
-_ORIGINAL_CROPS = sorted([
-    "barley", "castor", "chickpea", "cotton", "finger_millet",
-    "groundnut", "linseed", "maize", "mustard", "pearl_millet",
-    "pigeonpea", "rice", "safflower", "sesamum", "sorghum",
-    "soybean", "sugarcane", "sunflower", "wheat",
-])
-
-_SYNTHETIC_CROPS = sorted([
+# V6: all modes share the same 51-crop set from Crop_recommendation_v2.csv
+_V6_CROPS = sorted([
     "apple", "bajra", "banana", "barley", "ber", "blackgram",
     "brinjal", "carrot", "castor", "chickpea", "citrus", "coconut",
     "coffee", "cole_crop", "cotton", "cucumber", "custard_apple",
@@ -165,13 +161,9 @@ _SYNTHETIC_CROPS = sorted([
 ])
 
 
-def get_available_crops(mode: str = "original") -> List[str]:
-    """Return crop list for the requested mode."""
-    if mode == "synthetic":
-        return list(_SYNTHETIC_CROPS)
-    if mode == "both":
-        return sorted(set(_ORIGINAL_CROPS) | set(_SYNTHETIC_CROPS))
-    return list(_ORIGINAL_CROPS)
+def get_available_crops(mode: str = "soil") -> List[str]:
+    """Return crop list for the requested mode (all 51 in V6)."""
+    return list(_V6_CROPS)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -181,7 +173,7 @@ def get_available_crops(mode: str = "original") -> List[str]:
 class _PredictorShim:
     """Minimal shim so health_check can call get_predictor().get_available_crops()."""
 
-    def get_available_crops(self, mode: str = "original") -> List[str]:
+    def get_available_crops(self, mode: str = "soil") -> List[str]:
         return get_available_crops(mode)
 
 

@@ -12,15 +12,15 @@ interface InputFormProps {
   isLoading?: boolean;
 }
 
-// Fallback ranges (matches feature_ranges.json acceptance as of 2026-03-03)
+// Fallback ranges (matches feature_ranges.json acceptance as of V6 2026-03-03)
 const FALLBACK_RANGES: Record<string, FeatureRange> = {
-  N:           { min: 0,   max: 200,  unit: "kg/ha" },
-  P:           { min: 0,   max: 110,  unit: "kg/ha" },
-  K:           { min: 0,   max: 300,  unit: "kg/ha" },
-  temperature: { min: 7,   max: 47,   unit: "°C" },
+  N:           { min: 0,   max: 210,  unit: "kg/ha" },
+  P:           { min: 0,   max: 115,  unit: "kg/ha" },
+  K:           { min: 0,   max: 315,  unit: "kg/ha" },
+  temperature: { min: 5,   max: 50,   unit: "°C" },
   humidity:    { min: 0,   max: 100,  unit: "%" },
-  ph:          { min: 3.5, max: 9.5,  unit: "pH" },
-  rainfall:    { min: 20,  max: 3000, unit: "mm" },
+  ph:          { min: 3.0, max: 10.0, unit: "pH" },
+  rainfall:    { min: 0,   max: 3200, unit: "mm" },
   moisture:    { min: 0,   max: 100,  unit: "%" },
 };
 
@@ -38,7 +38,7 @@ const FIELD_TO_RANGE_KEY: Record<string, string> = {
 
 export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [mode, setMode] = useState<'original' | 'synthetic' | 'both'>('original');
+  const [mode, setMode] = useState<'soil' | 'extended' | 'both'>('soil');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [acceptanceRanges, setAcceptanceRanges] = useState<Record<string, FeatureRange>>(FALLBACK_RANGES);
 
@@ -206,21 +206,21 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
             <input type="hidden" name="mode" value={mode} />
             <div className="grid grid-cols-3 gap-3">
               <ModeCard
-                active={mode === 'original'}
-                onClick={() => setMode('original')}
+                active={mode === 'soil'}
+                onClick={() => setMode('soil')}
                 icon={<Shield className="w-5 h-5" />}
-                title="Original"
-                subtitle="19 real-world crops"
-                badge="V3 ensemble"
+                title="Soil"
+                subtitle="51 crops (V6 ensemble)"
+                badge="Primary"
                 badgeClass="bg-emerald-100 text-emerald-700 border-emerald-200"
               />
               <ModeCard
-                active={mode === 'synthetic'}
-                onClick={() => setMode('synthetic')}
+                active={mode === 'extended'}
+                onClick={() => setMode('extended')}
                 icon={<Layers className="w-5 h-5" />}
-                title="Synthetic"
-                subtitle="51 augmented crops"
-                badge="Extended"
+                title="Extended"
+                subtitle="51 crops (RF)"
+                badge="Legacy"
                 badgeClass="bg-blue-100 text-blue-700 border-blue-200"
               />
               <ModeCard
@@ -228,8 +228,8 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
                 onClick={() => setMode('both')}
                 icon={<Combine className="w-5 h-5" />}
                 title="Both"
-                subtitle="59 merged crops"
-                badge="Full coverage"
+                subtitle="51 blended crops"
+                badge="Hybrid"
                 badgeClass="bg-purple-100 text-purple-700 border-purple-200"
               />
             </div>

@@ -3,8 +3,9 @@ Crop Recommendation System - API Views
 ======================================
 REST API endpoints for crop prediction and management.
 
-Prediction modes:
-  POST /api/predict/  { ..., "mode": "original" | "synthetic" | "both" }
+Prediction modes (V6):
+  POST /api/predict/  { ..., "mode": "soil" | "extended" | "both" }
+  (aliases: "original" → "soil", "synthetic" → "extended")
 """
 
 import csv
@@ -61,19 +62,19 @@ class CropPredictionView(APIView):
         "N": 90, "P": 42, "K": 43,
         "temperature": 24.5, "humidity": 68,
         "ph": 6.7, "rainfall": 120,
-        "mode": "original",          // optional, default "original"
+        "mode": "soil",              // optional, default "soil" (aliases: original, synthetic)
         "soil_type": 1,              // optional, default 1 (loamy)
         "irrigation": 0,             // optional, default 0 (rainfed)
-        "moisture": 43.5             // optional, default 43.5
+        "moisture": 43.5             // optional, accepted for compat
     }
 
     Response (200)
     ──────────────
     {
-        "mode": "original",
+        "mode": "soil",
         "top_1": { "crop": "rice", "confidence": 98.6, "risk_level": "low", ... },
         "top_3": [ ... ],
-        "model_info": { "coverage": 19, "type": "stacked-ensemble-v3", "version": "3.0" }
+        "model_info": { "coverage": 51, "type": "stacked-ensemble-v6", "version": "6.0" }
     }
     """
 
@@ -89,7 +90,7 @@ class CropPredictionView(APIView):
             )
 
         vd = serializer.validated_data
-        mode = vd.get("mode", "original")
+        mode = vd.get("mode", "soil")
         
         # Add security warnings if any
         response_data = {}
@@ -206,8 +207,8 @@ class CropPredictionView(APIView):
                 moisture=input_data.get("moisture"),
                 soil_type=input_data.get("soil_type"),
                 irrigation=input_data.get("irrigation"),
-                mode=input_data.get("mode", "original"),
-                model_version=result.get("model_info", {}).get("version", "5.0"),
+                mode=input_data.get("mode", "soil"),
+                model_version=result.get("model_info", {}).get("version", "6.0"),
                 predictions=result.get("top_3", []),
                 ip_address=ip,
             )
@@ -292,7 +293,7 @@ def health_check(request):
         "status": "healthy",
         "database": "ok",
         "ml_model": "ok",
-        "modes": ["original", "synthetic", "both"],
+        "modes": ["soil", "extended", "both"],
     }
 
     # Simple DB check - avoid heavy queries
@@ -307,8 +308,8 @@ def health_check(request):
 
     # ML crop counts (static lists — no network call)
     try:
-        info["original_crops"] = len(get_available_crops("original"))
-        info["synthetic_crops"] = len(get_available_crops("synthetic"))
+        info["soil_crops"] = len(get_available_crops("soil"))
+        info["extended_crops"] = len(get_available_crops("extended"))
     except Exception:
         info["ml_model"] = "error"
         info["status"] = "unhealthy"
@@ -320,8 +321,8 @@ def health_check(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def available_crops(request):
-    """GET /api/crops/available/?mode=original|synthetic|both"""
-    mode = request.query_params.get("mode", "original")
+    """GET /api/crops/available/?mode=soil|extended|both"""
+    mode = request.query_params.get("mode", "soil")
     try:
         crops = get_available_crops(mode)
         return Response({"mode": mode, "count": len(crops), "crops": crops})
@@ -336,8 +337,7 @@ def model_limits(request):
 
     Returns the full feature_ranges.json content including:
       - acceptance: hard input limits used by Pydantic, Django, and the frontend
-      - original:   per-feature training statistics for V3 stacked ensemble
-      - synthetic:   per-feature training statistics for calibrated RF
+      - v6_soil_model: per-feature training statistics for V6 stacked ensemble
     """
     if FEATURE_RANGES:
         return Response(FEATURE_RANGES)

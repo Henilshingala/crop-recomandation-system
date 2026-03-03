@@ -40,15 +40,15 @@ if FEATURE_RANGES and "acceptance" in FEATURE_RANGES:
         if not k.startswith("_")
     }
 else:
-    # Fallback — matches feature_ranges.json acceptance as of 2026-03-03
+    # Fallback — matches feature_ranges.json acceptance as of V6 (2026-03-03)
     SAFE_RANGES = {
-        'N':           {'min': 0,    'max': 200,  'unit': 'kg/ha'},
-        'P':           {'min': 0,    'max': 110,  'unit': 'kg/ha'},
-        'K':           {'min': 0,    'max': 300,  'unit': 'kg/ha'},
-        'temperature': {'min': 7,    'max': 47,   'unit': '°C'},
+        'N':           {'min': 0,    'max': 210,  'unit': 'kg/ha'},
+        'P':           {'min': 0,    'max': 115,  'unit': 'kg/ha'},
+        'K':           {'min': 0,    'max': 315,  'unit': 'kg/ha'},
+        'temperature': {'min': 5,    'max': 50,   'unit': '°C'},
         'humidity':    {'min': 0,    'max': 100,  'unit': '%'},
-        'ph':          {'min': 3.5,  'max': 9.5,  'unit': 'pH'},
-        'rainfall':    {'min': 20,   'max': 3000, 'unit': 'mm'},
+        'ph':          {'min': 3.0,  'max': 10.0, 'unit': 'pH'},
+        'rainfall':    {'min': 0,    'max': 3200, 'unit': 'mm'},
         'moisture':    {'min': 0,    'max': 100,  'unit': '%'},
         'soil_type':   {'min': 0,    'max': 4,    'unit': 'type'},
         'irrigation':  {'min': 0,    'max': 1,    'unit': 'type'},
@@ -86,8 +86,8 @@ class PredictionInputValidator:
     
     @staticmethod
     def validate_mode(mode: str) -> str:
-        """Validate prediction mode."""
-        valid_modes = ['original', 'synthetic', 'both']
+        """Validate prediction mode (V6 canonical + backward-compatible aliases)."""
+        valid_modes = ['soil', 'extended', 'both', 'original', 'synthetic']
         if mode not in valid_modes:
             raise ValidationError(f"Invalid mode '{mode}'. Must be one of: {valid_modes}")
         return mode
@@ -122,7 +122,7 @@ class PredictionInputValidator:
         
         # Validate mode
         sanitized['mode'] = PredictionInputValidator.validate_mode(
-            data.get('mode', 'original')
+            data.get('mode', 'soil')
         )
         
         # Validate top_n
@@ -227,9 +227,9 @@ class SecurePredictionSerializer(serializers.Serializer):
         help_text="Season (0=Kharif, 1=Rabi, 2=Zaid)"
     )
     mode = serializers.ChoiceField(
-        choices=['original', 'synthetic', 'both'],
-        default='original',
-        help_text="Prediction mode"
+        choices=['soil', 'extended', 'both', 'original', 'synthetic'],
+        default='soil',
+        help_text="Prediction mode (V6: soil/extended/both; aliases: original→soil, synthetic→extended)"
     )
     top_n = serializers.IntegerField(
         min_value=1,

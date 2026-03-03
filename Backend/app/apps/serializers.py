@@ -41,22 +41,28 @@ class PredictionInputSerializer(serializers.Serializer):
     Optional: mode, soil_type, irrigation, moisture
     """
 
-    MODE_CHOICES = [("original", "Original"), ("synthetic", "Synthetic"), ("both", "Both")]
+    MODE_CHOICES = [
+        ("soil", "Soil (V6 stacked ensemble)"),
+        ("extended", "Extended (calibrated RF)"),
+        ("both", "Both (hybrid blend)"),
+        ("original", "Original (deprecated → soil)"),
+        ("synthetic", "Synthetic (deprecated → extended)"),
+    ]
 
     N = serializers.FloatField(
-        min_value=0, max_value=150,
+        min_value=0, max_value=210,
         help_text="Nitrogen content in soil (kg/ha)",
     )
     P = serializers.FloatField(
-        min_value=0, max_value=150,
+        min_value=0, max_value=115,
         help_text="Phosphorus content in soil (kg/ha)",
     )
     K = serializers.FloatField(
-        min_value=0, max_value=300,
+        min_value=0, max_value=315,
         help_text="Potassium content in soil (kg/ha)",
     )
     temperature = serializers.FloatField(
-        min_value=0, max_value=50,
+        min_value=5, max_value=50,
         help_text="Average temperature (°C)",
     )
     humidity = serializers.FloatField(
@@ -64,18 +70,18 @@ class PredictionInputSerializer(serializers.Serializer):
         help_text="Relative humidity (%)",
     )
     ph = serializers.FloatField(
-        min_value=3.5, max_value=9.5,
+        min_value=3.0, max_value=10.0,
         help_text="Soil pH value",
     )
     rainfall = serializers.FloatField(
-        min_value=0, max_value=3000,
+        min_value=0, max_value=3200,
         help_text="Annual rainfall (mm)",
     )
     mode = serializers.ChoiceField(
         choices=MODE_CHOICES,
-        default="original",
+        default="soil",
         required=False,
-        help_text="Prediction mode: 'original' (HF v3, 19 crops), 'synthetic' (local, 51 crops), or 'both' (blended)",
+        help_text="Prediction mode: 'soil' (V6 stacked, 51 crops), 'extended' (RF, 51 crops), or 'both' (blended)",
     )
     soil_type = serializers.IntegerField(
         min_value=0, max_value=2,
@@ -135,10 +141,10 @@ class PredictionResponseSerializer(serializers.Serializer):
     Full prediction response.
 
     {
-        "mode": "original" | "synthetic" | "both",
+        "mode": "soil" | "extended" | "both",
         "top_1": {"crop": "rice", "confidence": 98.6, ...},
         "top_3": [...],
-        "model_info": {"coverage": 19, "type": "stacked-ensemble-v3", "version": "3.0"}
+        "model_info": {"coverage": 51, "type": "stacked-ensemble-v6", "version": "6.0"}
     }
     """
 

@@ -53,27 +53,29 @@ def get_contract_config() -> dict[str, Any]:
     contract = registry.get("contract", {})
     if not contract:
         return {
-            "modes": ["real", "synthetic", "both"],
-            "mode_aliases": {"original": "real"},
-            "default_mode": "real",
+            "modes": ["soil", "extended", "both"],
+            "mode_aliases": {"original": "soil", "synthetic": "extended", "real": "soil"},
+            "default_mode": "soil",
             "feature_schema": {},
         }
     return contract
 
 
 def get_available_modes() -> list[str]:
-    return list(get_contract_config().get("modes", ["real", "synthetic", "both"]))
+    return list(get_contract_config().get("modes", ["soil", "extended", "both"]))
 
 
 def get_mode_aliases() -> dict[str, str]:
     aliases = dict(get_contract_config().get("mode_aliases", {}))
     # Keep compatibility even if alias is omitted from registry
-    aliases.setdefault("original", "real")
+    aliases.setdefault("original", "soil")
+    aliases.setdefault("synthetic", "extended")
+    aliases.setdefault("real", "soil")
     return aliases
 
 
 def get_default_mode() -> str:
-    return str(get_contract_config().get("default_mode", "real"))
+    return str(get_contract_config().get("default_mode", "soil"))
 
 
 def canonicalize_mode(mode: str | None) -> str:

@@ -26,7 +26,7 @@ export default function App() {
       humidity: parseFloat(fd.get('humidity') as string),
       ph: parseFloat(fd.get('ph') as string),
       rainfall: parseFloat(fd.get('rainfall') as string),
-      mode: (fd.get('mode') as 'original' | 'synthetic' | 'both') || 'original',
+      mode: (fd.get('mode') as 'soil' | 'extended' | 'both') || 'soil',
       soil_type: parseInt(fd.get('soil_type') as string) || 1,
       irrigation: parseInt(fd.get('irrigation') as string) || 0,
       moisture: parseFloat(fd.get('moisture') as string) || 43.5,
