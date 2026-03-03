@@ -73,6 +73,14 @@ TRAINING_RANGES["both"] = TRAINING_RANGES["soil"]
 MIN_CONFIDENCE_THRESHOLD = 0.60
 ENTROPY_WARNING_THRESHOLD = 2.0
 
+# ═══════════════════════════════════════════════════════════════════════════
+# RELIABILITY SCORING WEIGHTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+RELIABILITY_WEIGHT_CONFIDENCE = 0.7
+RELIABILITY_WEIGHT_ENTROPY = 0.3
+AGREEMENT_BONUS = 5.0   # +5% added when 2+ models agree on same top crop
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # MODE MAPPING — backward-compatible aliases
@@ -147,6 +155,82 @@ def risk_level(confidence_pct: float) -> str:
     if confidence_pct >= 50:
         return "medium"
     return "high"
+
+
+def compute_reliability_score(
+    top_probability: float, entropy: float, num_classes: int,
+) -> float:
+    """
+    Objective reliability score combining confidence and uncertainty.
+
+    reliability_score =
+        (top_probability * 0.7) + ((1 - normalized_entropy) * 0.3)
+
+    Where normalized_entropy = entropy / log(num_classes).
+    Returns score on 0-100 scale.
+    """
+    max_entropy = float(np.log(num_classes)) if num_classes > 1 else 1.0
+    normalized_entropy = min(entropy / max_entropy, 1.0) if max_entropy > 0 else 0.0
+
+    score = (
+        top_probability * RELIABILITY_WEIGHT_CONFIDENCE
+        + (1.0 - normalized_entropy) * RELIABILITY_WEIGHT_ENTROPY
+    )
+    return round(score * 100, 2)
+
+
+def run_single_model(
+    predictor, crops_list: list, input_dict: dict, model_name: str,
+    model_type: str, checksum: str, crop_count: int, feature_count: int,
+    label_encoder=None,
+) -> dict:
+    """
+    Run one predictor and return a standardised result dict.
+    """
+    proba = predictor.predict_proba(input_dict)
+    top_idx = int(np.argmax(proba))
+    top_prob = float(proba[top_idx])
+    entropy = compute_entropy(proba)
+    num_classes = len(crops_list)
+
+    # Resolve crop name
+    if label_encoder is not None:
+        top_crop = label_encoder.inverse_transform([top_idx])[0]
+    else:
+        top_crop = crops_list[top_idx]
+
+    reliability = compute_reliability_score(top_prob, entropy, num_classes)
+
+    # Top-N breakdown
+    top_n_idx = np.argsort(proba)[-3:][::-1]
+    top_n = []
+    for idx in top_n_idx:
+        if label_encoder is not None:
+            cname = label_encoder.inverse_transform([idx])[0]
+        else:
+            cname = crops_list[idx]
+        cpct = round(float(proba[idx]) * 100, 2)
+        top_n.append({
+            "crop": cname,
+            "confidence": cpct,
+            "risk_level": risk_level(cpct),
+            "nutrition": get_nutrition(cname),
+        })
+
+    return {
+        "model_name": model_name,
+        "model_type": model_type,
+        "checksum": checksum,
+        "crop": top_crop,
+        "confidence": round(top_prob * 100, 2),
+        "entropy": round(entropy, 4),
+        "reliability_score": reliability,
+        "num_classes": num_classes,
+        "feature_count": feature_count,
+        "top_3": top_n,
+        "proba": proba,            # kept for hybrid; stripped before response
+        "crops_list": crops_list,  # kept for response building
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -457,7 +541,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# PREDICT ENDPOINT
+# PREDICT ENDPOINT — dynamic model comparison
 # ═══════════════════════════════════════════════════════════════════════════
 
 @app.post("/predict")
@@ -469,12 +553,11 @@ async def predict(data: PredictionInput):
         raise HTTPException(400, f"Invalid mode '{raw_mode}'. Use: {sorted(CANONICAL_MODES)}")
 
     mode = MODE_ALIASES[raw_mode]
-    deprecated_mode = raw_mode != mode  # True if user sent "original"/"synthetic"
+    deprecated_mode = raw_mode != mode
 
-    # 1. Season
+    # ── 1. Season ──────────────────────────────────────────────────────
     season = data.season if data.season is not None else infer_season(data.temperature)
 
-    # 2. Unified feature dict — all V6 models use same uppercase keys
     input_dict = {
         "N": data.N, "P": data.P, "K": data.K,
         "temperature": data.temperature, "humidity": data.humidity,
@@ -484,75 +567,109 @@ async def predict(data: PredictionInput):
         "irrigation": data.irrigation,
     }
 
-    # Canonical features for OOD check (only core numeric features)
     canonical = {
         "N": data.N, "P": data.P, "K": data.K,
         "temperature": data.temperature, "humidity": data.humidity,
         "ph": data.ph, "rainfall": data.rainfall,
     }
 
-    # 3. Distribution validation — warn, don't reject
     ood_warnings = validate_distribution(canonical, mode)
     if ood_warnings:
         logger.warning("OOD inputs for mode=%s: %s", mode, ood_warnings)
 
-    # 4. Inference
+    # ── 2. Run ALL 3 models ────────────────────────────────────────────
+    model_results: Dict[str, dict] = {}
+
     try:
-        if mode == "soil":
-            if not _soil:
-                raise HTTPException(503, "V6 soil model unavailable")
-            proba = _soil.predict_proba(input_dict)
-            crops_list = _soil.crops
-            mtype = "stacked-ensemble-v6"
-            mchk = _soil.checksum
-            mcrop = _soil.crop_count
-            nfeat = len(_soil.features)
-
-        elif mode == "extended":
-            if not _extended:
-                raise HTTPException(503, "Extended RF model unavailable")
-            proba = _extended.predict_proba(input_dict)
-            crops_list = _extended.crops
-            mtype = "calibrated-rf"
-            mchk = _extended.checksum
-            mcrop = _extended.crop_count
-            nfeat = len(_extended.features)
-
-        else:  # both
-            if not _hybrid:
-                raise HTTPException(503, "Hybrid model unavailable")
-            proba = _hybrid.predict_proba(input_dict)
-            crops_list = _hybrid.unified_crops
-            mtype = "hybrid-v6-rf"
-            mchk = f"{_soil.checksum}+{_extended.checksum}"
-            mcrop = _hybrid.crop_count
-            nfeat = 10
-
-    except HTTPException:
-        raise
+        if _soil:
+            model_results["soil"] = run_single_model(
+                predictor=_soil, crops_list=_soil.crops,
+                input_dict=input_dict, model_name="soil",
+                model_type="stacked-ensemble-v6",
+                checksum=_soil.checksum,
+                crop_count=_soil.crop_count,
+                feature_count=len(_soil.features),
+                label_encoder=_soil.label_encoder,
+            )
     except Exception as e:
-        logger.exception("Inference failed mode=%s", mode)
-        raise HTTPException(500, f"Inference error: {e}")
+        logger.warning("Soil model inference failed: %s", e)
 
-    # 5. Confidence gating
-    top_prob = float(np.max(proba))
-    entropy = compute_entropy(proba)
-    low_conf = top_prob < MIN_CONFIDENCE_THRESHOLD
+    try:
+        if _extended:
+            model_results["extended"] = run_single_model(
+                predictor=_extended, crops_list=_extended.crops,
+                input_dict=input_dict, model_name="extended",
+                model_type="calibrated-rf",
+                checksum=_extended.checksum,
+                crop_count=_extended.crop_count,
+                feature_count=len(_extended.features),
+                label_encoder=_extended.label_encoder,
+            )
+    except Exception as e:
+        logger.warning("Extended model inference failed: %s", e)
 
-    # 6. Build response
+    try:
+        if _hybrid:
+            model_results["hybrid"] = run_single_model(
+                predictor=_hybrid, crops_list=_hybrid.unified_crops,
+                input_dict=input_dict, model_name="hybrid",
+                model_type="hybrid-v6-rf",
+                checksum=(
+                    f"{_soil.checksum}+{_extended.checksum}"
+                    if _soil and _extended else "n/a"
+                ),
+                crop_count=_hybrid.crop_count,
+                feature_count=10,
+                label_encoder=None,  # hybrid uses unified_crops directly
+            )
+    except Exception as e:
+        logger.warning("Hybrid model inference failed: %s", e)
+
+    if not model_results:
+        raise HTTPException(503, "All models failed to produce predictions")
+
+    # ── 3. Agreement bonus ─────────────────────────────────────────────
+    crop_votes: Dict[str, list] = {}
+    for mname, mres in model_results.items():
+        crop_votes.setdefault(mres["crop"], []).append(mname)
+
+    for crop, voters in crop_votes.items():
+        if len(voters) >= 2:
+            for mname in voters:
+                model_results[mname]["reliability_score"] = round(min(
+                    model_results[mname]["reliability_score"] + AGREEMENT_BONUS, 100.0
+                ), 2)
+                model_results[mname]["agreement_bonus"] = True
+
+    # ── 4. Select best model ───────────────────────────────────────────
+    best_name = max(model_results, key=lambda m: model_results[m]["reliability_score"])
+    best = model_results[best_name]
+
+    # If user requested a specific mode, use that mode's predictions for
+    # backward-compatible "predictions" / "top_3" fields, but always
+    # include the full comparison.
+    primary = model_results.get(mode, best) if mode != "both" else (
+        model_results.get("hybrid", best)
+    )
+
+    # ── 5. Build response ──────────────────────────────────────────────
     top_n = data.top_n or 3
-    top_idx = np.argsort(proba)[-top_n:][::-1]
+    primary_proba = primary["proba"]
+    primary_crops = primary["crops_list"]
+    primary_le = None
+    if primary["model_name"] == "soil" and _soil:
+        primary_le = _soil.label_encoder
+    elif primary["model_name"] == "extended" and _extended:
+        primary_le = _extended.label_encoder
 
+    top_idx = np.argsort(primary_proba)[-top_n:][::-1]
     predictions = []
     for idx in top_idx:
-        if mode == "both":
-            cname = crops_list[idx]
-        elif mode == "soil":
-            cname = _soil.label_encoder.inverse_transform([idx])[0]
+        if primary_le is not None:
+            cname = primary_le.inverse_transform([idx])[0]
         else:
-            cname = _extended.label_encoder.inverse_transform([idx])[0]
-
-        cpct = round(float(proba[idx]) * 100, 2)
+            cname = primary_crops[idx]
+        cpct = round(float(primary_proba[idx]) * 100, 2)
         predictions.append({
             "crop": cname,
             "confidence": cpct,
@@ -560,18 +677,41 @@ async def predict(data: PredictionInput):
             "nutrition": get_nutrition(cname),
         })
 
+    top_prob = primary["confidence"] / 100
+    entropy = primary["entropy"]
+    low_conf = top_prob < MIN_CONFIDENCE_THRESHOLD
+
     latency = round((time.time() - start) * 1000, 1)
 
+    # ── comparisons block (clean, no numpy arrays) ─────────────────────
+    comparisons = {}
+    for mname, mres in model_results.items():
+        comparisons[mname] = {
+            "crop": mres["crop"],
+            "confidence": mres["confidence"],
+            "reliability_score": mres["reliability_score"],
+            "entropy": mres["entropy"],
+            "agreement_bonus": mres.get("agreement_bonus", False),
+            "top_3": mres["top_3"],
+        }
+
     resp: Dict[str, Any] = {
+        # ── dynamic comparison result ──
+        "best_model": best_name,
+        "best_crop": best["crop"],
+        "best_reliability": best["reliability_score"],
+        "comparisons": comparisons,
+
+        # ── backward-compatible fields (from requested mode) ──
         "mode": mode,
         "predictions": predictions,
         "top_3": predictions[:3],
         "model_info": {
             "version": "6.0",
-            "type": mtype,
-            "crops": mcrop,
-            "checksum": mchk,
-            "features_used": nfeat,
+            "type": primary["model_type"],
+            "crops": primary["num_classes"],
+            "checksum": primary["checksum"],
+            "features_used": primary["feature_count"],
         },
         "confidence_info": {
             "top_probability": round(top_prob * 100, 2),
@@ -588,7 +728,6 @@ async def predict(data: PredictionInput):
         "latency_ms": latency,
     }
 
-    # Deprecation notice for old mode names
     if deprecated_mode:
         resp["deprecation_notice"] = (
             f"Mode '{raw_mode}' is deprecated. Mapped to '{mode}'. "
@@ -609,16 +748,17 @@ async def predict(data: PredictionInput):
         w = resp.get("warning", "")
         resp["warning"] = (w + " High entropy — model uncertain.").strip()
 
-    # 7. Full-vector logging
+    # ── logging ────────────────────────────────────────────────────────
     logger.info(
-        "PREDICT mode=%s crop=%s conf=%.1f%% entropy=%.3f ms=%.0f "
+        "PREDICT best=%s crop=%s rel=%.1f mode=%s conf=%.1f%% entropy=%.3f ms=%.0f "
         "N=%.1f P=%.1f K=%.1f T=%.1f H=%.1f pH=%.1f R=%.1f "
-        "soil=%d irrig=%d season=%d",
-        mode, predictions[0]["crop"] if predictions else "-",
-        top_prob * 100, entropy, latency,
+        "soil=%d irrig=%d season=%d agree=%s",
+        best_name, best["crop"], best["reliability_score"],
+        mode, top_prob * 100, entropy, latency,
         data.N, data.P, data.K, data.temperature, data.humidity,
         data.ph, data.rainfall,
         data.soil_type or 1, data.irrigation or 0, season,
+        {c: v for c, v in crop_votes.items() if len(v) >= 2},
     )
 
     return resp
