@@ -1,0 +1,125 @@
+=== 1  Cold+TropicalRain+HighAlkaline ===
+  Stress Index: 0.5641
+  WARNING: Some values (temperature) fall outside typical ranges. Confidence adjusted. Conditions may be challenging for most crops. Consider consulting local experts.
+  #1 cole_crop        conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (5.0C) is within the suitable range [5-22C] for cole_crop. Rainfall (2500mm) exceeds cole_crop's tolerance (1500mm). Waterloggin
+  #2 onion            conf=  0.00%  tier=Not Recommended  consensus=weak
+     -> Temperature (5.0C) is 5.0C below onion's minimum (10C). Cold stress risk. Rainfall (2500mm) exceeds onion's tolerance (800mm). Waterlogging 
+  #3 sugarcane        conf=  0.00%  tier=Not Recommended  consensus=moderate
+     -> Temperature (5.0C) is 17.0C below sugarcane's minimum (22C). Cold stress risk. Rainfall (2500mm) matches sugarcane's water requirement [800-
+
+=== 2  PerfectSoil+ExtremeHeat ===
+  Stress Index: 0.1595
+  WARNING: Some values (temperature) fall outside typical ranges. Confidence adjusted. Conditions may be challenging for most crops. Consider consulting local experts.
+  #1 green_chilli     conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (48.0C) is 13.0C above green_chilli's maximum (35C). Heat stress risk. Rainfall (600mm) matches green_chilli's water requirement
+  #2 jowar            conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (48.0C) is 6.0C above jowar's maximum (42C). Heat stress risk. Rainfall (600mm) matches jowar's water requirement [300-800mm]. S
+  #3 cotton           conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (48.0C) is 8.0C above cotton's maximum (40C). Heat stress risk. Rainfall (600mm) matches cotton's water requirement [500-1200mm]
+
+=== 3  NeutralWeather+AcidSoil pH3.2 ===
+  Stress Index: 0.1923
+  WARNING: Some values (ph) fall outside typical ranges. Confidence adjusted. Conditions may be challenging for most crops. Consider consulting local experts.
+  #1 cucumber         conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (25.0C) is within the suitable range [18-35C] for cucumber. Rainfall (500mm) matches cucumber's water requirement [300-1000mm]. 
+  #2 gourd            conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (25.0C) is within the suitable range [20-38C] for gourd. Rainfall (500mm) matches gourd's water requirement [300-1000mm]. Soil p
+  #3 tomato           conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (25.0C) is within the suitable range [18-35C] for tomato. Rainfall (500mm) matches tomato's water requirement [300-1000mm]. Soil
+
+=== 4  Moderate+UltraLowHumidity 12% ===
+  Stress Index: 0.1635
+  #1 gourd            conf= 46.16%  tier=Conditional / Trial Basis  consensus=strong
+     -> Temperature (25.0C) is within the suitable range [20-38C] for gourd. Rainfall (700mm) matches gourd's water requirement [300-1000mm]. Soil p
+  #2 tomato           conf= 22.18%  tier=Not Recommended  consensus=moderate
+     -> Temperature (25.0C) is within the suitable range [18-35C] for tomato. Rainfall (700mm) matches tomato's water requirement [300-1000mm]. Soil
+  #3 cucumber         conf= 21.92%  tier=Not Recommended  consensus=strong
+     -> Temperature (25.0C) is within the suitable range [18-35C] for cucumber. Rainfall (700mm) matches cucumber's water requirement [300-1000mm]. 
+
+=== 5  Flood+Cold+LowNutrients ===
+  Stress Index: 0.4963
+  WARNING: Some values (temperature) fall outside typical ranges. Confidence adjusted. Conditions may be challenging for most crops. Consider consulting local experts.
+  #1 spinach          conf= 20.00%  tier=Not Recommended  consensus=weak
+     -> Temperature (6.0C) is 2.0C below spinach's minimum (8C). Cold stress risk. Rainfall (2800mm) exceeds spinach's tolerance (800mm). Waterloggi
+  #2 coconut          conf=  0.00%  tier=Not Recommended  consensus=strong
+     -> Temperature (6.0C) is 16.0C below coconut's minimum (22C). Cold stress risk. Rainfall (2800mm) matches coconut's water requirement [1000-320
+  #3 citrus           conf=  0.00%  tier=Not Recommended  consensus=weak
+     -> Temperature (6.0C) is 9.0C below citrus's minimum (15C). Cold stress risk. Rainfall (2800mm) exceeds citrus's tolerance (1500mm). Waterloggi
+
+=== 6  ExtremeNutrients+IdealClimate ===
+  Stress Index: 0.3972
+  WARNING: Some values (N, P, K) fall outside typical ranges. Confidence adjusted.
+  #1 banana           conf= 52.73%  tier=Not Recommended  consensus=strong
+     -> Temperature (28.0C) is within the suitable range [20-40C] for banana. Rainfall (800mm) is below banana's minimum (1000mm). Supplementary irr
+  #2 brinjal          conf= 17.73%  tier=Not Recommended  consensus=strong
+     -> Temperature (28.0C) is within the suitable range [20-35C] for brinjal. Rainfall (800mm) matches brinjal's water requirement [300-1000mm]. So
+  #3 sugarcane        conf= 17.63%  tier=Not Recommended  consensus=weak
+     -> Temperature (28.0C) is within the suitable range [22-40C] for sugarcane. Rainfall (800mm) matches sugarcane's water requirement [800-2500mm]
+
+=== 7a TempSweep 18C ===
+  Stress Index: 0.1078
+  #1 barley           conf= 54.65%  tier=Conditional / Trial Basis  consensus=strong
+     -> Temperature (18.0C) is within the suitable range [5-25C] for barley. Rainfall (500mm) matches barley's water requirement [300-1000mm]. Soil 
+  #2 onion            conf= 23.45%  tier=Not Recommended  consensus=strong
+     -> Temperature (18.0C) is within the suitable range [10-30C] for onion. Rainfall (500mm) matches onion's water requirement [300-800mm]. Soil pH
+  #3 potato           conf= 21.90%  tier=Not Recommended  consensus=strong
+     -> Temperature (18.0C) is within the suitable range [10-25C] for potato. Rainfall (500mm) matches potato's water requirement [400-1000mm]. Soil
+
+=== 7b TempSweep 22C ===
+  Stress Index: 0.0888
+  #1 barley           conf= 44.87%  tier=Conditional / Trial Basis  consensus=strong
+     -> Temperature (22.0C) is within the suitable range [5-25C] for barley. Rainfall (500mm) matches barley's water requirement [300-1000mm]. Soil 
+  #2 onion            conf= 25.40%  tier=Not Recommended  consensus=strong
+     -> Temperature (22.0C) is within the suitable range [10-30C] for onion. Rainfall (500mm) matches onion's water requirement [300-800mm]. Soil pH
+  #3 mustard          conf= 14.89%  tier=Not Recommended  consensus=weak
+     -> Temperature (22.0C) is within the suitable range [10-28C] for mustard. Rainfall (500mm) matches mustard's water requirement [200-600mm]. Soi
+
+=== 7c TempSweep 26C ===
+  Stress Index: 0.0792
+  #1 gourd            conf= 50.53%  tier=Conditional / Trial Basis  consensus=strong
+     -> Temperature (26.0C) is within the suitable range [20-38C] for gourd. Rainfall (500mm) matches gourd's water requirement [300-1000mm]. Soil p
+  #2 cucumber         conf= 19.01%  tier=Not Recommended  consensus=strong
+     -> Temperature (26.0C) is within the suitable range [18-35C] for cucumber. Rainfall (500mm) matches cucumber's water requirement [300-1000mm]. 
+  #3 citrus           conf= 15.78%  tier=Not Recommended  consensus=moderate
+     -> Temperature (26.0C) is within the suitable range [15-35C] for citrus. Rainfall (500mm) matches citrus's water requirement [500-1500mm]. Soil
+
+=== 7d TempSweep 30C ===
+  Stress Index: 0.0983
+  #1 maize            conf= 45.21%  tier=Conditional / Trial Basis  consensus=strong
+     -> Temperature (30.0C) is within the suitable range [18-35C] for maize. Rainfall (500mm) matches maize's water requirement [400-1200mm]. Soil p
+  #2 okra             conf= 26.33%  tier=Not Recommended  consensus=strong
+     -> Temperature (30.0C) is within the suitable range [22-38C] for okra. Rainfall (500mm) matches okra's water requirement [400-1000mm]. Soil pH 
+  #3 jowar            conf= 15.00%  tier=Not Recommended  consensus=moderate
+     -> Temperature (30.0C) is within the suitable range [25-42C] for jowar. Rainfall (500mm) matches jowar's water requirement [300-800mm]. Soil pH
+
+=== 7e TempSweep 34C ===
+  Stress Index: 0.1173
+  #1 okra             conf= 45.06%  tier=Conditional / Trial Basis  consensus=strong
+     -> Temperature (34.0C) is within the suitable range [22-38C] for okra. Rainfall (500mm) matches okra's water requirement [400-1000mm]. Soil pH 
+  #2 maize            conf= 27.80%  tier=Not Recommended  consensus=strong
+     -> Temperature (34.0C) is within the suitable range [18-35C] for maize. Rainfall (500mm) matches maize's water requirement [400-1200mm]. Soil p
+  #3 jowar            conf= 13.87%  tier=Not Recommended  consensus=moderate
+     -> Temperature (34.0C) is within the suitable range [25-42C] for jowar. Rainfall (500mm) matches jowar's water requirement [300-800mm]. Soil pH
+
+=== 8  TrueChaos ===
+  Stress Index: 0.544
+  WARNING: Conditions may be challenging for most crops. Consider consulting local experts.
+  #1 mustard          conf= 38.28%  tier=Not Recommended  consensus=moderate
+     -> Temperature (12.0C) is within the suitable range [10-28C] for mustard. Rainfall (120mm) is below mustard's minimum (200mm). Supplementary ir
+  #2 cole_crop        conf= 33.10%  tier=Not Recommended  consensus=moderate
+     -> Temperature (12.0C) is within the suitable range [5-22C] for cole_crop. Rainfall (120mm) is below cole_crop's minimum (400mm). Supplementary
+  #3 barley           conf= 28.63%  tier=Not Recommended  consensus=strong
+     -> Temperature (12.0C) is within the suitable range [5-25C] for barley. Rainfall (120mm) is below barley's minimum (300mm). Supplementary irrig
+
+======================================================================
+FAIL-CONDITION AUDIT
+======================================================================
+  ALL FAIL-CONDITIONS PASSED
+
+SWEEP CURVE (Test 7):
+  18C: barley          54.65%
+  22C: barley          44.87%
+  26C: gourd           50.53%
+  30C: maize           45.21%
+  34C: okra            45.06%

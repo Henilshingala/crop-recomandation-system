@@ -177,6 +177,86 @@ def compute_entropy(proba: np.ndarray) -> float:
     return float(-np.sum(p * np.log(p)))
 
 
+# ===================================================================
+# HARD FEASIBILITY FILTER
+# Biologically non-viable crops must never appear in Top-3.
+# Applied BEFORE final ranking in /recommend.
+# ===================================================================
+
+def _hard_feasibility_filter(
+    candidates: dict,
+    temperature: float,
+    ph: float,
+) -> dict:
+    """
+    Remove biologically non-viable crops from the candidate pool.
+
+    Rules (per crop):
+      1. temp < crop_min_temp - 5°C  → probability = 0
+      2. temp > crop_max_temp + 5°C  → probability = 0
+      3. pH outside crop range by > 1.5 units → probability = 0
+      4. Two or more of the above   → exclude completely
+
+    After exclusion, re-normalise scores so Top-3 selection is
+    drawn only from biologically viable crops.
+    """
+    filtered: dict = {}
+
+    for cname, cdata in candidates.items():
+        agro = CROP_AGRO_CONSTRAINTS.get(cname)
+        if agro is None:
+            # No constraint data — keep as-is (conservative)
+            filtered[cname] = cdata
+            continue
+
+        violations = 0
+
+        # Temperature checks
+        t_min, t_max = agro["temp_range"]
+        if temperature < t_min - 5:
+            violations += 1
+        if temperature > t_max + 5:
+            violations += 1
+
+        # pH check (outside range by > 1.5 units)
+        ph_min, ph_max = agro["ph_range"]
+        if ph < ph_min - 1.5 or ph > ph_max + 1.5:
+            violations += 1
+
+        # Two or more violations → hard exclusion
+        if violations >= 2:
+            logger.debug(
+                "FEASIBILITY EXCLUDED %s: %d violations (temp=%.1f, pH=%.1f)",
+                cname, violations, temperature, ph,
+            )
+            continue
+
+        # Single violation → set score to 0 (will sink to bottom)
+        if violations == 1:
+            cdata = dict(cdata)  # shallow copy
+            cdata["_score"] = 0.0
+            cdata["confidence"] = 0.0
+            cdata["advisory_tier"] = "Not Recommended"
+            logger.debug(
+                "FEASIBILITY ZEROED %s: 1 violation (temp=%.1f, pH=%.1f)",
+                cname, temperature, ph,
+            )
+
+        filtered[cname] = cdata
+
+    # Re-normalise scores among survivors
+    total_score = sum(c["_score"] for c in filtered.values())
+    if total_score > 0:
+        for cdata in filtered.values():
+            raw = cdata["_score"]
+            norm_conf = round((raw / total_score) * 100, 2)
+            # Keep the lower of original confidence and normalised share
+            # so we never inflate a weak candidate
+            cdata["confidence"] = min(cdata["confidence"], norm_conf) if cdata["confidence"] > 0 else 0.0
+
+    return filtered
+
+
 def validate_distribution(input_dict: dict, mode: str) -> list:
     warnings = []
     ranges = TRAINING_RANGES.get(mode, TRAINING_RANGES["soil"])
@@ -1410,8 +1490,27 @@ async def recommend(data: RecommendInput):
                     "_score": score,
                 }
 
+    # ── Hard Feasibility Filter ────────────────────────────────────
+    # Remove biologically non-viable crops BEFORE ranking.
+    viable = _hard_feasibility_filter(
+        candidates,
+        temperature=data.temperature,
+        ph=data.ph,
+    )
+    excluded_count = len(candidates) - len(viable)
+    if excluded_count > 0:
+        logger.info(
+            "FEASIBILITY FILTER removed %d/%d candidates",
+            excluded_count, len(candidates),
+        )
+
     # Sort by score descending, take top 3
-    ranked = sorted(candidates.values(), key=lambda c: c["_score"], reverse=True)[:3]
+    ranked = sorted(viable.values(), key=lambda c: c["_score"], reverse=True)[:3]
+
+    # Re-compute advisory tier after filtering (confidence may have changed)
+    for c in ranked:
+        if c["confidence"] > 0:
+            c["advisory_tier"] = advisory_tier(c["confidence"], is_ood)
 
     # Strip internal scoring field
     top_recommendations = []
