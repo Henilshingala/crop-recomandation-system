@@ -257,6 +257,72 @@ def _hard_feasibility_filter(
     return filtered
 
 
+# ===================================================================
+# SALINITY STRESS OVERRIDE
+# High alkalinity + waterlogging = saline conditions.
+# Applied AFTER feasibility filter, BEFORE final ranking.
+# ===================================================================
+
+_SALT_SENSITIVE = {
+    "banana", "coconut", "sapota", "citrus", "apple", "papaya",
+    "coffee", "guava", "custard_apple", "grapes",
+}
+_SALT_TOLERANT = {
+    "rice", "barley", "bajra", "jowar", "ragi", "cotton",
+    "date_palm", "ber", "spinach", "mothbeans", "sugarcane",
+}
+# Everything else is moderately tolerant (factor 0.6)
+
+
+def _salinity_stress_override(
+    candidates: dict,
+    ph: float,
+    rainfall: float,
+) -> dict:
+    """
+    Apply salinity stress multipliers when pH >= 8.8 AND rainfall >= 2500.
+
+    Salt-sensitive crops  → ×0.1
+    Moderately tolerant   → ×0.6
+    Salt-tolerant crops   → ×1.1
+
+    After scaling, re-normalise probabilities.
+    """
+    if ph < 8.8 or rainfall < 2500:
+        return candidates  # no saline conditions
+
+    logger.info("SALINITY OVERRIDE triggered (pH=%.1f, rainfall=%.0f)", ph, rainfall)
+
+    adjusted: dict = {}
+    for cname, cdata in candidates.items():
+        cdata = dict(cdata)  # shallow copy
+
+        if cname in _SALT_SENSITIVE:
+            factor = 0.1
+        elif cname in _SALT_TOLERANT:
+            factor = 1.1
+        else:
+            factor = 0.6
+
+        cdata["_score"] = cdata["_score"] * factor
+        cdata["confidence"] = round(cdata["confidence"] * factor, 2)
+
+        if factor <= 0.1:
+            cdata["advisory_tier"] = "Not Recommended"
+
+        adjusted[cname] = cdata
+
+    # Re-normalise
+    total = sum(c["_score"] for c in adjusted.values())
+    if total > 0:
+        for cdata in adjusted.values():
+            raw = cdata["_score"]
+            norm_conf = round((raw / total) * 100, 2)
+            cdata["confidence"] = min(cdata["confidence"], norm_conf) if cdata["confidence"] > 0 else 0.0
+
+    return adjusted
+
+
 def validate_distribution(input_dict: dict, mode: str) -> list:
     warnings = []
     ranges = TRAINING_RANGES.get(mode, TRAINING_RANGES["soil"])
@@ -1503,6 +1569,9 @@ async def recommend(data: RecommendInput):
             "FEASIBILITY FILTER removed %d/%d candidates",
             excluded_count, len(candidates),
         )
+
+    # ── Salinity Stress Override ─────────────────────────────────
+    viable = _salinity_stress_override(viable, ph=data.ph, rainfall=data.rainfall)
 
     # Sort by score descending, take top 3
     ranked = sorted(viable.values(), key=lambda c: c["_score"], reverse=True)[:3]
