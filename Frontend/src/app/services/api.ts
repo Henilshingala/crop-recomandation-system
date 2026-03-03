@@ -62,6 +62,8 @@ export interface PredictionResponse {
   stress_index?: number;
   environment_info?: Record<string, unknown>;
   warning?: string;
+  disclaimer?: string;
+  version?: string;
 }
 
 export interface HealthResponse {

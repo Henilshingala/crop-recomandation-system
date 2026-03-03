@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Badge } from "@/app/components/ui/badge";
-import { Sprout, TrendingUp, AlertCircle, Calendar } from "lucide-react";
+import {
+  Sprout, TrendingUp, AlertCircle, Calendar, ChevronDown,
+  ShieldAlert, Info,
+} from "lucide-react";
 import { type PredictionResponse, type CropRecommendation } from "@/app/services/api";
 import { useEffect, useState, useMemo } from "react";
 
@@ -44,10 +47,16 @@ function AutoCarousel({ images, alt }: { images: string[]; alt: string }) {
   );
 }
 
-/* ── Confidence bar ───────────────────────────────────────────────── */
+/* ── Animated confidence bar ──────────────────────────────────────── */
 
 function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
-  const h = size === "sm" ? "h-2" : "h-3";
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => setWidth(Math.min(value, 100)), 100);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  const h = size === "sm" ? "h-2.5" : "h-3.5";
   const color =
     value >= 75 ? "from-green-500 to-emerald-500"
     : value >= 50 ? "from-yellow-400 to-amber-500"
@@ -59,14 +68,14 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
 
   return (
     <div className="w-full">
-      <div className="flex justify-between text-sm mb-1">
+      <div className="flex justify-between text-sm mb-1.5">
         <span className="font-medium text-gray-600">Confidence</span>
         <span className={`font-bold ${textColor}`}>{value.toFixed(1)}%</span>
       </div>
-      <div className={`w-full bg-gray-200 rounded-full ${h}`}>
+      <div className={`w-full bg-gray-200 rounded-full ${h} overflow-hidden`}>
         <div
-          className={`bg-gradient-to-r ${color} ${h} rounded-full transition-all duration-700 ease-out`}
-          style={{ width: `${Math.min(value, 100)}%` }}
+          className={`bg-gradient-to-r ${color} ${h} rounded-full transition-all duration-1000 ease-out`}
+          style={{ width: `${width}%` }}
         />
       </div>
     </div>
@@ -80,20 +89,27 @@ function AdvisoryBadge({ tier }: { tier?: string }) {
   const t = tier.toLowerCase();
   if (t.includes("strongly")) {
     return (
-      <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1.5 px-3 py-1 text-xs font-medium">
+      <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
         {tier}
       </Badge>
     );
   }
-  if (t.includes("monitoring") || t.includes("conditional")) {
+  if (t === "recommended") {
     return (
-      <Badge className="bg-amber-100 text-amber-800 border border-amber-300 gap-1.5 px-3 py-1 text-xs font-medium">
+      <Badge className="bg-blue-100 text-blue-800 border border-blue-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
+        {tier}
+      </Badge>
+    );
+  }
+  if (t.includes("conditional")) {
+    return (
+      <Badge className="bg-amber-100 text-amber-800 border border-amber-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
         {tier}
       </Badge>
     );
   }
   return (
-    <Badge className="bg-red-100 text-red-800 border border-red-300 gap-1.5 px-3 py-1 text-xs font-medium">
+    <Badge className="bg-red-100 text-red-800 border border-red-300 gap-1.5 px-3 py-1 text-xs font-semibold shadow-sm">
       {tier}
     </Badge>
   );
@@ -114,12 +130,92 @@ function ConsensusPill({ consensus }: { consensus?: string }) {
   );
 }
 
+/* ── Stress indicator badge with tooltip ──────────────────────────── */
+
+function StressBadge({ stressIndex }: { stressIndex?: number }) {
+  if (stressIndex === undefined || stressIndex === null) return null;
+  const [showTip, setShowTip] = useState(false);
+
+  const label =
+    stressIndex < 0.2 ? "Low Stress"
+    : stressIndex < 0.4 ? "Moderate Stress"
+    : stressIndex < 0.6 ? "High Stress"
+    : "Extreme Stress";
+
+  const cls =
+    stressIndex < 0.2 ? "bg-green-100 text-green-700 border-green-300"
+    : stressIndex < 0.4 ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+    : stressIndex < 0.6 ? "bg-orange-100 text-orange-700 border-orange-300"
+    : "bg-red-100 text-red-700 border-red-300";
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onMouseEnter={() => setShowTip(true)}
+        onMouseLeave={() => setShowTip(false)}
+        onClick={() => setShowTip(v => !v)}
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${cls} cursor-help transition-colors`}
+      >
+        <ShieldAlert className="w-3 h-3" />
+        {label}
+      </button>
+      {showTip && (
+        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg pointer-events-none">
+          <p className="font-medium mb-1">Stress Index: {(stressIndex * 100).toFixed(0)}%</p>
+          <p className="text-gray-300 leading-relaxed">
+            Measures deviation from ideal growing conditions. Higher stress reduces confidence and may trigger tier downgrades.
+          </p>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── "Why this crop?" expandable section ──────────────────────────── */
+
+function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string }) {
+  const [open, setOpen] = useState(false);
+  if (!explanation) return null;
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50/50 mt-3">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-green-600" />
+          Why {crop}?
+        </span>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="px-4 pb-3 text-sm text-gray-600 leading-relaxed border-t border-gray-200 pt-3">
+          {explanation}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main component ───────────────────────────────────────────────── */
 
 export function ResultsSection({ data }: ResultsSectionProps) {
   const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!top_1 || !top_3?.length) {
     return (
@@ -130,12 +226,12 @@ export function ResultsSection({ data }: ResultsSectionProps) {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className={`space-y-6 transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
       {/* ── Top-1 Hero Card ────────────────────────────────────────── */}
       <Card className="shadow-xl border-0 overflow-hidden bg-white/80 backdrop-blur-sm">
         {/* Header gradient */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-8">
+        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white px-6 py-8">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <Sprout className="w-8 h-8" />
@@ -143,14 +239,18 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 {selectedIdx === 0 ? "Top Recommendation" : "Selected Crop"}
               </h2>
             </div>
-            <AdvisoryBadge tier={selected.advisory_tier} />
+            <div className="flex items-center gap-2 flex-wrap">
+              <AdvisoryBadge tier={selected.advisory_tier} />
+              <StressBadge stressIndex={data.stress_index} />
+            </div>
           </div>
 
-          <div className="flex items-baseline gap-4">
+          <div className="flex items-baseline gap-4 flex-wrap">
             <p className="text-5xl font-bold capitalize">{selected.crop}</p>
             <Badge className="bg-white/20 backdrop-blur text-white text-sm font-semibold px-3 py-1 border border-white/30">
               {selected.confidence.toFixed(1)}% Match
             </Badge>
+            <ConsensusPill consensus={selected.model_consensus} />
           </div>
         </div>
 
@@ -199,8 +299,6 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   {([
                     ["Iron", selected.nutrition.iron_mg, "mg"],
                     ["Calcium", selected.nutrition.calcium_mg, "mg"],
-                    ["Vitamin A", selected.nutrition.vitamin_a_mcg, "mcg"],
-                    ["Vitamin C", selected.nutrition.vitamin_c_mg, "mg"],
                     ["Water", selected.nutrition.water_g, "g"],
                   ] as const).map(([k, v, u]) => (
                     <div key={k} className="flex justify-between">
@@ -216,7 +314,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">About {selected.crop}</h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Based on your soil nutrients and environmental conditions,{" "}
                   <strong className="capitalize">{selected.crop}</strong> is the best suited crop
                   with a {selected.confidence.toFixed(1)}% confidence match.
@@ -235,34 +333,26 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 <span className="text-gray-700">{selected.expected_yield || "Varies by conditions"}</span>
               </div>
 
-              {/* Confidence bar */}
+              {/* Animated confidence bar */}
               <div className="pt-2">
                 <ConfidenceBar value={selected.confidence} />
               </div>
 
-              {/* Explanation */}
-              {selected.explanation && (
-                <p className="text-sm text-gray-600 italic mt-2">{selected.explanation}</p>
-              )}
+              {/* "Why this crop?" expandable explanation */}
+              <WhyThisCrop explanation={selected.explanation} crop={selected.crop} />
+            </div>
+          </div>
 
-              {/* Consensus */}
-              <div className="flex items-center gap-2 pt-1">
-                <ConsensusPill consensus={selected.model_consensus} />
+          {/* Warning alert */}
+          {data.warning && (
+            <div className="mt-6 bg-amber-50/70 backdrop-blur-sm border border-amber-200/60 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-800">
+                <p className="font-semibold mb-1">Advisory Notice</p>
+                <p>{data.warning}</p>
               </div>
             </div>
-          </div>
-
-          {/* Info alert */}
-          <div className="mt-6 bg-amber-50/70 backdrop-blur-sm border border-amber-200/60 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-amber-800">
-              <p className="font-semibold mb-1">Important Note</p>
-              <p>
-                This recommendation is based on the parameters you provided. For best results,
-                consult with local agricultural experts and consider regional factors.
-              </p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -282,7 +372,8 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 key={crop.crop}
                 type="button"
                 onClick={() => { setSelectedIdx(i); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className={`text-left rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
+                className={`group text-left rounded-xl border-2 p-4 transition-all duration-200
+                  hover:shadow-lg hover:scale-[1.02]
                   ${i === selectedIdx
                     ? "border-green-500 bg-green-50/70 ring-2 ring-green-200 shadow-md"
                     : "border-gray-200 bg-white/70 hover:border-green-300"
@@ -293,12 +384,12 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   <img
                     src={crop.image_url || `https://via.placeholder.com/200x150?text=${crop.crop}`}
                     alt={crop.crop}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={e => { (e.target as HTMLImageElement).src = `https://via.placeholder.com/200x150?text=${crop.crop}`; }}
                   />
                 </div>
 
-                {/* Rank + confidence */}
+                {/* Rank + advisory */}
                 <div className="flex items-center justify-between mb-2">
                   <Badge
                     variant="outline"
@@ -310,40 +401,45 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                   >
                     #{i + 1}
                   </Badge>
-                  <Badge className={`text-xs border ${
-                    crop.confidence >= 75 ? 'bg-green-100 text-green-700 border-green-200'
-                    : crop.confidence >= 50 ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                    : 'bg-red-100 text-red-700 border-red-200'
-                  }`}>
-                    {crop.confidence.toFixed(1)}%
-                  </Badge>
+                  <AdvisoryBadge tier={crop.advisory_tier} />
                 </div>
 
                 <h4 className="font-semibold text-lg text-gray-900 mb-2 capitalize">{crop.crop}</h4>
 
+                {/* Animated confidence bar */}
                 <ConfidenceBar value={crop.confidence} size="sm" />
 
-                <div className="mt-3 space-y-1 text-xs text-gray-500">
-                  <div className="flex justify-between">
-                    <span>Yield:</span>
-                    <span className="text-gray-700">{crop.expected_yield || "—"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Season:</span>
-                    <span className="text-gray-700">{crop.season || "—"}</span>
-                  </div>
+                {/* Consensus */}
+                <div className="mt-3 flex items-center gap-2">
+                  <ConsensusPill consensus={crop.model_consensus} />
                 </div>
+
+                {/* Mini explanation preview */}
+                {crop.explanation && (
+                  <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                    {crop.explanation}
+                  </p>
+                )}
               </button>
             ))}
           </div>
         </CardContent>
       </Card>
 
+      {/* ── Safety Disclaimer (V8 Phase 6 — non-removable) ────────── */}
+      <div className="bg-blue-50/80 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-blue-800 leading-relaxed">
+          <strong>Disclaimer:</strong> This advisory is AI-assisted and based on environmental parameters.
+          Farmers should consult local agricultural officers for final decisions.
+        </p>
+      </div>
+
       {/* Try another */}
       <div className="flex justify-center">
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 border-2 border-green-600 text-green-700 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+          className="px-6 py-3 border-2 border-green-600 text-green-700 rounded-lg font-semibold hover:bg-green-50 transition-all duration-200 hover:shadow-md"
         >
           Try Another Analysis
         </button>

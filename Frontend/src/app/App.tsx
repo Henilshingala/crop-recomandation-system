@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
-import { Sprout, Wheat, Loader2 } from "lucide-react";
+import { Sprout, Wheat, Loader2, ShieldAlert } from "lucide-react";
 import { getPrediction, type PredictionResponse } from "@/app/services/api";
 
 export default function App() {
@@ -45,20 +45,20 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50/60 to-teal-50/40">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md border-b-4 border-green-600">
-        <div className="container mx-auto px-4 py-6">
+      <header className="bg-white/90 backdrop-blur-md shadow-md border-b-4 border-green-600 sticky top-0 z-30">
+        <div className="container mx-auto px-4 py-5">
           <div className="flex items-center justify-center gap-4">
-            <div className="bg-green-600 p-3 rounded-full">
-              <Wheat className="w-8 h-8 text-white" />
+            <div className="bg-green-600 p-3 rounded-full shadow-lg">
+              <Wheat className="w-7 h-7 text-white" />
             </div>
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900">Crop Recommendation System</h1>
-              <p className="text-gray-600 mt-1">Smart farming decisions based on soil and climate analysis</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Crop Recommendation System</h1>
+              <p className="text-gray-600 mt-1 text-sm">Smart farming decisions powered by AI analysis</p>
             </div>
-            <div className="bg-green-600 p-3 rounded-full">
-              <Sprout className="w-8 h-8 text-white" />
+            <div className="bg-green-600 p-3 rounded-full shadow-lg">
+              <Sprout className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
@@ -108,8 +108,16 @@ export default function App() {
       </main>
 
       <footer className="bg-green-800 text-white mt-16 py-6">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm">
+        <div className="container mx-auto px-4 space-y-3">
+          {/* Safety Disclaimer — always visible */}
+          <div className="flex items-start justify-center gap-2 text-green-200 text-xs leading-relaxed max-w-2xl mx-auto">
+            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <p>
+              This advisory is AI-assisted and based on environmental parameters.
+              Farmers should consult local agricultural officers for final decisions.
+            </p>
+          </div>
+          <p className="text-sm text-center text-green-300">
             &copy; 2026 Crop Recommendation System &bull; Empowering farmers with data-driven decisions
           </p>
         </div>

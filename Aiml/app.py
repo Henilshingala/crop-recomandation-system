@@ -41,7 +41,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ml_api_v7")
 
-app = FastAPI(title="Crop Recommendation ML API", version="7.0")
+app = FastAPI(title="Crop Recommendation ML API", version="8.0")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -178,69 +178,68 @@ def compute_entropy(proba: np.ndarray) -> float:
 
 
 # ===================================================================
-# HARD FEASIBILITY FILTER
-# Biologically non-viable crops must never appear in Top-3.
-# Applied BEFORE final ranking in /recommend.
+# V8 PHASE 1 — HARD AGRONOMIC FEASIBILITY GATE
+# Biologically non-viable crops MUST NOT appear in Top-3.
+# Applied BEFORE stress penalty and ranking.
 # ===================================================================
 
 def _hard_feasibility_filter(
     candidates: dict,
     temperature: float,
     ph: float,
+    rainfall: float,
 ) -> dict:
     """
-    Remove biologically non-viable crops from the candidate pool.
+    EXCLUDE biologically impossible crops. This is a hard gate, not a
+    probability penalty.
 
     Rules (per crop):
-      1. temp < crop_min_temp - 5°C  → probability = 0
-      2. temp > crop_max_temp + 5°C  → probability = 0
-      3. pH outside crop range by > 1.5 units → probability = 0
-      4. Two or more of the above   → exclude completely
+      1. temp < min_temp - 3°C  → EXCLUDE
+      2. temp > max_temp + 3°C  → EXCLUDE
+      3. pH < min_pH - 0.5 OR pH > max_pH + 0.5  → EXCLUDE
+      4. rainfall < min_rainfall × 0.3  → EXCLUDE
 
-    After exclusion, re-normalise scores so Top-3 selection is
-    drawn only from biologically viable crops.
+    Any single violation → crop removed entirely.
+    After exclusion, re-normalise scores among survivors.
     """
     filtered: dict = {}
 
     for cname, cdata in candidates.items():
         agro = CROP_AGRO_CONSTRAINTS.get(cname)
         if agro is None:
-            # No constraint data — keep as-is (conservative)
             filtered[cname] = cdata
             continue
 
-        violations = 0
+        excluded = False
+        reasons = []
 
-        # Temperature checks
+        # Temperature gate (±3°C margin)
         t_min, t_max = agro["temp_range"]
-        if temperature < t_min - 5:
-            violations += 1
-        if temperature > t_max + 5:
-            violations += 1
+        if temperature < t_min - 3:
+            excluded = True
+            reasons.append(f"temp {temperature:.1f}C < min {t_min}-3")
+        if temperature > t_max + 3:
+            excluded = True
+            reasons.append(f"temp {temperature:.1f}C > max {t_max}+3")
 
-        # pH check (outside range by > 1.5 units)
+        # pH gate (±0.5 margin)
         ph_min, ph_max = agro["ph_range"]
-        if ph < ph_min - 1.5 or ph > ph_max + 1.5:
-            violations += 1
+        if ph < ph_min - 0.5 or ph > ph_max + 0.5:
+            excluded = True
+            reasons.append(f"pH {ph:.1f} outside [{ph_min-0.5:.1f}, {ph_max+0.5:.1f}]")
 
-        # Two or more violations → hard exclusion
-        if violations >= 2:
-            logger.debug(
-                "FEASIBILITY EXCLUDED %s: %d violations (temp=%.1f, pH=%.1f)",
-                cname, violations, temperature, ph,
+        # Rainfall gate (< 30% of min requirement)
+        r_min = agro["rainfall_range"][0]
+        if r_min > 0 and rainfall < r_min * 0.3:
+            excluded = True
+            reasons.append(f"rain {rainfall:.0f}mm < 30% of min {r_min}")
+
+        if excluded:
+            logger.info(
+                "FEASIBILITY EXCLUDED %s: %s",
+                cname, "; ".join(reasons),
             )
             continue
-
-        # Single violation → set score to 0 (will sink to bottom)
-        if violations == 1:
-            cdata = dict(cdata)  # shallow copy
-            cdata["_score"] = 0.0
-            cdata["confidence"] = 0.0
-            cdata["advisory_tier"] = "Not Recommended"
-            logger.debug(
-                "FEASIBILITY ZEROED %s: 1 violation (temp=%.1f, pH=%.1f)",
-                cname, temperature, ph,
-            )
 
         filtered[cname] = cdata
 
@@ -250,8 +249,6 @@ def _hard_feasibility_filter(
         for cdata in filtered.values():
             raw = cdata["_score"]
             norm_conf = round((raw / total_score) * 100, 2)
-            # Keep the lower of original confidence and normalised share
-            # so we never inflate a weak candidate
             cdata["confidence"] = min(cdata["confidence"], norm_conf) if cdata["confidence"] > 0 else 0.0
 
     return filtered
@@ -319,6 +316,119 @@ def _salinity_stress_override(
             raw = cdata["_score"]
             norm_conf = round((raw / total) * 100, 2)
             cdata["confidence"] = min(cdata["confidence"], norm_conf) if cdata["confidence"] > 0 else 0.0
+
+    return adjusted
+
+
+# ===================================================================
+# V8 PHASE 2 — GRADUAL STRESS PENALTY (per-crop, not binary)
+# ===================================================================
+
+def _compute_crop_stress_factor(crop: str, input_dict: dict) -> Tuple[float, int]:
+    """
+    Compute a continuous stress factor in [0, 1] for a specific crop
+    based on how far current conditions deviate from the crop's ideal range.
+
+    Returns (stress_factor, severe_count).
+    severe_count = number of parameters with deviation > 0.5.
+    """
+    agro = CROP_AGRO_CONSTRAINTS.get(crop)
+    if agro is None:
+        return 0.0, 0
+
+    temp = input_dict.get("temperature", 25)
+    ph = input_dict.get("ph", 6.5)
+    rain = input_dict.get("rainfall", 500)
+    N = input_dict.get("N", 80)
+    P = input_dict.get("P", 50)
+    K = input_dict.get("K", 50)
+
+    deviations = []
+    severe_count = 0
+
+    # Temperature deviation
+    t_min, t_max = agro["temp_range"]
+    t_mid = (t_min + t_max) / 2
+    t_half = max((t_max - t_min) / 2, 1)
+    t_dev = max(0, abs(temp - t_mid) / t_half - 1.0)  # 0 inside range, >0 outside
+    t_dev = min(t_dev, 2.0) / 2.0  # normalise to [0, 1]
+    deviations.append(t_dev * 0.30)  # weight 30%
+    if t_dev > 0.5:
+        severe_count += 1
+
+    # pH deviation
+    ph_min, ph_max = agro["ph_range"]
+    ph_mid = (ph_min + ph_max) / 2
+    ph_half = max((ph_max - ph_min) / 2, 0.5)
+    ph_dev = max(0, abs(ph - ph_mid) / ph_half - 1.0)
+    ph_dev = min(ph_dev, 2.0) / 2.0
+    deviations.append(ph_dev * 0.25)  # weight 25%
+    if ph_dev > 0.5:
+        severe_count += 1
+
+    # Rainfall deviation
+    r_min, r_max = agro["rainfall_range"]
+    r_mid = (r_min + r_max) / 2
+    r_half = max((r_max - r_min) / 2, 100)
+    r_dev = max(0, abs(rain - r_mid) / r_half - 1.0)
+    r_dev = min(r_dev, 2.0) / 2.0
+    deviations.append(r_dev * 0.25)  # weight 25%
+    if r_dev > 0.5:
+        severe_count += 1
+
+    # Nutrient excess ratio (combined N+P+K)
+    nutrient_total = N + P + K
+    if nutrient_total > 400:
+        n_dev = min((nutrient_total - 400) / 400, 1.0)
+    elif nutrient_total < 30:
+        n_dev = min((30 - nutrient_total) / 30, 1.0)
+    else:
+        n_dev = 0.0
+    deviations.append(n_dev * 0.20)  # weight 20%
+    if n_dev > 0.5:
+        severe_count += 1
+
+    stress_factor = sum(deviations)
+    stress_factor = min(stress_factor, 1.0)
+
+    return round(stress_factor, 4), severe_count
+
+
+def _apply_stress_penalty(candidates: dict, input_dict: dict) -> dict:
+    """
+    V8 Phase 2: Apply gradual stress penalty to each crop.
+
+    calibrated_confidence = base × (1 - stress_factor)
+
+    Caps:
+      - Any stress case: max 75%
+      - Chaos (multiple severe stresses): max 60%
+      - No extreme environment may exceed 80%
+    """
+    adjusted: dict = {}
+
+    for cname, cdata in candidates.items():
+        cdata = dict(cdata)  # shallow copy
+        stress_factor, severe_count = _compute_crop_stress_factor(cname, input_dict)
+
+        base_conf = cdata["confidence"]
+        penalised = base_conf * (1.0 - stress_factor)
+
+        # Apply confidence caps
+        if severe_count >= 2:  # chaos
+            penalised = min(penalised, 60.0)
+        elif stress_factor > 0.1:  # any stress
+            penalised = min(penalised, 75.0)
+
+        # Universal extreme-environment cap
+        penalised = min(penalised, 80.0)
+
+        cdata["confidence"] = round(penalised, 2)
+        cdata["_stress_factor"] = stress_factor
+        cdata["_severe_count"] = severe_count
+        cdata["_score"] = cdata["_score"] * (1.0 - stress_factor)
+
+        adjusted[cname] = cdata
 
     return adjusted
 
@@ -517,24 +627,52 @@ def flatten_distribution(proba: np.ndarray, stress_index: float) -> np.ndarray:
 # STEP 6 — ADVISORY RISK TIERS
 # ===================================================================
 
-def advisory_tier(confidence_pct: float, is_ood: bool) -> str:
-    if confidence_pct > 85:
+# V8 PHASE 4 — CONFIDENCE CALIBRATION & TIER RULES
+_TIER_DOWNGRADE = {
+    "Strongly Recommended": "Recommended",
+    "Recommended": "Conditional / Trial Basis",
+    "Conditional / Trial Basis": "Not Recommended",
+    "Not Recommended": "Not Recommended",
+}
+
+
+def advisory_tier(
+    confidence_pct: float,
+    is_ood: bool = False,
+    stress_factor: float = 0.0,
+    severe_count: int = 0,
+) -> str:
+    """
+    V8 tier boundaries:
+      > 80%  → Strongly Recommended
+      60-80% → Recommended
+      40-60% → Conditional / Trial Basis
+      < 40%  → Not Recommended
+
+    Downgrades:
+      - OOD → -1 tier
+      - stress_factor > 0.4 → -1 tier
+      - multiple severe stresses (severe_count >= 2) → -2 tiers total
+    """
+    if confidence_pct > 80:
         tier = "Strongly Recommended"
     elif confidence_pct > 60:
-        tier = "Recommended with Monitoring"
+        tier = "Recommended"
     elif confidence_pct > 40:
         tier = "Conditional / Trial Basis"
     else:
         tier = "Not Recommended"
 
+    downgrades = 0
     if is_ood:
-        downgrade = {
-            "Strongly Recommended": "Recommended with Monitoring",
-            "Recommended with Monitoring": "Conditional / Trial Basis",
-            "Conditional / Trial Basis": "Not Recommended",
-            "Not Recommended": "Not Recommended",
-        }
-        tier = downgrade[tier]
+        downgrades += 1
+    if severe_count >= 2:
+        downgrades += 2
+    elif stress_factor > 0.4:
+        downgrades += 1
+
+    for _ in range(downgrades):
+        tier = _TIER_DOWNGRADE[tier]
 
     return tier
 
@@ -843,7 +981,11 @@ else:
 
 
 def _assert_startup():
+    """V8 Phase 7 — Fail fast if any inconsistency detected."""
     errors = []
+    warnings = []
+
+    # Model presence
     if not _soil:
         errors.append("Soil model not loaded")
     elif _soil.crop_count != 51:
@@ -854,15 +996,52 @@ def _assert_startup():
         errors.append(f"Extended RF has {_extended.crop_count} crops, expected 51")
     if not _hybrid:
         errors.append("Hybrid not available")
+
+    # Validate crop constraint dictionary completeness
     if _soil:
         missing = [c for c in _soil.crops if c not in CROP_AGRO_CONSTRAINTS]
         if missing:
             errors.append(f"Missing agronomic constraints for: {missing}")
-    for e in errors:
-        logger.error("STARTUP: %s", e)
-    if not errors:
-        logger.info("All startup assertions passed (V7 advisory engine).")
+    if _extended:
+        missing_ext = [c for c in _extended.crops if c not in CROP_AGRO_CONSTRAINTS]
+        if missing_ext:
+            errors.append(f"Extended model — missing constraints for: {missing_ext}")
 
+    # Validate constraint structure
+    required_keys = {"ph_range", "temp_range", "rainfall_range", "humidity_range"}
+    for crop, data in CROP_AGRO_CONSTRAINTS.items():
+        missing_keys = required_keys - set(data.keys())
+        if missing_keys:
+            errors.append(f"Crop '{crop}' missing constraint keys: {missing_keys}")
+        # Validate ranges are [min, max] with min < max
+        for key in ["ph_range", "temp_range", "rainfall_range", "humidity_range"]:
+            if key in data:
+                lo, hi = data[key]
+                if lo > hi:
+                    errors.append(f"Crop '{crop}' {key}: min ({lo}) > max ({hi})")
+
+    # Validate feature_ranges.json has acceptance limits
+    for field in ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]:
+        if field not in _ACC:
+            errors.append(f"Missing acceptance limit for: {field}")
+
+    # Report
+    for e in errors:
+        logger.error("STARTUP ASSERTION FAILED: %s", e)
+    for w in warnings:
+        logger.warning("STARTUP WARNING: %s", w)
+
+    if errors:
+        logger.critical(
+            "V8 STARTUP: %d assertion(s) failed — system may produce unsafe results!",
+            len(errors),
+        )
+    else:
+        logger.info(
+            "V8 startup assertions PASSED — %d crops, %d constraints, all models loaded.",
+            _soil.crop_count if _soil else 0,
+            len(CROP_AGRO_CONSTRAINTS),
+        )
 _assert_startup()
 
 
@@ -1315,12 +1494,12 @@ async def predict(data: PredictionInput):
 def predict_hint():
     return {
         "message": "Use POST with JSON body.",
-        "version": "7.0",
+        "version": "8.0",
         "modes": sorted(CANONICAL_MODES),
         "aliases": {"original": "soil", "synthetic": "extended"},
         "advisory_tiers": [
-            "Strongly Recommended (>85%)",
-            "Recommended with Monitoring (60-85%)",
+            "Strongly Recommended (>80%)",
+            "Recommended (60-80%)",
             "Conditional / Trial Basis (40-60%)",
             "Not Recommended (<40%)",
         ],
@@ -1331,32 +1510,35 @@ def predict_hint():
 def health():
     return {
         "status": "online",
-        "version": "7.0",
-        "architecture": "V7 Farmer Advisory Engine",
-        "features": [
-            "agronomic_constraints",
-            "ood_dampening",
-            "stress_scoring",
-            "calibrated_confidence",
-            "model_rebalancing",
-            "advisory_tiers",
-            "explanation_layer",
-            "confidence_cap_92pct",
+        "version": "8.0",
+        "architecture": "V8 Production-Grade Farmer Advisory",
+        "phases": [
+            "hard_feasibility_gate",
+            "gradual_stress_penalty",
+            "salinity_override",
+            "consensus_merge_3_models",
+            "confidence_calibration_and_caps",
+            "tier_downgrade_logic",
+            "startup_validation",
+            "safety_disclaimer",
         ],
+        "confidence_caps": {
+            "stress": "75%",
+            "chaos_multi_severe": "60%",
+            "universal_max": "80%",
+        },
         "models": {
             "soil": {
                 "loaded": _soil is not None,
                 "type": "stacked-ensemble-v6",
                 "crops": _soil.crop_count if _soil else 0,
-                "checksum": _soil.checksum if _soil else None,
             },
             "extended": {
                 "loaded": _extended is not None,
                 "type": "calibrated-rf",
                 "crops": _extended.crop_count if _extended else 0,
-                "checksum": _extended.checksum if _extended else None,
             },
-            "both": {
+            "hybrid": {
                 "loaded": _hybrid is not None,
                 "type": "hybrid-v6-rf",
                 "crops": _hybrid.crop_count if _hybrid else 0,
@@ -1556,35 +1738,44 @@ async def recommend(data: RecommendInput):
                     "_score": score,
                 }
 
-    # ── Hard Feasibility Filter ────────────────────────────────────
-    # Remove biologically non-viable crops BEFORE ranking.
+    # ── V8 Phase 1: Hard Feasibility Gate ──────────────────────────
     viable = _hard_feasibility_filter(
         candidates,
         temperature=data.temperature,
         ph=data.ph,
+        rainfall=data.rainfall,
     )
     excluded_count = len(candidates) - len(viable)
     if excluded_count > 0:
         logger.info(
-            "FEASIBILITY FILTER removed %d/%d candidates",
+            "FEASIBILITY GATE removed %d/%d candidates",
             excluded_count, len(candidates),
         )
 
-    # ── Salinity Stress Override ─────────────────────────────────
+    # ── V8 Salinity Stress Override ──────────────────────────────
     viable = _salinity_stress_override(viable, ph=data.ph, rainfall=data.rainfall)
+
+    # ── V8 Phase 2: Gradual Stress Penalty ───────────────────────
+    viable = _apply_stress_penalty(viable, canonical)
 
     # Sort by score descending, take top 3
     ranked = sorted(viable.values(), key=lambda c: c["_score"], reverse=True)[:3]
 
-    # Re-compute advisory tier after filtering (confidence may have changed)
+    # V8 Phase 4: Re-compute advisory tier with stress-based downgrade
     for c in ranked:
-        if c["confidence"] > 0:
-            c["advisory_tier"] = advisory_tier(c["confidence"], is_ood)
+        sf = c.get("_stress_factor", 0.0)
+        sc = c.get("_severe_count", 0)
+        c["advisory_tier"] = advisory_tier(
+            c["confidence"], is_ood,
+            stress_factor=sf, severe_count=sc,
+        )
 
-    # Strip internal scoring field
+    # Strip internal scoring fields
     top_recommendations = []
     for c in ranked:
         c.pop("_score", None)
+        c.pop("_stress_factor", None)
+        c.pop("_severe_count", None)
         top_recommendations.append(c)
 
     latency = round((time.time() - start) * 1000, 1)
@@ -1600,6 +1791,11 @@ async def recommend(data: RecommendInput):
             "irrigation": data.irrigation,
             "moisture": data.moisture,
         },
+        "disclaimer": (
+            "This advisory is AI-assisted and based on environmental parameters. "
+            "Farmers should consult local agricultural officers for final decisions."
+        ),
+        "version": "8.0",
         "latency_ms": latency,
     }
 
@@ -1632,8 +1828,15 @@ async def recommend(data: RecommendInput):
 def recommend_hint():
     return {
         "message": "Use POST with JSON body.",
-        "version": "7.1",
-        "description": "Unified advisory engine — no model selection required.",
+        "version": "8.0",
+        "description": "V8 production-grade farmer advisory — no model selection required.",
         "required_fields": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"],
         "optional_fields": ["soil_type", "irrigation", "moisture", "season"],
+        "phases": [
+            "Hard feasibility gate (±3°C, ±0.5 pH, <30% min rain)",
+            "Gradual stress penalty (per-crop weighted deviation)",
+            "Salinity override (pH≥8.8 + rain≥2500)",
+            "Confidence caps (75% stress, 60% chaos, 80% universal)",
+            "Tier downgrade (stress>0.4 → -1, multi-severe → -2)",
+        ],
     }
