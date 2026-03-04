@@ -74,8 +74,8 @@ export default function App() {
                 <Wheat className="w-5 h-5 text-white" />
               </div>
               <div className="text-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{t("app.title")}</h1>
-                <p className="text-emerald-300/60 text-xs mt-0.5">{t("app.subtitle")}</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">{t("app.title")}</h1>
+                <p className="text-emerald-600/60 text-xs mt-0.5">{t("app.subtitle")}</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/20">
                 <Sprout className="w-5 h-5 text-white" />
@@ -84,15 +84,15 @@ export default function App() {
 
             {/* Language Switcher */}
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-emerald-400/60 hidden sm:block" />
+              <Globe className="w-4 h-4 text-emerald-600/60 hidden sm:block" />
               <select
                 value={i18n.language}
                 onChange={(e) => i18n.changeLanguage(e.target.value)}
-                className="bg-white/[0.06] backdrop-blur border border-white/10 text-emerald-200 text-sm rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 cursor-pointer outline-none transition-all"
+                className="bg-white/60 backdrop-blur border border-gray-200 text-gray-700 text-sm rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 cursor-pointer outline-none transition-all"
                 aria-label={t("nav.language")}
               >
                 {LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code} className="bg-gray-900 text-white">
+                  <option key={lang.code} value={lang.code} className="bg-white text-gray-900">
                     {lang.label}
                   </option>
                 ))}
@@ -115,21 +115,21 @@ export default function App() {
                 <div className="loading-dot" />
                 <div className="loading-dot" />
               </div>
-              <p className="text-emerald-300/70 text-sm font-medium">{t("loading")}</p>
+              <p className="text-emerald-700/70 text-sm font-medium">{t("loading")}</p>
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="glass-card !border-red-500/20 p-6 animate-fade-in-up">
+            <div className="glass-card !border-red-200 p-6 animate-fade-in-up">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                  <ShieldAlert className="w-5 h-5 text-red-400" />
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <ShieldAlert className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-red-300">{t("errors.title")}</p>
-                  <p className="text-red-200/70 text-sm mt-1">{error}</p>
-                  <p className="text-red-200/40 text-xs mt-2">{t("errors.serverHint")}</p>
+                  <p className="font-semibold text-red-800">{t("errors.title")}</p>
+                  <p className="text-red-600/80 text-sm mt-1">{error}</p>
+                  <p className="text-red-400 text-xs mt-2">{t("errors.serverHint")}</p>
                 </div>
               </div>
             </div>
@@ -141,13 +141,13 @@ export default function App() {
           {/* How It Works */}
           {!results && !isLoading && (
             <div className="glass-card p-6 animate-fade-in-up delay-200">
-              <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
-                <Sprout className="w-5 h-5 text-emerald-400" />
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Sprout className="w-5 h-5 text-emerald-600" />
                 {t("howItWorks.title")}
               </h3>
-              <div className="text-sm text-gray-300/70 space-y-2">
+              <div className="text-sm text-gray-600 space-y-2">
                 <p>{t("howItWorks.description")}</p>
-                <p className="pt-2 text-emerald-300/60" dangerouslySetInnerHTML={{ __html: t("howItWorks.getStarted") }} />
+                <p className="pt-2 text-emerald-700/60" dangerouslySetInnerHTML={{ __html: t("howItWorks.getStarted") }} />
               </div>
             </div>
           )}
@@ -155,13 +155,13 @@ export default function App() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="mt-20 border-t border-white/[0.05]">
+      <footer className="mt-20 border-t border-gray-200/60">
         <div className="container mx-auto px-4 py-6 space-y-3">
-          <div className="flex items-start justify-center gap-2 text-gray-400/70 text-xs leading-relaxed max-w-2xl mx-auto">
-            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-500/40" />
+          <div className="flex items-start justify-center gap-2 text-gray-500 text-xs leading-relaxed max-w-2xl mx-auto">
+            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-500/50" />
             <p>{t("disclaimer")}</p>
           </div>
-          <p className="text-xs text-center text-gray-500/50">
+          <p className="text-xs text-center text-gray-400">
             {t("footer.copyright")}
           </p>
         </div>

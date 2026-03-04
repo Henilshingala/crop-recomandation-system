@@ -107,9 +107,9 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   return (
     <div className="glass-card overflow-hidden animate-fade-in-up">
       {/* Card header */}
-      <div className="px-6 py-5 border-b border-white/[0.06]">
-        <h2 className="text-xl font-bold text-white">{t("form.title")}</h2>
-        <p className="text-sm text-gray-400 mt-1">{t("form.description")}</p>
+      <div className="px-6 py-5 border-b border-gray-200/60">
+        <h2 className="text-xl font-bold text-gray-900">{t("form.title")}</h2>
+        <p className="text-sm text-gray-500 mt-1">{t("form.description")}</p>
       </div>
 
       {/* Card body */}
@@ -119,11 +119,11 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
           {/* NPK Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/40 to-transparent" />
-              <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-widest whitespace-nowrap">
+              <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/30 to-transparent" />
+              <h3 className="text-xs font-semibold text-emerald-700 uppercase tracking-widest whitespace-nowrap">
                 {t("form.soilNutrients")}
               </h3>
-              <div className="h-px flex-1 bg-gradient-to-l from-emerald-500/40 to-transparent" />
+              <div className="h-px flex-1 bg-gradient-to-l from-emerald-500/30 to-transparent" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <GlassField label={t("form.nitrogen")} name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-400" />} placeholder={`${VALIDATION_RANGES.nitrogen.min}–${VALIDATION_RANGES.nitrogen.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
@@ -135,11 +135,11 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
           {/* Environmental Conditions */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-px flex-1 bg-gradient-to-r from-teal-500/40 to-transparent" />
-              <h3 className="text-xs font-semibold text-teal-400 uppercase tracking-widest whitespace-nowrap">
+              <div className="h-px flex-1 bg-gradient-to-r from-teal-500/30 to-transparent" />
+              <h3 className="text-xs font-semibold text-teal-700 uppercase tracking-widest whitespace-nowrap">
                 {t("form.envConditions")}
               </h3>
-              <div className="h-px flex-1 bg-gradient-to-l from-teal-500/40 to-transparent" />
+              <div className="h-px flex-1 bg-gradient-to-l from-teal-500/30 to-transparent" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <GlassField label={t("form.temperature")} name="temperature" icon={<Thermometer className="w-4 h-4 text-red-400" />} placeholder={`${VALIDATION_RANGES.temperature.min} to ${VALIDATION_RANGES.temperature.max}`} unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
@@ -181,7 +181,7 @@ function GlassField({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={name} className="flex items-center gap-2 text-gray-300 text-sm font-medium">
+      <Label htmlFor={name} className="flex items-center gap-2 text-gray-700 text-sm font-medium">
         {icon} {label}
       </Label>
       <div className="relative">
@@ -198,7 +198,7 @@ function GlassField({
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">{unit}</span>
       </div>
       {errors[name] && (
-        <p className="text-xs text-red-400 mt-1 animate-fade-in">{errors[name]}</p>
+        <p className="text-xs text-red-600 mt-1 animate-fade-in">{errors[name]}</p>
       )}
     </div>
   );

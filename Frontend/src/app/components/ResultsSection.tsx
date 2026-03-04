@@ -73,14 +73,14 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
     : value >= 50 ? "progress-fill-mid"
     : "progress-fill-low";
   const textColor =
-    value >= 75 ? "text-emerald-400"
-    : value >= 50 ? "text-amber-400"
-    : "text-red-400";
+    value >= 75 ? "text-emerald-700"
+    : value >= 50 ? "text-amber-700"
+    : "text-red-700";
 
   return (
     <div className="w-full">
       <div className="flex justify-between text-sm mb-1.5">
-        <span className="font-medium text-gray-400">{t("results.confidence")}</span>
+        <span className="font-medium text-gray-500">{t("results.confidence")}</span>
         <span className={`font-bold ${textColor}`}><AnimatedCounter value={value} /></span>
       </div>
       <div className={`progress-track ${h}`}>
@@ -108,27 +108,27 @@ function AdvisoryBadge({ tier }: { tier?: string }) {
 
   if (tl.includes("strongly")) {
     return (
-      <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 gap-1.5 px-3 py-1 text-xs font-semibold">
+      <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200 gap-1.5 px-3 py-1 text-xs font-semibold">
         {tierLabel}
       </Badge>
     );
   }
   if (tl === "recommended") {
     return (
-      <Badge className="bg-blue-500/15 text-blue-300 border border-blue-500/30 gap-1.5 px-3 py-1 text-xs font-semibold">
+      <Badge className="bg-blue-100 text-blue-800 border border-blue-200 gap-1.5 px-3 py-1 text-xs font-semibold">
         {tierLabel}
       </Badge>
     );
   }
   if (tl.includes("conditional")) {
     return (
-      <Badge className="bg-amber-500/15 text-amber-300 border border-amber-500/30 gap-1.5 px-3 py-1 text-xs font-semibold">
+      <Badge className="bg-amber-100 text-amber-800 border border-amber-200 gap-1.5 px-3 py-1 text-xs font-semibold">
         {tierLabel}
       </Badge>
     );
   }
   return (
-    <Badge className="bg-red-500/15 text-red-300 border border-red-500/30 gap-1.5 px-3 py-1 text-xs font-semibold">
+    <Badge className="bg-red-100 text-red-800 border border-red-200 gap-1.5 px-3 py-1 text-xs font-semibold">
       {tierLabel}
     </Badge>
   );
@@ -140,9 +140,9 @@ function ConsensusPill({ consensus }: { consensus?: string }) {
   const { t } = useTranslation();
   if (!consensus) return null;
   const cls =
-    consensus === "strong" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/25"
-    : consensus === "moderate" ? "bg-amber-500/15 text-amber-300 border-amber-500/25"
-    : "bg-white/[0.06] text-gray-400 border-white/10";
+    consensus === "strong" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+    : consensus === "moderate" ? "bg-amber-100 text-amber-700 border-amber-200"
+    : "bg-gray-100 text-gray-600 border-gray-200";
 
   const label = consensus === "strong" ? t("consensus.strong")
     : consensus === "moderate" ? t("consensus.moderate")
@@ -169,10 +169,10 @@ function StressBadge({ stressIndex }: { stressIndex?: number }) {
     : t("stress.extreme");
 
   const cls =
-    stressIndex < 0.2 ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-    : stressIndex < 0.4 ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-    : stressIndex < 0.6 ? "bg-orange-500/15 text-orange-300 border-orange-500/30"
-    : "bg-red-500/15 text-red-300 border-red-500/30";
+    stressIndex < 0.2 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+    : stressIndex < 0.4 ? "bg-amber-100 text-amber-700 border-amber-200"
+    : stressIndex < 0.6 ? "bg-orange-100 text-orange-700 border-orange-200"
+    : "bg-red-100 text-red-700 border-red-200";
 
   return (
     <div className="relative inline-block">
@@ -186,7 +186,7 @@ function StressBadge({ stressIndex }: { stressIndex?: number }) {
         {label}
       </button>
       {showTip && (
-        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900/95 backdrop-blur-xl text-white text-xs rounded-xl p-3 shadow-2xl border border-white/10 pointer-events-none">
+        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900/95 backdrop-blur-xl text-white text-xs rounded-xl p-3 shadow-2xl border border-gray-700 pointer-events-none">
           <p className="font-medium mb-1">{t("stress.indexLabel", { value: (stressIndex * 100).toFixed(0) })}</p>
           <p className="text-gray-300 leading-relaxed">
             {t("stress.description")}
@@ -205,10 +205,10 @@ function ConfidenceLabel({ label }: { label?: string }) {
   if (!label) return null;
   const l = label.toLowerCase();
   const cls = l.includes("strong")
-    ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
     : l.includes("moderate")
-    ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
-    : "bg-white/[0.06] text-gray-400 border-white/10";
+    ? "bg-blue-100 text-blue-700 border-blue-200"
+    : "bg-gray-100 text-gray-600 border-gray-200";
   const i18nKey = l.includes("strong") ? "match.strong"
     : l.includes("moderate") ? "match.moderate" : "match.weak";
   return (
@@ -229,13 +229,13 @@ function LimitingFactorBanner({ data }: { data: PredictionResponse }) {
   const devPct = Math.abs(lf.deviation * 100).toFixed(0);
 
   return (
-    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3">
-      <div className="p-1.5 rounded-lg bg-red-500/15">
-        <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+    <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+      <div className="p-1.5 rounded-lg bg-red-100">
+        <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
       </div>
       <div className="text-sm">
-        <p className="font-semibold mb-1 text-red-300">{t("results.limitingFactorTitle")}</p>
-        <p className="text-red-200/80">
+        <p className="font-semibold mb-1 text-red-800">{t("results.limitingFactorTitle")}</p>
+        <p className="text-red-700">
           {t("results.limitingFactorDesc", { feature: featureLabel, deviation: devPct })}
         </p>
         {lf.all_deviations && Object.keys(lf.all_deviations).length > 1 && (
@@ -244,7 +244,7 @@ function LimitingFactorBanner({ data }: { data: PredictionResponse }) {
               .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
               .map(([feat, dev]) => (
                 <span key={feat} className={`inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium ${
-                  Math.abs(dev) > 0.3 ? "bg-red-500/15 text-red-300" : "bg-amber-500/15 text-amber-300"
+                  Math.abs(dev) > 0.3 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
                 }`}>
                   {t(`features.${feat}`, { defaultValue: feat })}: {(Math.abs(dev) * 100).toFixed(0)}%
                 </span>
@@ -264,14 +264,14 @@ function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string
   if (!explanation) return null;
 
   return (
-    <div className="border border-white/[0.08] rounded-xl overflow-hidden bg-white/[0.03] mt-3">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 mt-3">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/[0.05] transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
       >
         <span className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-emerald-400" />
+          <Info className="w-4 h-4 text-emerald-600" />
           {t("results.whyCrop", { crop })}
         </span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
@@ -281,7 +281,7 @@ function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string
           open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <div className="px-4 pb-3 text-sm text-gray-400 leading-relaxed border-t border-white/[0.08] pt-3">
+        <div className="px-4 pb-3 text-sm text-gray-600 leading-relaxed border-t border-gray-200 pt-3">
           {explanation}
         </div>
       </div>
@@ -373,7 +373,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
 
   if (!top_1 || !top_3?.length) {
     return (
-      <div className="glass-card !border-amber-500/20 p-4 text-amber-300">
+      <div className="glass-card !border-amber-200 p-4 text-amber-700">
         {t("results.noRecommendations")}
       </div>
     );
@@ -382,11 +382,11 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
   // Dynamic header gradient / border colors based on suitability
   const heroClass = isUnsuitableState ? "hero-gradient-warn" : "hero-gradient";
   const cardSelectedBorder = isUnsuitableState
-    ? "border-amber-500/40 bg-amber-500/10 ring-2 ring-amber-500/20 shadow-lg shadow-amber-500/5"
-    : "border-emerald-500/40 bg-emerald-500/10 ring-2 ring-emerald-500/20 shadow-lg shadow-emerald-500/5";
+    ? "border-amber-400 bg-amber-50 ring-2 ring-amber-200 shadow-lg"
+    : "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200 shadow-lg";
   const cardHoverBorder = isUnsuitableState
-    ? "border-white/[0.08] bg-white/[0.04] hover:border-amber-500/25 hover:bg-amber-500/5"
-    : "border-white/[0.08] bg-white/[0.04] hover:border-emerald-500/25 hover:bg-emerald-500/5";
+    ? "border-gray-200 bg-white/70 hover:border-amber-300 hover:bg-amber-50/50"
+    : "border-gray-200 bg-white/70 hover:border-emerald-300 hover:bg-emerald-50/50";
 
   return (
     <div className={`space-y-6 transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -451,7 +451,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Image carousel */}
-            <div className="rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.06] max-w-sm mx-auto lg:mx-0">
+            <div className="rounded-xl overflow-hidden bg-gray-100 border border-gray-200/60 max-w-sm mx-auto lg:mx-0">
               {selected.image_urls && selected.image_urls.length > 0 ? (
                 <AutoCarousel key={selected.crop} images={selected.image_urls} alt={tc(selected.crop)} />
               ) : (
@@ -468,9 +468,9 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
 
             {/* Nutrition */}
             {selected.nutrition && (
-              <div className="bg-emerald-500/[0.06] backdrop-blur-sm rounded-xl p-4 border border-emerald-500/15">
-                <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-emerald-50 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/60">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {t("results.nutritionTitle")}
@@ -484,19 +484,19 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
                     [t("results.fiber"), selected.nutrition.fiber_g, "g"],
                   ] as const).map(([k, v, u]) => (
                     <div key={k} className="flex justify-between">
-                      <span className="text-gray-400">{k}:</span>
-                      <span className="font-medium text-white">{v} {u}</span>
+                      <span className="text-gray-600">{k}:</span>
+                      <span className="font-medium text-gray-900">{v} {u}</span>
                     </div>
                   ))}
-                  <div className="h-px bg-emerald-500/15 my-1.5" />
+                  <div className="h-px bg-emerald-200 my-1.5" />
                   {([
                     [t("results.iron"), selected.nutrition.iron_mg, "mg"],
                     [t("results.calcium"), selected.nutrition.calcium_mg, "mg"],
                     [t("results.water"), selected.nutrition.water_g, "g"],
                   ] as const).map(([k, v, u]) => (
                     <div key={k} className="flex justify-between">
-                      <span className="text-gray-400">{k}:</span>
-                      <span className="font-medium text-white">{v} {u}</span>
+                      <span className="text-gray-600">{k}:</span>
+                      <span className="font-medium text-gray-900">{v} {u}</span>
                     </div>
                   ))}
                 </div>
@@ -506,8 +506,8 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
             {/* Details column */}
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-white mb-2">{t("results.aboutCrop", { crop: tc(selected.crop) })}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed"
+                <h3 className="font-semibold text-gray-900 mb-2">{t("results.aboutCrop", { crop: tc(selected.crop) })}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed"
                    dangerouslySetInnerHTML={{
                      __html: isUnsuitableState
                        ? t("results.aboutUnsuitable", { crop: tc(selected.crop), confidence: selected.confidence.toFixed(1) })
@@ -517,15 +517,15 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               </div>
 
               <div className="flex items-center gap-2 text-sm">
-                <Calendar className="w-4 h-4 text-emerald-400" />
-                <span className="font-medium text-gray-300">{t("results.season")}:</span>
-                <span className="text-gray-400">{selected.season || t("results.seasonNotSpecified")}</span>
+                <Calendar className="w-4 h-4 text-emerald-600" />
+                <span className="font-medium text-gray-700">{t("results.season")}:</span>
+                <span className="text-gray-600">{selected.season || t("results.seasonNotSpecified")}</span>
               </div>
 
               <div className="flex items-center gap-2 text-sm">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span className="font-medium text-gray-300">{t("results.expectedYield")}:</span>
-                <span className="text-gray-400">{selected.expected_yield || t("results.yieldVaries")}</span>
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <span className="font-medium text-gray-700">{t("results.expectedYield")}:</span>
+                <span className="text-gray-600">{selected.expected_yield || t("results.yieldVaries")}</span>
               </div>
 
               {/* Animated confidence bar */}
@@ -540,13 +540,13 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
 
           {/* Warning alert */}
           {data.warning && (
-            <div className="mt-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
-              <div className="p-1.5 rounded-lg bg-amber-500/15">
-                <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+              <div className="p-1.5 rounded-lg bg-amber-100">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
               </div>
               <div className="text-sm">
-                <p className="font-semibold mb-1 text-amber-300">{t("results.advisoryNotice")}</p>
-                <p className="text-amber-200/80">{translateWarning(data.warning)}</p>
+                <p className="font-semibold mb-1 text-amber-800">{t("results.advisoryNotice")}</p>
+                <p className="text-amber-700">{translateWarning(data.warning)}</p>
               </div>
             </div>
           )}
@@ -556,11 +556,11 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
       {/* ── Top-3 Ranked List ─────────────────────────────────────── */}
       <div className="glass-card !p-0 overflow-hidden animate-fade-in-up delay-100">
         <div
-          className={`px-6 py-5 border-b border-white/[0.06] ${isUnsuitableState ? "cursor-pointer hover:bg-white/[0.02]" : ""}`}
+          className={`px-6 py-5 border-b border-gray-200/60 ${isUnsuitableState ? "cursor-pointer hover:bg-gray-50" : ""}`}
           {...(isUnsuitableState ? { onClick: () => setTop3Expanded(v => !v) } : {})}
         >
           <h3 className={`text-xl font-bold flex items-center gap-2 ${
-            isUnsuitableState ? "text-amber-300" : "text-emerald-300"
+            isUnsuitableState ? "text-amber-800" : "text-emerald-800"
           }`}>
             {isUnsuitableState ? (
               <>
@@ -575,7 +575,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               </>
             )}
           </h3>
-          <p className={`text-sm mt-1 ${isUnsuitableState ? "text-amber-400/70" : "text-emerald-400/70"}`}>
+          <p className={`text-sm mt-1 ${isUnsuitableState ? "text-amber-600" : "text-emerald-600"}`}>
             {isUnsuitableState
               ? t("results.rankedByLeast")
               : t("results.clickToView")}
@@ -600,7 +600,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
                   }`}
               >
                 {/* Image */}
-                <div className="w-full h-32 bg-white/[0.04] rounded-xl mb-3 overflow-hidden border border-white/[0.06]">
+                <div className="w-full h-32 bg-gray-100 rounded-xl mb-3 overflow-hidden border border-gray-200/60">
                   <img
                     src={crop.image_url || `https://via.placeholder.com/200x150?text=${crop.crop}`}
                     alt={tc(crop.crop)}
@@ -614,9 +614,9 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
                   <Badge
                     variant="outline"
                     className={
-                      i === 0 ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/10"
-                      : i === 1 ? "border-gray-500/30 text-gray-400 bg-white/[0.05]"
-                      : "border-orange-500/40 text-orange-300 bg-orange-500/10"
+                      i === 0 ? "border-yellow-400 text-yellow-700 bg-yellow-50"
+                      : i === 1 ? "border-gray-300 text-gray-600 bg-gray-50"
+                      : "border-orange-400 text-orange-700 bg-orange-50"
                     }
                   >
                     #{i + 1}
@@ -624,7 +624,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
                   <AdvisoryBadge tier={crop.advisory_tier} />
                 </div>
 
-                <h4 className="font-semibold text-lg text-white mb-2 capitalize">{tc(crop.crop)}</h4>
+                <h4 className="font-semibold text-lg text-gray-900 mb-2 capitalize">{tc(crop.crop)}</h4>
 
                 {/* Animated confidence bar */}
                 <ConfidenceBar value={crop.confidence} size="sm" />
@@ -655,12 +655,12 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
       </div>
 
       {/* ── Safety Disclaimer (V8 Phase 6 — non-removable) ────────── */}
-      <div className="glass-card !border-blue-500/15 flex items-start gap-3 animate-fade-in-up delay-200">
-        <div className="p-1.5 rounded-lg bg-blue-500/15">
-          <ShieldAlert className="w-5 h-5 text-blue-400 flex-shrink-0" />
+      <div className="glass-card !border-blue-200 flex items-start gap-3 animate-fade-in-up delay-200">
+        <div className="p-1.5 rounded-lg bg-blue-100">
+          <ShieldAlert className="w-5 h-5 text-blue-600 flex-shrink-0" />
         </div>
-        <p className="text-sm text-blue-200/80 leading-relaxed">
-          <strong className="text-blue-300">{t("results.advisoryNotice")}:</strong> {t("disclaimer")}
+        <p className="text-sm text-blue-800 leading-relaxed">
+          <strong className="text-blue-900">{t("results.advisoryNotice")}:</strong> {t("disclaimer")}
         </p>
       </div>
 
@@ -668,7 +668,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
       <div className="flex justify-center animate-fade-in-up delay-300">
         <button
           onClick={() => window.location.reload()}
-          className="px-8 py-3 border-2 border-emerald-500/30 text-emerald-400 rounded-xl font-semibold hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5"
+          className="px-8 py-3 border-2 border-emerald-500 text-emerald-700 rounded-xl font-semibold hover:bg-emerald-50 hover:border-emerald-600 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10"
         >
           {t("results.tryAnother")}
         </button>
