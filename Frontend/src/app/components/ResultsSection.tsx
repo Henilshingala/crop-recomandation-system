@@ -186,7 +186,7 @@ function StressBadge({ stressIndex }: { stressIndex?: number }) {
         {label}
       </button>
       {showTip && (
-        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900/95 backdrop-blur-xl text-white text-xs rounded-xl p-3 shadow-2xl border border-gray-700 pointer-events-none">
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900/95 backdrop-blur-xl text-white text-xs rounded-xl p-3 shadow-2xl border border-gray-700 pointer-events-none">
           <p className="font-medium mb-1">{t("stress.indexLabel", { value: (stressIndex * 100).toFixed(0) })}</p>
           <p className="text-gray-300 leading-relaxed">
             {t("stress.description")}
@@ -392,9 +392,9 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
     <div className={`space-y-6 transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
       {/* ── Top-1 Hero Card ────────────────────────────────────────── */}
-      <div className="glass-card !p-0 overflow-hidden animate-fade-in-up">
+      <div className="glass-card !p-0 animate-fade-in-up">
         {/* Header gradient */}
-        <div className={`${heroClass} text-white px-6 py-8`}>
+        <div className={`${heroClass} text-white px-6 py-8 rounded-t-[20px]`}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               {isUnsuitableState ? (
