@@ -1,11 +1,11 @@
 """
-Crop Recommendation ML API — V8.1 Production-Grade Farmer Advisory
+Crop Recommendation ML API — V8 FINAL STABLE
 ===================================================================
 Stabilized advisory system with guaranteed non-empty responses,
 consistent confidence caps, and fallback logic.
 
-V8.1 phases:
-  1. Hard feasibility gate (±3°C temp, ±0.5 pH, <30% min rain)
+V8 FINAL STABLE phases:
+  1. Hard feasibility gate (±5°C temp, ±0.5 pH, <30% min rain)
   2. Fallback: least-violating crop if all excluded (cap 35%)
   3. Gradual stress penalty (weighted per-crop deviation)
   4. Salinity stress override
@@ -13,6 +13,9 @@ V8.1 phases:
   6. Tier downgrade (stress>0.4 → -1, >0.6 → -2)
   7. Safety disclaimer in every response
   8. Startup assertions (fail-fast validation)
+  9. Limiting factor identification (per request)
+  10. Confidence interpretation labels
+  11. Global unsuitable detection (max_conf<25% or all-not-recommended)
 
 Models:
   "soil"      -> V6 stacked ensemble (51 crops)
@@ -42,7 +45,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ml_api_v7")
 
-app = FastAPI(title="Crop Recommendation ML API", version="8.1")
+app = FastAPI(title="Crop Recommendation ML API", version="8.2")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -195,9 +198,9 @@ def _hard_feasibility_filter(
     EXCLUDE biologically impossible crops. This is a hard gate, not a
     probability penalty.
 
-    Rules (per crop):
-      1. temp < min_temp - 3°C  → EXCLUDE
-      2. temp > max_temp + 3°C  → EXCLUDE
+    Rules (per crop) — V8 FINAL STABLE:
+      1. temp < min_temp - 5°C  → EXCLUDE
+      2. temp > max_temp + 5°C  → EXCLUDE
       3. pH < min_pH - 0.5 OR pH > max_pH + 0.5  → EXCLUDE
       4. rainfall < min_rainfall × 0.3  → EXCLUDE
 
@@ -205,6 +208,7 @@ def _hard_feasibility_filter(
     After exclusion, re-normalise scores among survivors.
     """
     filtered: dict = {}
+    excluded_info: list = []  # V8F: track exclusion reasons
 
     for cname, cdata in candidates.items():
         agro = CROP_AGRO_CONSTRAINTS.get(cname)
@@ -215,14 +219,14 @@ def _hard_feasibility_filter(
         excluded = False
         reasons = []
 
-        # Temperature gate (±3°C margin)
+        # Temperature gate (±5°C margin) — V8 FINAL STABLE
         t_min, t_max = agro["temp_range"]
-        if temperature < t_min - 3:
+        if temperature < t_min - 5:
             excluded = True
-            reasons.append(f"temp {temperature:.1f}C < min {t_min}-3")
-        if temperature > t_max + 3:
+            reasons.append(f"temp {temperature:.1f}C < min {t_min}-5")
+        if temperature > t_max + 5:
             excluded = True
-            reasons.append(f"temp {temperature:.1f}C > max {t_max}+3")
+            reasons.append(f"temp {temperature:.1f}C > max {t_max}+5")
 
         # pH gate (±0.5 margin)
         ph_min, ph_max = agro["ph_range"]
@@ -241,14 +245,19 @@ def _hard_feasibility_filter(
                 "FEASIBILITY EXCLUDED %s: %s",
                 cname, "; ".join(reasons),
             )
+            excluded_info.append({"crop": cname, "reasons": reasons})
             continue
 
         filtered[cname] = cdata
 
+    # Store excluded info on the dict for later retrieval
+    filtered["__excluded__"] = excluded_info  # type: ignore[assignment]
+
     # Re-normalise scores among survivors
-    total_score = sum(c["_score"] for c in filtered.values())
+    real_vals = {k: v for k, v in filtered.items() if k != "__excluded__"}
+    total_score = sum(c["_score"] for c in real_vals.values())
     if total_score > 0:
-        for cdata in filtered.values():
+        for cdata in real_vals.values():
             raw = cdata["_score"]
             norm_conf = round((raw / total_score) * 100, 2)
             cdata["confidence"] = min(cdata["confidence"], norm_conf) if cdata["confidence"] > 0 else 0.0
@@ -693,6 +702,50 @@ def flatten_distribution(proba: np.ndarray, stress_index: float) -> np.ndarray:
     if total > 0:
         flattened /= total
     return flattened
+
+
+# ===================================================================
+# V8 FINAL STABLE — LIMITING FACTOR IDENTIFICATION
+# ===================================================================
+
+def compute_limiting_factor(input_dict: dict) -> dict:
+    """
+    For each input feature, compute normalised deviation from the
+    centre of the training-range midpoint.  Return the feature with
+    the largest deviation as the primary limiting factor.
+    """
+    # Reference midpoints (from STRESS_REFERENCE)
+    deviations: Dict[str, float] = {}
+    for feat, ref in STRESS_REFERENCE.items():
+        val = input_dict.get(feat)
+        if val is None:
+            continue
+        distance = abs(val - ref["mid"])
+        normalised = min(distance / ref["half_width"], 2.0) / 2.0
+        deviations[feat] = round(normalised, 4)
+
+    if not deviations:
+        return {"feature": "unknown", "deviation": 0, "all_deviations": {}}
+
+    worst_feat = max(deviations, key=lambda k: deviations[k])
+    return {
+        "feature": worst_feat,
+        "deviation": deviations[worst_feat],
+        "all_deviations": deviations,
+    }
+
+
+# ===================================================================
+# V8 FINAL STABLE — CONFIDENCE INTERPRETATION LABELS
+# ===================================================================
+
+def confidence_label(confidence_pct: float) -> str:
+    """Map confidence % to human-readable match strength label."""
+    if confidence_pct > 60:
+        return "Strong Match"
+    if confidence_pct >= 30:
+        return "Moderate Match"
+    return "Weak Match"
 
 
 # ===================================================================
@@ -1591,8 +1644,8 @@ def predict_hint():
 def health():
     return {
         "status": "online",
-        "version": "8.1",
-        "architecture": "V8.1 Production-Grade Farmer Advisory",
+        "version": "8.2-final",
+        "architecture": "V8 FINAL STABLE Farmer Advisory",
         "phases": [
             "hard_feasibility_gate",
             "gradual_stress_penalty",
@@ -1819,13 +1872,15 @@ async def recommend(data: RecommendInput):
                     "_score": score,
                 }
 
-    # ── V8 Phase 1: Hard Feasibility Gate ──────────────────────────
+    # ── V8 Phase 1: Hard Feasibility Gate (±5°C) ─────────────────────
     viable = _hard_feasibility_filter(
         candidates,
         temperature=data.temperature,
         ph=data.ph,
         rainfall=data.rainfall,
     )
+    # Extract exclusion info before using the dict further
+    excluded_crops_info = viable.pop("__excluded__", [])  # type: ignore[arg-type]
     excluded_count = len(candidates) - len(viable)
     if excluded_count > 0:
         logger.info(
@@ -1862,15 +1917,28 @@ async def recommend(data: RecommendInput):
             c["confidence"], is_ood,
             stress_factor=sf, severe_count=sc,
         )
+        # V8F: Add confidence interpretation label
+        c["confidence_label"] = confidence_label(c["confidence"])
         # V8.1: Fallback mode hard cap
         if fallback_mode:
             c["confidence"] = min(c["confidence"], FALLBACK_CONFIDENCE_CAP)
             c["advisory_tier"] = "Not Recommended"
+            c["confidence_label"] = "Weak Match"
 
     # Detect if ALL returned crops are "Not Recommended"
     all_not_recommended = all(
         c.get("advisory_tier") == "Not Recommended" for c in ranked
     ) if ranked else True
+
+    # ── V8F: Global unsuitable detection ───────────────────────────
+    max_confidence = max((c["confidence"] for c in ranked), default=0)
+    global_unsuitable = (max_confidence < 25) or all_not_recommended
+
+    # ── V8F: Limiting factor identification ────────────────────────
+    limiting = compute_limiting_factor(canonical)
+
+    # ── V8F: Clean top-3 info ──────────────────────────────────────
+    viable_count = len(viable)
 
     # Strip internal scoring fields
     top_recommendations = []
@@ -1888,6 +1956,10 @@ async def recommend(data: RecommendInput):
         "stress_per_feature": stress_per_feature,
         "fallback_mode": fallback_mode,
         "all_not_recommended": all_not_recommended,
+        "global_unsuitable": global_unsuitable,
+        "limiting_factor": limiting,
+        "viable_count": viable_count,
+        "excluded_crops": excluded_crops_info if excluded_crops_info else [],
         "environment_info": {
             "season_used": get_season_name(season),
             "season_inferred": data.season is None,
@@ -1899,7 +1971,7 @@ async def recommend(data: RecommendInput):
             "This AI advisory is based on provided environmental parameters. "
             "Consult local agricultural experts before final decision."
         ),
-        "version": "8.1",
+        "version": "8.2-final",
         "latency_ms": latency,
     }
 
@@ -1937,16 +2009,19 @@ async def recommend(data: RecommendInput):
 def recommend_hint():
     return {
         "message": "Use POST with JSON body.",
-        "version": "8.1",
-        "description": "V8.1 production-grade farmer advisory — no model selection, guaranteed non-empty.",
+        "version": "8.2-final",
+        "description": "V8 FINAL STABLE — no model selection, guaranteed non-empty, limiting factor ID.",
         "required_fields": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"],
         "optional_fields": ["soil_type", "irrigation", "moisture", "season"],
         "phases": [
-            "Hard feasibility gate (±3°C, ±0.5 pH, <30% min rain)",
+            "Hard feasibility gate (±5°C, ±0.5 pH, <30% min rain)",
             "Fallback: least-violating crop if all excluded (cap 35%)",
             "Gradual stress penalty (per-crop weighted deviation)",
             "Salinity override (pH≥8.8 + rain≥2500)",
             "Confidence caps (75% stress, 60% chaos, 85% hard max)",
             "Tier downgrade (stress>0.4 → -1, >0.6 → -2)",
+            "Limiting factor identification",
+            "Confidence interpretation labels (Weak/Moderate/Strong)",
+            "Global unsuitable detection (max_conf<25% or all not-recommended)",
         ],
     }

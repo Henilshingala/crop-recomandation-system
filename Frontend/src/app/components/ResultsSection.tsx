@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/ca
 import { Badge } from "@/app/components/ui/badge";
 import {
   Sprout, TrendingUp, AlertCircle, Calendar, ChevronDown,
-  ShieldAlert, Info,
+  ShieldAlert, Info, AlertTriangle,
 } from "lucide-react";
 import { type PredictionResponse, type CropRecommendation, type PredictionInput } from "@/app/services/api";
 import { useEffect, useState, useMemo } from "react";
@@ -191,6 +191,62 @@ function StressBadge({ stressIndex }: { stressIndex?: number }) {
   );
 }
 
+/* ── Confidence interpretation label (V8 FINAL STABLE) ────────────── */
+
+function ConfidenceLabel({ label }: { label?: string }) {
+  const { t } = useTranslation();
+  if (!label) return null;
+  const l = label.toLowerCase();
+  const cls = l.includes("strong")
+    ? "bg-emerald-100 text-emerald-700 border-emerald-300"
+    : l.includes("moderate")
+    ? "bg-blue-100 text-blue-700 border-blue-300"
+    : "bg-gray-100 text-gray-600 border-gray-300";
+  const i18nKey = l.includes("strong") ? "match.strong"
+    : l.includes("moderate") ? "match.moderate" : "match.weak";
+  return (
+    <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${cls}`}>
+      {t(i18nKey, { defaultValue: label })}
+    </Badge>
+  );
+}
+
+/* ── Limiting-factor banner (V8 FINAL STABLE) ────────────────────── */
+
+function LimitingFactorBanner({ data }: { data: PredictionResponse }) {
+  const { t } = useTranslation();
+  const lf = data.limiting_factor;
+  if (!lf) return null;
+
+  const featureLabel = t(`features.${lf.feature}`, { defaultValue: lf.feature });
+  const devPct = Math.abs(lf.deviation * 100).toFixed(0);
+
+  return (
+    <div className="bg-red-50/80 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+      <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+      <div className="text-sm text-red-800">
+        <p className="font-semibold mb-1">{t("results.limitingFactorTitle")}</p>
+        <p>
+          {t("results.limitingFactorDesc", { feature: featureLabel, deviation: devPct })}
+        </p>
+        {lf.all_deviations && Object.keys(lf.all_deviations).length > 1 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {Object.entries(lf.all_deviations)
+              .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+              .map(([feat, dev]) => (
+                <span key={feat} className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                  Math.abs(dev) > 0.3 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
+                }`}>
+                  {t(`features.${feat}`, { defaultValue: feat })}: {(Math.abs(dev) * 100).toFixed(0)}%
+                </span>
+              ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── "Why this crop?" expandable section ──────────────────────────── */
 
 function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string }) {
@@ -296,11 +352,15 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // V8.1: Detect all-not-recommended / fallback states
+  // V8 FINAL STABLE: Detect all-not-recommended / fallback / global-unsuitable
   const allNotRecommended = data.all_not_recommended
     ?? top_3.every(c => c.advisory_tier?.toLowerCase().includes("not recommended"));
   const fallbackMode = data.fallback_mode ?? false;
-  const isUnsuitableState = allNotRecommended || fallbackMode;
+  const globalUnsuitable = data.global_unsuitable ?? false;
+  const isUnsuitableState = globalUnsuitable || allNotRecommended || fallbackMode;
+
+  // Collapsible top-3 when globally unsuitable (collapsed by default)
+  const [top3Expanded, setTop3Expanded] = useState(!isUnsuitableState);
 
   if (!top_1 || !top_3?.length) {
     return (
@@ -353,6 +413,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               {t("results.match", { value: selected.confidence.toFixed(1) })}
             </Badge>
             <ConsensusPill consensus={selected.model_consensus} />
+            <ConfidenceLabel label={selected.confidence_label} />
           </div>
         </div>
 
@@ -360,7 +421,9 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
         {isUnsuitableState && (
           <div className="bg-amber-900/30 border-t border-amber-400/40 px-6 py-3">
             <p className="text-amber-100 text-sm leading-relaxed">
-              {fallbackMode
+              {globalUnsuitable
+                ? t("results.globalUnsuitableBanner")
+                : fallbackMode
                 ? t("results.unsuitableWarningAll")
                 : t("results.unsuitableWarningMost")}
             </p>
@@ -368,6 +431,12 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
         )}
 
         <CardContent className="p-6">
+          {/* V8 FINAL STABLE: Limiting factor banner */}
+          {isUnsuitableState && data.limiting_factor && (
+            <div className="mb-6">
+              <LimitingFactorBanner data={data} />
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Image carousel */}
@@ -473,10 +542,13 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
 
       {/* ── Top-3 Ranked List ─────────────────────────────────────── */}
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader className={isUnsuitableState
-          ? "bg-gradient-to-r from-amber-50/80 to-orange-50/80"
-          : "bg-gradient-to-r from-green-50/80 to-emerald-50/80"
-        }>
+        <CardHeader
+          className={`${isUnsuitableState
+            ? "bg-gradient-to-r from-amber-50/80 to-orange-50/80 cursor-pointer"
+            : "bg-gradient-to-r from-green-50/80 to-emerald-50/80"
+          }`}
+          {...(isUnsuitableState ? { onClick: () => setTop3Expanded(v => !v) } : {})}
+        >
           <CardTitle className={`text-xl flex items-center gap-2 ${
             isUnsuitableState ? "text-amber-900" : "text-green-900"
           }`}>
@@ -484,6 +556,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               <>
                 <AlertCircle className="w-6 h-6" />
                 {t("results.noSuitable")}
+                <ChevronDown className={`w-5 h-5 ml-auto transition-transform duration-300 ${top3Expanded ? "rotate-180" : ""}`} />
               </>
             ) : (
               <>
@@ -498,6 +571,9 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               : t("results.clickToView")}
           </p>
         </CardHeader>
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          top3Expanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+        }`}>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {top_3.slice(0, 3).map((crop, i) => (
@@ -542,9 +618,10 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
                 {/* Animated confidence bar */}
                 <ConfidenceBar value={crop.confidence} size="sm" />
 
-                {/* Consensus */}
-                <div className="mt-3 flex items-center gap-2">
+                {/* Consensus + confidence label */}
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <ConsensusPill consensus={crop.model_consensus} />
+                  <ConfidenceLabel label={crop.confidence_label} />
                 </div>
 
                 {/* Mini explanation preview */}
@@ -556,7 +633,14 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               </button>
             ))}
           </div>
+          {/* Fewer than 3 crops note */}
+          {top_3.length < 3 && (
+            <p className="mt-4 text-xs text-gray-500 italic text-center">
+              {t("results.fewerThanThree", { count: top_3.length })}
+            </p>
+          )}
         </CardContent>
+        </div>
       </Card>
 
       {/* ── Safety Disclaimer (V8 Phase 6 — non-removable) ────────── */}

@@ -75,7 +75,7 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
     top_recs = hf_resp.get("top_recommendations", [])
     top3 = []
     for r in top_recs[:3]:
-        top3.append({
+        entry = {
             "crop": r.get("crop", "unknown"),
             "confidence": round(float(r.get("confidence", 0)), 2),
             "advisory_tier": r.get("advisory_tier", "Not Recommended"),
@@ -84,14 +84,18 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
             "explanation": r.get("explanation", ""),
             "model_consensus": r.get("model_consensus", "weak"),
             "nutrition": r.get("nutrition"),
-        })
+        }
+        # V8 FINAL STABLE — confidence interpretation label
+        if "confidence_label" in r:
+            entry["confidence_label"] = r["confidence_label"]
+        top3.append(entry)
 
     result = {
         "top_3": top3,
         "model_info": {
-            "type": "unified-advisory-v8.1",
+            "type": "unified-advisory-v8.2-final",
             "coverage": 51,
-            "version": "8.1",
+            "version": "8.2-final",
         },
         "stress_index": hf_resp.get("stress_index", 0),
         "stress_per_feature": hf_resp.get("stress_per_feature", {}),
@@ -100,6 +104,16 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
         "all_not_recommended": hf_resp.get("all_not_recommended", False),
         "disclaimer": hf_resp.get("disclaimer", ""),
     }
+
+    # V8 FINAL STABLE — new response fields
+    if "global_unsuitable" in hf_resp:
+        result["global_unsuitable"] = hf_resp["global_unsuitable"]
+    if "limiting_factor" in hf_resp:
+        result["limiting_factor"] = hf_resp["limiting_factor"]
+    if "viable_count" in hf_resp:
+        result["viable_count"] = hf_resp["viable_count"]
+    if "excluded_crops" in hf_resp:
+        result["excluded_crops"] = hf_resp["excluded_crops"]
 
     warning = hf_resp.get("warning")
     if warning:

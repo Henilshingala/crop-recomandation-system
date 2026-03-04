@@ -1,0 +1,423 @@
+================================================================================
+  CROP RECOMMENDATION SYSTEM — 10-QUESTION DEEP MODEL DIAGNOSTIC
+  Generated: 2026-03-04
+  Subject: TC1 (Rice/Monsoon) Failure Analysis
+  Input: N=110 P=50 K=50 Temp=28°C Humidity=92% pH=6.3 Rainfall=450mm
+================================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q1: RAW PROBABILITY DISTRIBUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  VERDICT: Rice raw probability was ALREADY 0.00% — TRAINING ISSUE, not calibration.
+
+  ┌─────────────────────── Per-Base-Model Raw Probabilities ────────────────────┐
+
+  BalancedRF (avg of 5 folds):
+    okra             25.674%  ← WINNER
+    maize            15.130%
+    brinjal          14.530%
+    green_chilli     13.641%
+    jowar            13.526%
+    cotton           12.202%
+    ...rice not in top 10
+
+  XGBoost (avg of 5 folds):
+    okra             89.687%  ← DOMINANT
+    maize             3.867%
+    green_chilli      1.813%
+    cotton            1.398%
+    jowar             1.167%
+    brinjal           0.222%
+    rice              0.126%  ← RANK #7, effectively zero
+
+  LightGBM (avg of 5 folds):
+    okra             99.846%  ← OVERWHELMING
+    maize             0.042%
+    cotton            0.041%
+    green_chilli      0.039%
+    jowar             0.018%
+    brinjal           0.007%
+    rice              0.001%  ← RANK #7, near zero
+
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────── Meta-Learner + Temperature Scaling ──────────────────────┐
+
+  After Meta-Learner (before T-scaling):
+    okra             92.559%
+    brinjal           2.107%
+    green_chilli      1.831%
+    citrus            1.246%
+    maize             1.146%
+    ragi              0.706%
+    ...rice: ~0.0000% (RANK #12)
+
+  After Temperature Scaling (T=0.9):
+    okra             95.205%  ← Even more concentrated
+    brinjal           1.423%
+    green_chilli      1.218%
+    ...rice: ~0.0000% (RANK #12)
+
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────── Extended RF (Calibrated Random Forest) ────────────────────┐
+
+    okra             40.873%
+    maize            21.035%
+    jowar             4.352%
+    brinjal           4.195%
+    cotton            3.956%
+    green_chilli      3.915%
+    ...rice: 0.597% (RANK #20)
+
+  └─────────────────────────────────────────────────────────────────────────────┘
+
+  ANSWER:
+  ─ Rice raw probability: ~0.00% (all 3 models)
+  ─ Okra raw probability: 25-99% (all 3 models)
+  ─ Maize raw probability: 0.04-21% (varies by model)
+  ─ CONCLUSION: This is a TRAINING ISSUE. Rice was never a contender.
+    No calibration or post-processing can recover a 0% base signal.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q2: FEATURE IMPORTANCE RANKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  V6 Stacked Ensemble Feature Importance:
+
+  Rank  Feature         Importance   Visual
+  ───── ─────────────── ──────────── ──────────────────────────────
+  #1    K               0.1741       ██████████████████████████████████
+  #2    N               0.1694       █████████████████████████████████
+  #3    P               0.1336       ██████████████████████████
+  #4    rainfall        0.1252       █████████████████████████ ← CRITICAL
+  #5    humidity        0.1039       ████████████████████
+  #6    temperature     0.0863       █████████████████
+  #7    ph              0.0854       █████████████████
+  #8    season          0.0740       ██████████████
+  #9    soil_type       0.0306       ██████
+  #10   irrigation      0.0176       ███
+
+  ANSWER:
+  ─ Rainfall IS in TOP 4 (rank #4, importance=0.1252)
+  ─ But NPK dominate (combined 0.4771 = 48% of total importance)
+  ─ Rainfall/K ratio = 0.72x — rainfall is 28% weaker than top feature
+  ─ For monsoon crops like rice, rainfall SHOULD be #1 or #2
+  ─ The model treats NPK nutrients as primary signal, climate as secondary
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q3: DATASET DISTRIBUTION CHECK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Total: 22,300 samples | 51 crops
+
+  Key crops:
+    Rice       500 samples (2.24%)
+    Okra       500 samples (2.24%)
+    Brinjal    500 samples (2.24%)
+    Maize      500 samples (2.24%)
+
+  Imbalance ratio: 4.0x (max 1200 / min 300)
+  Okra/Rice ratio: 1.00x (equal)
+
+  ANSWER:
+  ─ Dataset is NOT imbalanced between rice, okra, brinjal, maize
+  ─ All have exactly 500 samples
+  ─ Dataset imbalance is NOT the cause
+  ─ The slight global imbalance (4x max/min) is mild
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q4: RAINFALL DISTRIBUTION FOR RICE IN TRAINING DATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Rice Training Data Rainfall Statistics:
+    Min:     807.2 mm
+    Max:    2825.2 mm
+    Mean:   1472.8 mm
+    Median: 1403.3 mm
+    Std:     389.8 mm
+    P25:    1159.1 mm
+    P75:    1748.2 mm
+    P90:    2004.2 mm
+
+  Histogram:
+    [  0- 100mm):    0
+    [100- 200mm):    0
+    [200- 300mm):    0
+    [300- 400mm):    0
+    [400- 500mm):    0   ← TC1=450mm IS HERE (ZERO rice samples!)
+    [500- 600mm):    0
+    [600- 800mm):    0
+    [800-1000mm):   52   ████████
+    [1000-1500mm): 231   █████████████████████████████████████████
+    [1500-2000mm): 165   ████████████████████████████████
+    [2000-3000mm):  52   ████████
+
+  Fraction with rainfall >= 450mm: 100.0%
+  Fraction with rainfall < 800mm:    0.0%
+
+  ⚠ CRITICAL FINDING:
+  ─ ALL 500 rice training samples have rainfall between 807-2825mm
+  ─ Rice MINIMUM in training data is 807mm
+  ─ TC1 input = 450mm is COMPLETELY OUTSIDE the rice training distribution
+  ─ The model has NEVER SEEN rice at 450mm rainfall
+  ─ From the model's perspective, 450mm is "not rice territory"
+
+  Okra training rainfall for comparison:
+    Mean:   657.3 mm
+    Std:    147.2 mm
+    → 450mm is much closer to okra's distribution than rice's
+
+  ANSWER: This is THE root cause. 450mm rainfall is:
+  ─ 350mm below rice's minimum training value (807mm)
+  ─ Within okra's range (okra trained around 500-800mm)
+  ─ The model correctly learned that rice = high rainfall
+  ─ But 450mm doesn't match "high rainfall"
+  ─ YOUR TEST CASE IS WRONG, not the model — real rice needs 800+ mm
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q5: CORRELATION MATRIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Point-Biserial Correlation (Feature × Crop):
+
+  Feature         vs Rice    vs Okra    vs Maize   vs Brinjal
+  ─────────────── ────────── ────────── ────────── ──────────
+  N               +0.2656    +0.0552    +0.0949    +0.1588
+  P               +0.0460    +0.0444    +0.0245    +0.2225
+  K               +0.0335    -0.0526    -0.0809    -0.0042
+  temperature     -0.0184    +0.0359    +0.0211    -0.0726
+  humidity        +0.2100    +0.1134    -0.0399    +0.1619
+  ph              +0.0178    +0.0301    -0.1289    -0.0126
+  rainfall        +0.2741    -0.0448    -0.0289    -0.0419
+
+  Top Rainfall-Correlated Crops:
+    #1 coconut    r = +0.2955
+    #2 coffee     r = +0.2810
+    #3 rice       r = +0.2741  ← STRONG positive
+    #4 jute       r = +0.2674
+    #5 sugarcane  r = +0.2172
+
+  ANSWER:
+  ─ Rainfall IS strongly correlated with rice (r = +0.2741, #3 overall)
+  ─ Rice is also correlated with N (+0.2656) and humidity (+0.2100)
+  ─ The correlations are correct — the model KNOWS rice needs high rainfall
+  ─ But knowing it needs high rainfall makes 450mm ANTI-rice signal
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q6: STRESS PENALTY INTERACTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Overall Stress Index: 0.1346 (threshold for activation: 0.60)
+  Stress Active? NO — below threshold
+
+  Per-feature stress:
+    humidity        0.3857  █████████████████
+    rainfall        0.2188  █████████
+    N               0.1875  ████████
+    temperature     0.1000  ████
+    ph              0.0500  ██
+    P               0.0000
+    K               0.0000
+
+  Per-crop stress factors:
+    rice:     0.0398 (0 severe) — minimal penalty
+    okra:     0.0000 (0 severe) — NO penalty
+    maize:    0.0000 (0 severe) — NO penalty
+    brinjal:  0.0000 (0 severe) — NO penalty
+
+  ANSWER:
+  ─ Stress index = 0.1346, well below 0.60 threshold
+  ─ Stress penalty is NOT the issue (confirmed)
+  ─ Okra has ZERO stress — perfect match for these conditions
+  ─ Rice has minimal stress (0.04) — not enough to explain the failure
+  ─ The dominance problem is purely model-learning, not stress-related
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q7: CALIBRATION CAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  OOD Warnings: 0 (no features outside training range)
+  OOD Multiplier: 1.000 (no dampening)
+  OOD Cap: 1.00 (no cap)
+  HARD_CONFIDENCE_CAP: 0.85
+
+  Rice probability through every pipeline stage:
+    Raw (temp-scaled):          0.0000%
+    After agronomic penalty:    0.0000%  (×0.05 for rainfall violation)
+    After stress flattening:    0.0000%
+    After OOD dampening:        0.0000%
+    After stress reduction:     0.0000%
+    After HARD CAP (85%):       0.0000%
+
+  Okra probability through every pipeline stage:
+    Raw (temp-scaled):         95.2049%
+    After agronomic penalty:   96.5120%  (okra penalty on humidity normalised UP)
+    After stress flattening:   96.5120%
+
+  ANSWER:
+  ─ Calibration caps are NOT compressing rice's signal
+  ─ Rice signal is 0.00% at EVERY stage — nothing to compress
+  ─ The problem occurred BEFORE any calibration
+  ─ Even the agronomic penalty (×0.05 for rainfall violation) is irrelevant
+    because the raw probability was already ~0%
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q8: ENSEMBLE WEIGHTING  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Soil Model max confidence:    95.20% (above 30% threshold)
+  Extended RF max confidence:   40.87% (above 30% threshold)
+  Decision: Both confident → Default weights
+  
+  Weights:
+    Soil model (V6 stacked):   0.70
+    Extended RF:               0.30
+
+  Soil Model Top-3:          Extended RF Top-3:
+    okra         95.205%        okra         40.873%
+    brinjal       1.423%        maize        21.035%
+    green_chilli  1.218%        jowar         4.352%
+
+  Rice rank:
+    Soil:  #12 (0.00%)
+    RF:    #20 (0.60%)
+
+  ANSWER:
+  ─ Soil model weight (0.70) dominates
+  ─ But BOTH models strongly prefer okra over rice for this input
+  ─ Even if weights were reversed (RF=0.70), okra still wins
+  ─ Rice is #12 in soil, #20 in RF — not a weighting problem
+  ─ Neither model considers rice viable at 450mm rainfall
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q9: FEASIBILITY FILTER — Did Rice Pass?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Rice Agronomic Constraints:
+    pH range:          [5.0 — 7.5]
+    Temperature range: [20 — 38]°C
+    Rainfall range:    [800 — 3000] mm  ← !!
+    Humidity range:    [60 — 95]%
+
+  Hard Feasibility Gate (±3°C temp, ±0.5 pH, <30% min rain):
+    ✓ Temperature: 28°C in [17, 41] — PASS
+    ✓ pH: 6.3 in [4.5, 8.0] — PASS
+    ✓ Rainfall: 450mm >= 240mm (30% of 800) — PASS (barely)
+
+  Rice PASSED the hard gate (not excluded).
+
+  Soft Constraint (agronomic penalty):
+    ⚠ Rainfall 450mm < min 800mm → PENALTY ×0.05 (95% probability reduction)
+    ✓ Humidity 92% in [60, 95]% — no penalty
+
+  ANSWER:
+  ─ Rice passed the HARD gate (not excluded from candidates)
+  ─ But rice's rainfall_range = [800, 3000]mm
+  ─ TC1 input = 450mm is 350mm below the minimum (800mm)
+  ─ This CORRECTLY triggers the soft agronomic penalty (×0.05)
+  ─ However, this penalty is irrelevant because rice's base prob was 0%
+  ─ The constraint bounds are scientifically correct (ICAR/FAO data):
+    Real paddy rice DOES need 800mm+ rainfall
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Q10: TRAINING OBJECTIVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Architecture:
+    Stacked Ensemble: BalancedRF + XGBoost + LightGBM
+    Meta-learner: LogisticRegression (multinomial, isotonic calibrated)
+    Cross-validation: 5-fold
+    Estimators per base: 200
+
+  Performance Metrics:
+    Top-1 Accuracy:     91.46%
+    Top-3 Accuracy:     98.86%
+    Macro F1:           0.908
+    Weighted F1:        0.914
+    ECE:                0.016
+    Log Loss:           0.3258
+
+  Calibration:
+    Temperature: T = 0.9 (slight sharpening)
+    ECE improvement: 0.0160 → 0.0086
+
+  Tuned for: Overall Accuracy + balanced Macro F1
+  Uses BalancedRandomForest (balanced class weighting built-in)
+  
+  ANSWER:
+  ─ Model uses BALANCED accuracy (BalancedRF handles class imbalance)
+  ─ Macro F1 = 0.908 means ALL 51 crops get fair treatment
+  ─ Not optimized for any single crop dominance
+  ─ Training objective is NOT the issue
+  ─ The model correctly learned what each crop needs
+
+
+================================================================================
+  FINAL ROOT CAUSE DIAGNOSIS
+================================================================================
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                   TC1 IS A FLAWED TEST CASE                       │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  The test expected rice to dominate with 450mm rainfall, but:
+
+  FACT 1: Rice REQUIRES 800-3000mm rainfall (ICAR/FAO literature)
+  FACT 2: Every rice training sample has rainfall 807-2825mm
+  FACT 3: 450mm is in OKRA territory (okra trained at 400-900mm)
+  FACT 4: All 3 base models give rice ~0% probability
+  FACT 5: Correlation data confirms rice = high rainfall (r=+0.27)
+
+  The model is CORRECT. Rice should NOT be recommended at 450mm.
+  450mm is rainfed vegetable territory, not paddy territory.
+
+  ─────────────────────────────────────────────────────────────────────
+  TO MAKE TC1 PASS, EITHER:
+  
+  Option A: Fix the test input → set rainfall = 1200mm (realistic for rice)
+            With R=1200: rice would likely rank #1-#3
+  
+  Option B: Keep 450mm but expect okra/vegetables (model is right)
+  ─────────────────────────────────────────────────────────────────────
+
+
+  SUMMARY TABLE OF 10 ANSWERS:
+
+  Q#   Question                     Answer                      Issue?
+  ───  ─────────────────────────── ──────────────────────────── ──────
+  Q1   Raw probability              Rice = 0.00% in all models   YES ← root
+  Q2   Feature importance           Rainfall #4 (12.5%)          Minor
+  Q3   Dataset distribution         Equal (500 ea), no imbalance NO
+  Q4   Rice rainfall distribution   Training min = 807mm         YES ← root
+  Q5   Correlation matrix           Rainfall↔Rice r=+0.27       OK
+  Q6   Stress penalty               0.1346, not active           NO
+  Q7   Calibration cap              Nothing to cap (0% in)       NO
+  Q8   Ensemble weighting           Both models agree: no rice   NO
+  Q9   Feasibility filter           Passed hard gate, soft ×0.05 Irrelevant
+  Q10  Training objective           Balanced, Macro F1 = 0.91    NO
+
+  PRIMARY ROOT CAUSE:
+  ═══════════════════════════════════════════════════════════════
+  TC1's rainfall (450mm) is 350mm below rice's minimum training
+  distribution (807mm). The model CORRECTLY learned that rice
+  needs high rainfall. This is a TEST CASE error, not a model bug.
+  
+  The "strong rice signal" in TC1 does not actually exist.
+  Temp=28°C + Humidity=92% + pH=6.3 alone are NOT enough.
+  Rainfall is THE differentiating factor for rice, and 450mm
+  falls squarely into vegetable crop territory.
+  ═══════════════════════════════════════════════════════════════
+
+================================================================================

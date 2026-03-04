@@ -31,6 +31,7 @@ export interface CropRecommendation {
   stress_index?: number;
   explanation?: string;
   model_consensus?: 'strong' | 'moderate' | 'weak';
+  confidence_label?: string;
   image_url?: string;
   image_urls?: string[];
   expected_yield?: string | null;
@@ -55,6 +56,17 @@ export interface ModelInfo {
   version?: string;
 }
 
+export interface LimitingFactor {
+  feature: string;
+  deviation: number;
+  all_deviations: Record<string, number>;
+}
+
+export interface ExcludedCrop {
+  crop: string;
+  reasons: string[];
+}
+
 export interface PredictionResponse {
   top_1: CropRecommendation;
   top_3: CropRecommendation[];
@@ -66,6 +78,10 @@ export interface PredictionResponse {
   version?: string;
   fallback_mode?: boolean;
   all_not_recommended?: boolean;
+  global_unsuitable?: boolean;
+  limiting_factor?: LimitingFactor;
+  viable_count?: number;
+  excluded_crops?: ExcludedCrop[];
 }
 
 export interface HealthResponse {

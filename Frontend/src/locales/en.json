@@ -59,7 +59,11 @@
     "water": "Water",
     "whyCrop": "Why {{crop}}?",
     "tryAnother": "Try Another Analysis",
-    "advisoryNotice": "Advisory Notice"
+    "advisoryNotice": "Advisory Notice",
+    "globalUnsuitableBanner": "No crop in our database is well-suited for these conditions. The recommendations below are the least unsuitable options. Corrective soil or climate measures are strongly advised before planting.",
+    "limitingFactorTitle": "Limiting Factor Identified",
+    "limitingFactorDesc": "{{feature}} deviates {{deviation}}% from ideal growing conditions — this is the primary bottleneck.",
+    "fewerThanThree": "Only {{count}} crop(s) met minimum viability thresholds."
   },
   "tiers": {
     "stronglyRecommended": "Strongly Recommended",
@@ -81,6 +85,20 @@
     "weak": "weak consensus"
   },
   "disclaimer": "This AI advisory is based on provided environmental parameters. Consult local agricultural experts before final decision.",
+  "match": {
+    "weak": "Weak Match",
+    "moderate": "Moderate Match",
+    "strong": "Strong Match"
+  },
+  "features": {
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "ph": "Soil pH",
+    "rainfall": "Rainfall",
+    "N": "Nitrogen",
+    "P": "Phosphorus",
+    "K": "Potassium"
+  },
   "footer": {
     "copyright": "© 2026 Crop Recommendation System • Empowering farmers with data-driven decisions"
   },
