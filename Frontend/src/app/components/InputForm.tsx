@@ -1,7 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { Button } from "@/app/components/ui/button";
 import { Droplet, Thermometer, FlaskConical, CloudRain, Gauge, Loader2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -108,91 +105,101 @@ export function InputForm({ onSubmit, isLoading = false }: InputFormProps) {
   };
 
   return (
-    <Card className="shadow-lg border-green-100/60 backdrop-blur-sm bg-white/80">
-      <CardHeader className="bg-gradient-to-r from-green-50/80 to-emerald-50/80">
-        <CardTitle className="text-2xl text-green-900">{t("form.title")}</CardTitle>
-        <CardDescription className="text-green-700">
-          {t("form.description")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="glass-card overflow-hidden animate-fade-in-up">
+      {/* Card header */}
+      <div className="px-6 py-5 border-b border-white/[0.06]">
+        <h2 className="text-xl font-bold text-white">{t("form.title")}</h2>
+        <p className="text-sm text-gray-400 mt-1">{t("form.description")}</p>
+      </div>
+
+      {/* Card body */}
+      <div className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
 
           {/* NPK Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
-              {t("form.soilNutrients")}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FieldInput label={t("form.nitrogen")} name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.nitrogen.min}-${VALIDATION_RANGES.nitrogen.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label={t("form.phosphorus")} name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-600" />} placeholder={`${VALIDATION_RANGES.phosphorus.min}-${VALIDATION_RANGES.phosphorus.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label={t("form.potassium")} name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-600" />} placeholder={`${VALIDATION_RANGES.potassium.min}-${VALIDATION_RANGES.potassium.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-gradient-to-r from-emerald-500/40 to-transparent" />
+              <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-widest whitespace-nowrap">
+                {t("form.soilNutrients")}
+              </h3>
+              <div className="h-px flex-1 bg-gradient-to-l from-emerald-500/40 to-transparent" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <GlassField label={t("form.nitrogen")} name="nitrogen" icon={<FlaskConical className="w-4 h-4 text-blue-400" />} placeholder={`${VALIDATION_RANGES.nitrogen.min}–${VALIDATION_RANGES.nitrogen.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <GlassField label={t("form.phosphorus")} name="phosphorus" icon={<FlaskConical className="w-4 h-4 text-orange-400" />} placeholder={`${VALIDATION_RANGES.phosphorus.min}–${VALIDATION_RANGES.phosphorus.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
+              <GlassField label={t("form.potassium")} name="potassium" icon={<FlaskConical className="w-4 h-4 text-purple-400" />} placeholder={`${VALIDATION_RANGES.potassium.min}–${VALIDATION_RANGES.potassium.max}`} unit="kg/ha" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
           {/* Environmental Conditions */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b pb-2">
-              {t("form.envConditions")}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FieldInput label={t("form.temperature")} name="temperature" icon={<Thermometer className="w-4 h-4 text-red-600" />} placeholder={`${VALIDATION_RANGES.temperature.min} to ${VALIDATION_RANGES.temperature.max}`} unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label={t("form.humidity")} name="humidity" icon={<Droplet className="w-4 h-4 text-blue-600" />} placeholder={`${VALIDATION_RANGES.humidity.min}-${VALIDATION_RANGES.humidity.max}`} unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label={t("form.ph")} name="ph" icon={<Gauge className="w-4 h-4 text-green-600" />} placeholder={`${VALIDATION_RANGES.ph.min}-${VALIDATION_RANGES.ph.max}`} unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
-              <FieldInput label={t("form.rainfall")} name="rainfall" icon={<CloudRain className="w-4 h-4 text-sky-600" />} placeholder={`${VALIDATION_RANGES.rainfall.min}-${VALIDATION_RANGES.rainfall.max}`} unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-gradient-to-r from-teal-500/40 to-transparent" />
+              <h3 className="text-xs font-semibold text-teal-400 uppercase tracking-widest whitespace-nowrap">
+                {t("form.envConditions")}
+              </h3>
+              <div className="h-px flex-1 bg-gradient-to-l from-teal-500/40 to-transparent" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <GlassField label={t("form.temperature")} name="temperature" icon={<Thermometer className="w-4 h-4 text-red-400" />} placeholder={`${VALIDATION_RANGES.temperature.min} to ${VALIDATION_RANGES.temperature.max}`} unit="°C" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <GlassField label={t("form.humidity")} name="humidity" icon={<Droplet className="w-4 h-4 text-sky-400" />} placeholder={`${VALIDATION_RANGES.humidity.min}–${VALIDATION_RANGES.humidity.max}`} unit="%" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <GlassField label={t("form.ph")} name="ph" icon={<Gauge className="w-4 h-4 text-emerald-400" />} placeholder={`${VALIDATION_RANGES.ph.min}–${VALIDATION_RANGES.ph.max}`} unit="pH" step="0.1" errors={errors} onBlur={handleInputBlur} />
+              <GlassField label={t("form.rainfall")} name="rainfall" icon={<CloudRain className="w-4 h-4 text-cyan-400" />} placeholder={`${VALIDATION_RANGES.rainfall.min}–${VALIDATION_RANGES.rainfall.max}`} unit="mm" step="0.1" errors={errors} onBlur={handleInputBlur} />
             </div>
           </div>
 
           {/* Submit Button */}
-          <Button
+          <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-6 rounded-lg text-lg font-semibold shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-glow w-full py-4 text-lg tracking-wide cursor-pointer"
           >
             {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
                 {t("form.analyzing")}
-              </>
+              </span>
             ) : (
               t("form.submit")
             )}
-          </Button>
+          </button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
-/* ── Reusable field input ─────────────────────────────────────────── */
+/* ── Glass field input ────────────────────────────────────────────── */
 
-function FieldInput({
-  label, name, icon, placeholder, unit, step = "0.01", defaultValue, required = true, errors, onBlur,
+function GlassField({
+  label, name, icon, placeholder, unit, step = "0.01", errors, onBlur,
 }: {
   label: string; name: string; icon: React.ReactNode; placeholder: string;
-  unit: string; step?: string; defaultValue?: string; required?: boolean;
+  unit: string; step?: string;
   errors: Record<string, string>; onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={name} className="flex items-center gap-2 text-gray-700 text-sm">
+      <Label htmlFor={name} className="flex items-center gap-2 text-gray-300 text-sm font-medium">
         {icon} {label}
       </Label>
       <div className="relative">
-        <Input
+        <input
           id={name}
           name={name}
           type="number"
           step={step}
           placeholder={placeholder}
-          required={required}
-          defaultValue={defaultValue}
+          required
           onBlur={onBlur}
-          className={`rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 ${errors[name] ? 'border-red-500' : ''}`}
+          className={`glass-input w-full px-4 py-2.5 text-sm ${errors[name] ? '!border-red-500/50' : ''}`}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{unit}</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">{unit}</span>
       </div>
-      {errors[name] && <p className="text-xs text-red-600 mt-1">{errors[name]}</p>}
+      {errors[name] && (
+        <p className="text-xs text-red-400 mt-1 animate-fade-in">{errors[name]}</p>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
-import { Sprout, Wheat, Loader2, ShieldAlert, Globe } from "lucide-react";
+import { Sprout, Wheat, ShieldAlert, Globe } from "lucide-react";
 import { getPrediction, type PredictionResponse, type PredictionInput } from "@/app/services/api";
 
 const LANGUAGES = [
@@ -62,38 +62,37 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50/60 to-teal-50/40">
-      {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md shadow-md border-b-4 border-green-600 sticky top-0 z-30">
-        <div className="container mx-auto px-4 py-5">
+    <div className="bg-animated-gradient min-h-screen">
+      {/* ── Sticky Glass Header ── */}
+      <header className="glass-header sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Left spacer for centering */}
-            <div className="hidden sm:block w-[160px]" />
+            <div className="hidden sm:block w-[140px]" />
 
-            <div className="flex items-center gap-4 flex-1 justify-center">
-              <div className="bg-green-600 p-3 rounded-full shadow-lg">
-                <Wheat className="w-7 h-7 text-white" />
+            <div className="flex items-center gap-3 flex-1 justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <Wheat className="w-5 h-5 text-white" />
               </div>
               <div className="text-center">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{t("app.title")}</h1>
-                <p className="text-gray-600 mt-1 text-sm">{t("app.subtitle")}</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{t("app.title")}</h1>
+                <p className="text-emerald-300/60 text-xs mt-0.5">{t("app.subtitle")}</p>
               </div>
-              <div className="bg-green-600 p-3 rounded-full shadow-lg">
-                <Sprout className="w-7 h-7 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/20">
+                <Sprout className="w-5 h-5 text-white" />
               </div>
             </div>
 
             {/* Language Switcher */}
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-green-700 hidden sm:block" />
+              <Globe className="w-4 h-4 text-emerald-400/60 hidden sm:block" />
               <select
                 value={i18n.language}
                 onChange={(e) => i18n.changeLanguage(e.target.value)}
-                className="bg-green-50 border border-green-300 text-green-800 text-sm rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer"
+                className="bg-white/[0.06] backdrop-blur border border-white/10 text-emerald-200 text-sm rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30 cursor-pointer outline-none transition-all"
                 aria-label={t("nav.language")}
               >
                 {LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
+                  <option key={lang.code} value={lang.code} className="bg-gray-900 text-white">
                     {lang.label}
                   </option>
                 ))}
@@ -103,51 +102,66 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* ── Main Content ── */}
+      <main className="container mx-auto px-4 py-10 max-w-6xl">
         <div className="space-y-8">
           <InputForm onSubmit={handleSubmit} isLoading={isLoading} />
 
+          {/* Loading */}
           {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
-              <span className="ml-3 text-lg text-gray-600">{t("loading")}</span>
+            <div className="glass-card p-12 flex flex-col items-center justify-center gap-4 animate-fade-in">
+              <div className="flex gap-3">
+                <div className="loading-dot" />
+                <div className="loading-dot" />
+                <div className="loading-dot" />
+              </div>
+              <p className="text-emerald-300/70 text-sm font-medium">{t("loading")}</p>
             </div>
           )}
 
+          {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-              <p className="font-semibold">{t("errors.title")}</p>
-              <p>{error}</p>
-              <p className="text-sm mt-2">{t("errors.serverHint")}</p>
+            <div className="glass-card !border-red-500/20 p-6 animate-fade-in-up">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                  <ShieldAlert className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-red-300">{t("errors.title")}</p>
+                  <p className="text-red-200/70 text-sm mt-1">{error}</p>
+                  <p className="text-red-200/40 text-xs mt-2">{t("errors.serverHint")}</p>
+                </div>
+              </div>
             </div>
           )}
 
+          {/* Results */}
           {results && !isLoading && <ResultsSection data={results} userInput={lastInput} />}
 
+          {/* How It Works */}
           {!results && !isLoading && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6 border-l-4 border-green-600">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Sprout className="w-5 h-5 text-green-600" />
+            <div className="glass-card p-6 animate-fade-in-up delay-200">
+              <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
+                <Sprout className="w-5 h-5 text-emerald-400" />
                 {t("howItWorks.title")}
               </h3>
-              <div className="text-sm text-gray-700 space-y-2">
+              <div className="text-sm text-gray-300/70 space-y-2">
                 <p>{t("howItWorks.description")}</p>
-                <p className="pt-2" dangerouslySetInnerHTML={{ __html: t("howItWorks.getStarted") }} />
+                <p className="pt-2 text-emerald-300/60" dangerouslySetInnerHTML={{ __html: t("howItWorks.getStarted") }} />
               </div>
             </div>
           )}
         </div>
       </main>
 
-      <footer className="bg-green-800 text-white mt-16 py-6">
-        <div className="container mx-auto px-4 space-y-3">
-          {/* Safety Disclaimer — always visible */}
-          <div className="flex items-start justify-center gap-2 text-green-200 text-xs leading-relaxed max-w-2xl mx-auto">
-            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
+      {/* ── Footer ── */}
+      <footer className="mt-20 border-t border-white/[0.05]">
+        <div className="container mx-auto px-4 py-6 space-y-3">
+          <div className="flex items-start justify-center gap-2 text-gray-400/70 text-xs leading-relaxed max-w-2xl mx-auto">
+            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-500/40" />
             <p>{t("disclaimer")}</p>
           </div>
-          <p className="text-sm text-center text-green-300">
+          <p className="text-xs text-center text-gray-500/50">
             {t("footer.copyright")}
           </p>
         </div>
