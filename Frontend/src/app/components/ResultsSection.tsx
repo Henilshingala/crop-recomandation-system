@@ -244,6 +244,48 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
     return translated || apiExplanation;
   };
 
+  /** Translate the API warning string by matching known English patterns */
+  const translateWarning = (warning: string): string => {
+    const parts: string[] = [];
+
+    if (warning.includes("All crops violate critical environmental thresholds")) {
+      parts.push(t("warnings.fallbackThresholds"));
+    }
+
+    // "Some values (P) fall outside typical ranges. Confidence adjusted."
+    const oodMatch = warning.match(/Some values \(([^)]+)\) fall outside typical ranges/);
+    if (oodMatch) {
+      parts.push(t("warnings.oodValues", { fields: oodMatch[1] }));
+    }
+
+    // "High agricultural stress detected (index=0.XX)."
+    const stressMatch = warning.match(/High agricultural stress detected \(index=([\d.]+)\)/);
+    if (stressMatch) {
+      parts.push(t("warnings.highStress", { index: stressMatch[1] }));
+    }
+    // Also match the older format "High agricultural stress (index=0.XX). Confidence reduced."
+    const stressOldMatch = warning.match(/High agricultural stress \(index=([\d.]+)\)/);
+    if (stressOldMatch && !stressMatch) {
+      parts.push(t("warnings.highStress", { index: stressOldMatch[1] }));
+    }
+
+    if (warning.includes("Conditions may be challenging for most crops")) {
+      parts.push(t("warnings.challengingConditions"));
+    }
+
+    // OOD features (older API format)
+    const oodOldMatch = warning.match(/OOD features: ([^.]+)\. Confidence dampened/);
+    if (oodOldMatch && !oodMatch) {
+      parts.push(t("warnings.oodValues", { fields: oodOldMatch[1] }));
+    }
+
+    if (warning.includes("Low confidence") && !warning.includes("Conditions may be challenging")) {
+      parts.push(t("warnings.challengingConditions"));
+    }
+
+    return parts.length > 0 ? parts.join(" ") : warning;
+  };
+
   const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
@@ -422,7 +464,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-amber-800">
                 <p className="font-semibold mb-1">{t("results.advisoryNotice")}</p>
-                <p>{data.warning}</p>
+                <p>{translateWarning(data.warning)}</p>
               </div>
             </div>
           )}

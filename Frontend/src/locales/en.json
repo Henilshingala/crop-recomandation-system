@@ -97,6 +97,12 @@
     "tryAgain": "Try again"
   },
   "loading": "Analyzing your soil data...",
+  "warnings": {
+    "fallbackThresholds": "All crops violate critical environmental thresholds. Soil and climate correction required.",
+    "oodValues": "Some values ({{fields}}) fall outside typical ranges. Confidence adjusted.",
+    "highStress": "High agricultural stress detected (index={{index}}). Recommendations may have reduced confidence.",
+    "challengingConditions": "Conditions may be challenging for most crops. Consider consulting local experts."
+  },
   "explanation": {
     "tempInRange": "Temperature ({{temp}}°C) is within the suitable range [{{min}}–{{max}}°C] for {{crop}}.",
     "tempBelow": "Temperature ({{temp}}°C) is {{deficit}}°C below {{crop}}'s minimum ({{min}}°C). Cold stress risk.",
