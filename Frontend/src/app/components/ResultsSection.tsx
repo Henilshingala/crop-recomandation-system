@@ -4,12 +4,14 @@ import {
   Sprout, TrendingUp, AlertCircle, Calendar, ChevronDown,
   ShieldAlert, Info,
 } from "lucide-react";
-import { type PredictionResponse, type CropRecommendation } from "@/app/services/api";
+import { type PredictionResponse, type CropRecommendation, type PredictionInput } from "@/app/services/api";
 import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { buildExplanation, type ExplanationInput } from "@/app/utils/buildExplanation";
 
 interface ResultsSectionProps {
   data: PredictionResponse;
+  userInput?: PredictionInput | null;
 }
 
 /* ── Auto Carousel ────────────────────────────────────────────────── */
@@ -224,10 +226,24 @@ function WhyThisCrop({ explanation, crop }: { explanation?: string; crop: string
 
 /* ── Main component ───────────────────────────────────────────────── */
 
-export function ResultsSection({ data }: ResultsSectionProps) {
+export function ResultsSection({ data, userInput }: ResultsSectionProps) {
   const { t } = useTranslation();
   /** Translate an API crop name (e.g. "finger_millet") to the active locale */
   const tc = (crop: string) => t(`crops.${crop}`, { defaultValue: crop });
+
+  /** Build a translated explanation for a crop, falling back to the API's English text */
+  const explainCrop = (crop: string, apiExplanation?: string, isFallback = false): string | undefined => {
+    if (!userInput) return apiExplanation;
+    const ei: ExplanationInput = {
+      temperature: userInput.temperature,
+      humidity: userInput.humidity,
+      ph: userInput.ph,
+      rainfall: userInput.rainfall,
+    };
+    const translated = buildExplanation(crop, ei, t, tc, isFallback);
+    return translated || apiExplanation;
+  };
+
   const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
@@ -396,7 +412,7 @@ export function ResultsSection({ data }: ResultsSectionProps) {
               </div>
 
               {/* "Why this crop?" expandable explanation */}
-              <WhyThisCrop explanation={selected.explanation} crop={tc(selected.crop)} />
+              <WhyThisCrop explanation={explainCrop(selected.crop, selected.explanation, isUnsuitableState)} crop={tc(selected.crop)} />
             </div>
           </div>
 
@@ -490,9 +506,9 @@ export function ResultsSection({ data }: ResultsSectionProps) {
                 </div>
 
                 {/* Mini explanation preview */}
-                {crop.explanation && (
+                {(crop.explanation || userInput) && (
                   <p className="mt-2 text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                    {crop.explanation}
+                    {explainCrop(crop.crop, crop.explanation, isUnsuitableState)}
                   </p>
                 )}
               </button>

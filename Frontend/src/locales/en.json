@@ -97,6 +97,23 @@
     "tryAgain": "Try again"
   },
   "loading": "Analyzing your soil data...",
+  "explanation": {
+    "tempInRange": "Temperature ({{temp}}°C) is within the suitable range [{{min}}–{{max}}°C] for {{crop}}.",
+    "tempBelow": "Temperature ({{temp}}°C) is {{deficit}}°C below {{crop}}'s minimum ({{min}}°C). Cold stress risk.",
+    "tempAbove": "Temperature ({{temp}}°C) is {{excess}}°C above {{crop}}'s maximum ({{max}}°C). Heat stress risk.",
+    "rainInRange": "Rainfall ({{rain}}mm) matches {{crop}}'s water requirement [{{min}}–{{max}}mm].",
+    "rainBelow": "Rainfall ({{rain}}mm) is below {{crop}}'s minimum ({{min}}mm). Supplementary irrigation strongly advised.",
+    "rainAbove": "Rainfall ({{rain}}mm) exceeds {{crop}}'s tolerance ({{max}}mm). Waterlogging risk — ensure proper drainage.",
+    "phInRange": "Soil pH ({{ph}}) is within the optimal range [{{min}}–{{max}}].",
+    "phBelow": "Soil pH ({{ph}}) is below {{crop}}'s ideal ({{min}}). Liming may be needed to reduce acidity.",
+    "phAbove": "Soil pH ({{ph}}) exceeds {{crop}}'s upper limit ({{max}}). Soil amendment with sulfur or organic matter recommended.",
+    "humidityLow": "Humidity ({{hum}}%) is low for {{crop}} (needs ≥{{min}}%).",
+    "humidityHigh": "Humidity ({{hum}}%) is high — fungal disease risk for {{crop}}.",
+    "highStress": "High agricultural stress on: {{features}}. Monitor crop health closely.",
+    "boundary": "Near boundary conditions for: {{features}}. Slight environmental shifts could affect yield.",
+    "oodWarning": "Some input values fall outside model training distribution. Confidence has been reduced accordingly.",
+    "fallback": "All crops violate critical environmental thresholds. Soil and climate correction required. {{crop}} is the least unsuitable option under current conditions."
+  },
   "crops": {
     "apple": "Apple",
     "bajra": "Pearl Millet (Bajra)",

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
 import { Sprout, Wheat, Loader2, ShieldAlert, Globe } from "lucide-react";
-import { getPrediction, type PredictionResponse } from "@/app/services/api";
+import { getPrediction, type PredictionResponse, type PredictionInput } from "@/app/services/api";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -21,6 +21,7 @@ const LANGUAGES = [
 export default function App() {
   const { t, i18n } = useTranslation();
   const [results, setResults] = useState<PredictionResponse | null>(null);
+  const [lastInput, setLastInput] = useState<PredictionInput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +34,7 @@ export default function App() {
     const form = e.target as HTMLFormElement;
     const fd = new FormData(form);
 
-    const input = {
+    const input: PredictionInput = {
       N: parseFloat(fd.get('nitrogen') as string),
       P: parseFloat(fd.get('phosphorus') as string),
       K: parseFloat(fd.get('potassium') as string),
@@ -42,6 +43,7 @@ export default function App() {
       ph: parseFloat(fd.get('ph') as string),
       rainfall: parseFloat(fd.get('rainfall') as string),
     };
+    setLastInput(input);
 
     try {
       const response = await getPrediction(input);
@@ -121,7 +123,7 @@ export default function App() {
             </div>
           )}
 
-          {results && !isLoading && <ResultsSection data={results} />}
+          {results && !isLoading && <ResultsSection data={results} userInput={lastInput} />}
 
           {!results && !isLoading && (
             <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6 border-l-4 border-green-600">
