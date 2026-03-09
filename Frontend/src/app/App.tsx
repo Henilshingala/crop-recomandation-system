@@ -7,15 +7,28 @@ import { getPrediction, type PredictionResponse, type PredictionInput } from "@/
 
 const LANGUAGES = [
   { code: "en", label: "English" },
-  { code: "hi", label: "हिन्दी" },
+  { code: "as", label: "অসমীয়া" },
+  { code: "bn", label: "বাংলা" },
+  { code: "brx", label: "बड़ो" },
+  { code: "doi", label: "डोगरी" },
   { code: "gu", label: "ગુજરાતી" },
+  { code: "hi", label: "हिन्दी" },
+  { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "ks", label: "कॉशुर" },
+  { code: "gom", label: "कोंकणी" },
+  { code: "mai", label: "मैथिली" },
+  { code: "ml", label: "മലയാളം" },
+  { code: "mni", label: "মৈতৈলোন্" },
   { code: "mr", label: "मराठी" },
+  { code: "ne", label: "नेपाली" },
+  { code: "or", label: "ଓଡ଼ିଆ" },
   { code: "pa", label: "ਪੰਜਾਬੀ" },
+  { code: "sa", label: "संस्कृतम्" },
+  { code: "sat", label: "ᱥᱟᱱᱛᱟᱲᱤ" },
+  { code: "sd", label: "سنڌي" },
   { code: "ta", label: "தமிழ்" },
   { code: "te", label: "తెలుగు" },
-  { code: "kn", label: "ಕನ್ನಡ" },
-  { code: "bn", label: "বাংলা" },
-  { code: "or", label: "ଓଡ଼ିଆ" },
+  { code: "ur", label: "اردو" },
 ];
 
 export default function App() {
