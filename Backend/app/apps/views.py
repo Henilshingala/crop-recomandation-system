@@ -376,7 +376,12 @@ def gemini_chat(request):
             },
             timeout=30,
         )
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            logger.error("Gemini API error %s: %s", resp.status_code, resp.text[:500])
+            return Response(
+                {"error": f"Gemini returned {resp.status_code}", "detail": resp.json().get("error", {}).get("message", resp.text[:200])},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
         return Response(resp.json())
     except http_requests.Timeout:
         return Response({"error": "Gemini request timed out"}, status=status.HTTP_504_GATEWAY_TIMEOUT)
