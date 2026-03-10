@@ -1,13 +1,12 @@
 /**
  * Gemini AI Service for Farmer Assistant
- *
- * ⚠️  SECURITY WARNING: This API key is exposed in client-side code.
- *     For production, proxy requests through your Django backend instead.
+ * Proxied through Django backend — API key stays server-side.
  */
 
-const GEMINI_API_KEY = "AIzaSyCEgWrjAG0CKWrhK2t9N0mKpTvKLJp9MNA";
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://crop-recomandation-system.onrender.com/api"
+).replace(/\/$/, "");
 
 export interface ChatMessage {
   role: "user" | "model";
@@ -77,22 +76,15 @@ export async function askGemini(
     { role: "user" as const, parts: [{ text: userMessage }] },
   ];
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(`${API_BASE_URL}/assistant/chat/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents,
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.9,
-        maxOutputTokens: 1024,
-      },
-    }),
+    body: JSON.stringify({ contents }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${err}`);
+    throw new Error(`Assistant error (${response.status}): ${err}`);
   }
 
   const data = await response.json();

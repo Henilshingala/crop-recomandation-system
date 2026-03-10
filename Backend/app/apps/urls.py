@@ -14,7 +14,8 @@ from .views import (
     health_check,
     available_crops,
     model_limits,
-    index
+    index,
+    gemini_chat,
 )
 
 # DRF Router for ViewSets
@@ -36,6 +37,9 @@ urlpatterns = [
     # Feature validation ranges (GET) — single source of truth
     path('model/limits/', model_limits, name='model-limits'),
     
+    # AI Assistant chat proxy (POST)
+    path('assistant/chat/', gemini_chat, name='gemini-chat'),
+
     # Index page
     path('index/', index, name='index'),
     
