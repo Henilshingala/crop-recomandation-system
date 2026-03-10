@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
 import { Sprout, Wheat, ShieldAlert, Globe } from "lucide-react";
@@ -179,6 +180,7 @@ export default function App() {
           </p>
         </div>
       </footer>
+      <SpeedInsights />
     </div>
   );
 }
