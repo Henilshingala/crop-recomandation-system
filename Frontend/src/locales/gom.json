@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "title": "पीक शिफारस प्रणाली",
     "subtitle": "AI विश्लेषणाचेर आदारिल्ले हुशार शेतकामी निर्णय"
@@ -198,5 +198,17 @@
     "tomato": "टमाट",
     "watermelon": "कलिंगड",
     "wheat": "गंव"
+  },
+  "assistant": {
+    "title": "कृषी मित्र",
+    "subtitle": "AI शेती सहाय्यक",
+    "open": "Open AI Assistant",
+    "close": "Close",
+    "clear": "Clear chat",
+    "placeholder": "Ask any farming question...",
+    "send": "Send",
+    "welcome": "Hi! I'm Krishi Mitra, your AI farming assistant. Ask me anything about crops, soil, weather, or farming!",
+    "error": "Sorry, I couldn't get a response. Please try again.",
+    "suggestions": ["Which crop suits my soil?", "How to control pests?", "Best season for wheat?"]
   }
 }

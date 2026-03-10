@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "title": "মহৈ-মরাং তাকপীবগী সিস্তেম",
     "subtitle": "AI-না লমজিংবা স্মার্ত লৌউ-শিংউগী ৱারেপশিং"
@@ -198,5 +198,17 @@
     "tomato": "খমেন অশিঞ্জা",
     "watermelon": "তরবুজ",
     "wheat": "গেহু"
+  },
+  "assistant": {
+    "title": "কৃষি মিত্র",
+    "subtitle": "AI কৃষি সহায়ক",
+    "open": "Open AI Assistant",
+    "close": "Close",
+    "clear": "Clear chat",
+    "placeholder": "Ask any farming question...",
+    "send": "Send",
+    "welcome": "Hi! I'm Krishi Mitra, your AI farming assistant. Ask me anything about crops, soil, weather, or farming!",
+    "error": "Sorry, I couldn't get a response. Please try again.",
+    "suggestions": ["Which crop suits my soil?", "How to control pests?", "Best season for wheat?"]
   }
 }
