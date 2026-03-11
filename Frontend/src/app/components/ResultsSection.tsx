@@ -448,10 +448,10 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
               <LimitingFactorBanner data={data} />
             </div>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             {/* Image carousel */}
-            <div className="rounded-xl overflow-hidden bg-gray-100 border border-gray-200/60 max-w-sm mx-auto lg:mx-0">
+            <div className="rounded-xl overflow-hidden bg-gray-100 border border-gray-200/60">
               {selected.image_urls && selected.image_urls.length > 0 ? (
                 <AutoCarousel key={selected.crop} images={selected.image_urls} alt={tc(selected.crop)} />
               ) : (
