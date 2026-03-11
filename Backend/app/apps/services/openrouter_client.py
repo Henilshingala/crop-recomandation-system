@@ -1,7 +1,7 @@
 """
 OpenRouter LLM Client
 =====================
-Calls the OpenRouter API (mistralai/mistral-7b-instruct) as a fallback
+Calls the OpenRouter API (meta-llama/llama-3-8b-instruct) as a fallback
 when no FAQ match is found.
 
 Environment variable required: OPENROUTER_API_KEY
@@ -18,20 +18,18 @@ logger = logging.getLogger(__name__)
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "mistralai/mistral-7b-instruct"
+MODEL = "meta-llama/llama-3-8b-instruct"
 
 SYSTEM_PROMPT = (
-    "You are an agricultural assistant helping farmers. "
-    "Provide helpful advice about crops, soil, fertilizers, and farming practices. "
-    "Answer clearly and simply."
+    "You are Krishi Mitra, an AI farming assistant that helps farmers "
+    "with crops, soil, fertilizers, irrigation, and pest control. "
+    "Answer clearly and simply in a helpful tone."
 )
 
 FALLBACK_RESPONSE = (
-    "I'm currently unable to retrieve external knowledge, but based on general "
-    "farming practices, I recommend consulting your local Krishi Vigyan Kendra "
-    "(KVK) or agriculture extension officer for specific advice on your query. "
-    "They can provide region-specific guidance on crops, soil management, and "
-    "best farming practices."
+    "I couldn't access external knowledge right now, but generally "
+    "farmers can consult agricultural experts or local Krishi Vigyan "
+    "Kendra (KVK) for region-specific advice."
 )
 
 
@@ -54,7 +52,11 @@ def call_openrouter(user_message: str, lang_code: str = "en") -> str:
     # Build system prompt with language instruction
     system_content = SYSTEM_PROMPT
     if lang_code and lang_code != "en":
-        system_content += f"\n\nIMPORTANT: You MUST reply in the language with code '{lang_code}'. Every word of your response must be in that language."
+        system_content += (
+            f"\n\nIMPORTANT: You MUST reply in the language with "
+            f"code '{lang_code}'. Every word of your response must "
+            f"be in that language."
+        )
 
     try:
         resp = requests.post(

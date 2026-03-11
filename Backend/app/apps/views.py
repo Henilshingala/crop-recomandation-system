@@ -362,7 +362,15 @@ def assistant_chat(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # 1. Try FAQ semantic search first
+    # 1. Handle simple greetings instantly (no API call needed)
+    GREETINGS = {"hi", "hello", "hey", "hii", "helo", "namaste", "namaskar"}
+    if user_message.lower().strip() in GREETINGS:
+        return Response({
+            "answer": "Hello! I am Krishi Mitra 🌱. How can I help you with farming today?",
+            "source": "greeting",
+        })
+
+    # 2. Try FAQ keyword search
     try:
         faq_answer, score = search_faq(user_message)
         if faq_answer:
@@ -372,7 +380,7 @@ def assistant_chat(request):
         logger.error("FAQ search failed: %s", e)
         # Continue to LLM fallback
 
-    # 2. Fallback to OpenRouter LLM
+    # 3. Fallback to OpenRouter LLM
     try:
         llm_answer = call_openrouter(user_message, lang_code)
         return Response({"answer": llm_answer, "source": "llm"})

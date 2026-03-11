@@ -552,36 +552,8 @@
     "answer": "Frontend: React + Vite + TypeScript + Tailwind CSS + Framer Motion (hosted on Vercel). Backend: Django + Django REST Framework + SQLite (hosted on Render). ML Engine: Python + FastAPI + Scikit-learn + XGBoost + LightGBM (hosted on HuggingFace Spaces). DevOps: Docker, Git."
   },
   {
-    "question": "What is Django?",
-    "answer": "Django is a high-level Python web framework that promotes rapid development and clean, pragmatic design. In this system, Django acts as the secure API gateway between the React frontend and the FastAPI ML engine."
-  },
-  {
-    "question": "What is React?",
-    "answer": "React is a JavaScript library developed by Meta for building interactive user interfaces. In this system, the frontend is built with React + Vite + TypeScript to render the input form and display crop recommendation cards."
-  },
-  {
-    "question": "What is the backend framework used?",
-    "answer": "The backend API gateway is built with Django and Django REST Framework (DRF), a powerful Python web framework for building RESTful APIs."
-  },
-  {
-    "question": "What is the frontend framework used?",
-    "answer": "The frontend is built using React (with Vite as the build tool) and TypeScript, styled with Tailwind CSS and animated with Framer Motion."
-  },
-  {
     "question": "How is the ML model deployed?",
     "answer": "The ML engine is containerised with Docker and deployed on HuggingFace Spaces at https://huggingface.co/spaces/shingala/CRS. The FastAPI app inside the container handles inference requests."
-  },
-  {
-    "question": "What is model inference?",
-    "answer": "Model inference is the process of using a trained machine learning model to make predictions on new, unseen data. In this system, inference means taking your 7 soil/climate inputs and computing the most likely crop recommendation."
-  },
-  {
-    "question": "What is label encoding in ML?",
-    "answer": "Label encoding converts categorical text labels (like crop names: 'rice', 'wheat') into numerical integers (0, 1, 2, …) so that machine learning algorithms, which work with numbers, can process them."
-  },
-  {
-    "question": "What is feature scaling?",
-    "answer": "Feature scaling standardises the range of input features (e.g., N: 0–140, pH: 3.5–9.5) so that no single feature dominates the model due to its magnitude. Common methods include min-max normalisation and standardisation (z-score scaling)."
   },
   {
     "question": "How do I contact support?",
