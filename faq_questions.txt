@@ -23,6 +23,7 @@ Can I use the system in Gujarati?
 Can I use the system in Kannada?
 Can I use the system in Punjabi?
 Can I use the system in Odia?
+can i use the system in 
 What is the role of nitrogen in crop recommendation?
 What is the role of phosphorus in crop recommendation?
 What is the role of potassium in crop recommendation?

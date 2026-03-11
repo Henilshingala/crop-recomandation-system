@@ -345,7 +345,7 @@ def model_limits(request):
 # AI Assistant (Hybrid FAQ + OpenRouter)
 # ═════════════════════════════════════════════════════════════════════════
 
-from .services.faq_loader import search_faq
+from .services.faq_search import search_faq
 from .services.openrouter_client import call_openrouter, FALLBACK_RESPONSE
 
 
