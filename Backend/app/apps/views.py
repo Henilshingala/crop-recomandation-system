@@ -342,52 +342,43 @@ def model_limits(request):
 
 
 # ═════════════════════════════════════════════════════════════════════════
-# AI Assistant (Gemini proxy)
+# AI Assistant (Hybrid FAQ + OpenRouter)
 # ═════════════════════════════════════════════════════════════════════════
 
-import requests as http_requests
-
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+from .services.faq_loader import search_faq
+from .services.openrouter_client import call_openrouter, FALLBACK_RESPONSE
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def gemini_chat(request):
-    """POST /api/assistant/chat/ — proxy chat to Gemini, keeping API key server-side."""
-    if not GEMINI_API_KEY:
-        return Response({"error": "Gemini API key not configured"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+def assistant_chat(request):
+    """POST /api/assistant/chat/ — hybrid FAQ search + OpenRouter LLM fallback."""
+    user_message = request.data.get("message", "").strip()
+    lang_code = request.data.get("lang", "en")
 
-    contents = request.data.get("contents")
-    if not contents or not isinstance(contents, list):
-        return Response({"error": "Invalid request body"}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        resp = http_requests.post(
-            GEMINI_URL,
-            params={"key": GEMINI_API_KEY},
-            json={
-                "contents": contents,
-                "generationConfig": {
-                    "temperature": 0.7,
-                    "topP": 0.9,
-                    "maxOutputTokens": 1024,
-                },
-            },
-            timeout=30,
+    if not user_message:
+        return Response(
+            {"error": "Message is required"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
-        if resp.status_code != 200:
-            logger.error("Gemini API error %s: %s", resp.status_code, resp.text[:500])
-            return Response(
-                {"error": f"Gemini returned {resp.status_code}", "detail": resp.json().get("error", {}).get("message", resp.text[:200])},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-        return Response(resp.json())
-    except http_requests.Timeout:
-        return Response({"error": "Gemini request timed out"}, status=status.HTTP_504_GATEWAY_TIMEOUT)
-    except http_requests.RequestException as e:
-        logger.error("Gemini proxy error: %s", e)
-        return Response({"error": "Failed to get response from AI"}, status=status.HTTP_502_BAD_GATEWAY)
+
+    # 1. Try FAQ semantic search first
+    try:
+        faq_answer, score = search_faq(user_message)
+        if faq_answer:
+            logger.info("FAQ match (score=%.3f) for: %s", score, user_message[:80])
+            return Response({"answer": faq_answer, "source": "faq", "confidence": round(score, 3)})
+    except Exception as e:
+        logger.error("FAQ search failed: %s", e)
+        # Continue to LLM fallback
+
+    # 2. Fallback to OpenRouter LLM
+    try:
+        llm_answer = call_openrouter(user_message, lang_code)
+        return Response({"answer": llm_answer, "source": "llm"})
+    except Exception as e:
+        logger.error("OpenRouter fallback failed: %s", e)
+        return Response({"answer": FALLBACK_RESPONSE, "source": "fallback"})
 
 
 class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):

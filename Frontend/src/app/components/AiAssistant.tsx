@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageCircle, X, Send, Loader2, Trash2, Bot, User } from "lucide-react";
-import { askGemini, type ChatMessage } from "@/app/services/gemini";
+import { askAssistant, type ChatMessage } from "@/app/services/assistant";
 
 export function AiAssistant() {
   const { t, i18n } = useTranslation();
@@ -34,7 +34,7 @@ export function AiAssistant() {
     setLoading(true);
 
     try {
-      const reply = await askGemini(text, messages, i18n.language);
+      const reply = await askAssistant(text, messages, i18n.language);
       setMessages((prev) => [...prev, { role: "model", text: reply }]);
     } catch {
       setMessages((prev) => [

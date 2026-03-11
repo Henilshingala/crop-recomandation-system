@@ -1,0 +1,90 @@
+[
+  {
+    "question": "Best crop for black soil",
+    "answer": "Cotton is the best crop for black soil due to its high moisture retention capacity. Other suitable crops include soybean, wheat, sorghum (jowar), sunflower, and chickpea (chana). Black soil is rich in calcium, magnesium, and iron which supports these crops well."
+  },
+  {
+    "question": "Best crop for red soil",
+    "answer": "Groundnut (peanut), millets (bajra, ragi), pulses, and tobacco grow well in red soil. Red soil is well-drained and responds well to fertilizers. Adding organic matter improves its fertility. Rice and sugarcane can also be grown with proper irrigation."
+  },
+  {
+    "question": "Best crop for sandy soil",
+    "answer": "Sandy soil is best suited for crops like bajra (pearl millet), jowar (sorghum), groundnut, watermelon, and muskmelon. These crops tolerate the low water retention of sandy soil. Adding organic manure and mulching helps improve sandy soil quality."
+  },
+  {
+    "question": "Fertilizer recommendation for wheat",
+    "answer": "Wheat requires balanced NPK fertilization. Apply 120 kg Nitrogen, 60 kg Phosphorus, and 40 kg Potassium per hectare. Split nitrogen into 3 doses: at sowing, first irrigation (21 days), and second irrigation (45 days). DAP at sowing and Urea for top-dressing is the common practice."
+  },
+  {
+    "question": "Fertilizer recommendation for rice",
+    "answer": "Rice requires 120-150 kg Nitrogen, 60 kg Phosphorus, and 60 kg Potassium per hectare. Apply full P and K at transplanting. Split nitrogen into 3 equal doses: at transplanting, tillering stage, and panicle initiation. Use zinc sulfate (25 kg/ha) in zinc-deficient soils."
+  },
+  {
+    "question": "How to control pests in crops",
+    "answer": "Integrated Pest Management (IPM) is recommended: 1) Use resistant crop varieties. 2) Practice crop rotation. 3) Use neem-based bio-pesticides as first line of defense. 4) Install pheromone traps for monitoring. 5) Use chemical pesticides only when pest population exceeds economic threshold. Always follow recommended dosage and safety period."
+  },
+  {
+    "question": "Best season for wheat cultivation",
+    "answer": "Wheat is a Rabi (winter) crop. The ideal sowing time is mid-October to late November depending on the region. It requires cool temperatures (10-25°C) during growth and warm, dry weather during ripening. Harvest is typically in March-April. Late sowing reduces yield significantly."
+  },
+  {
+    "question": "Best season for rice cultivation",
+    "answer": "Rice is primarily a Kharif (monsoon) crop. Nursery is prepared in June and transplanting is done in July. It requires high temperature (20-35°C), high humidity, and heavy rainfall (100-200 cm). Harvest is in October-November. Some varieties can also be grown in Rabi season in southern India."
+  },
+  {
+    "question": "How to improve soil fertility",
+    "answer": "To improve soil fertility: 1) Add organic manure (FYM, compost) regularly. 2) Practice crop rotation with legumes to fix nitrogen. 3) Use green manuring with dhaincha or sunhemp. 4) Apply balanced fertilizers based on soil test results. 5) Use vermicompost. 6) Avoid burning crop residues — incorporate them instead. Get soil tested every 2-3 years."
+  },
+  {
+    "question": "How to do soil testing",
+    "answer": "Collect soil samples from 15-20 spots in your field at 15 cm depth in a zigzag pattern. Mix all samples, take about 500g as a representative sample. Send to your nearest Krishi Vigyan Kendra (KVK) or government soil testing lab. The test costs Rs 50-100 and reports NPK levels, pH, organic carbon, and micronutrients. Based on results, apply recommended fertilizers."
+  },
+  {
+    "question": "What is organic farming",
+    "answer": "Organic farming avoids synthetic fertilizers and pesticides. It relies on: 1) Organic manure and compost for nutrition. 2) Bio-fertilizers like Rhizobium and Azotobacter. 3) Bio-pesticides like neem oil and Trichoderma for pest control. 4) Crop rotation and mixed cropping. Organic certification takes 3 years of transition. Organic produce fetches 20-40% higher prices in the market."
+  },
+  {
+    "question": "How to manage water for irrigation",
+    "answer": "Efficient irrigation practices: 1) Drip irrigation saves 40-60% water — ideal for vegetables and fruits. 2) Sprinkler irrigation suits wheat, pulses, and groundnut. 3) Mulching reduces evaporation by 25-30%. 4) Schedule irrigation based on critical growth stages. 5) Avoid flood irrigation where possible. Government subsidies (PM Krishi Sinchayee Yojana) are available for micro-irrigation systems."
+  },
+  {
+    "question": "Government schemes for farmers in India",
+    "answer": "Key schemes: 1) PM-KISAN — Rs 6000/year direct income support. 2) PM Fasal Bima Yojana — crop insurance at low premium. 3) Kisan Credit Card (KCC) — easy farm loans at 4% interest. 4) PM Krishi Sinchayee Yojana — irrigation subsidy. 5) Soil Health Card scheme — free soil testing. 6) e-NAM — online crop selling platform. Visit your nearest agriculture office for registration."
+  },
+  {
+    "question": "How to prevent crop diseases",
+    "answer": "Disease prevention strategies: 1) Use certified disease-free seeds. 2) Treat seeds with fungicides before sowing. 3) Maintain proper plant spacing for air circulation. 4) Avoid excess nitrogen as it promotes fungal growth. 5) Remove and destroy infected plants immediately. 6) Spray preventive fungicides during humid weather. 7) Practice crop rotation — don't grow the same crop family continuously."
+  },
+  {
+    "question": "Best crops for summer season",
+    "answer": "Zaid (summer) season crops include: watermelon, muskmelon, cucumber, bottle gourd, ridge gourd, bitter gourd, okra (bhindi), moong dal (green gram), and sunflower. These crops grow well in temperatures of 25-40°C. Ensure adequate irrigation as summer crops need more water. Mulching is recommended to conserve soil moisture."
+  },
+  {
+    "question": "How to start a kitchen garden",
+    "answer": "Start a kitchen garden with easy vegetables: tomato, chilli, brinjal, spinach, coriander, and mint. Use containers or raised beds with good drainage. Mix garden soil with compost (1:1 ratio). Water regularly in the morning. Use neem spray for pest control. Start with seedlings rather than seeds for faster results. Most kitchen vegetables are ready to harvest in 45-90 days."
+  },
+  {
+    "question": "What is crop rotation and why is it important",
+    "answer": "Crop rotation means growing different crops in sequence on the same land. Benefits: 1) Breaks pest and disease cycles. 2) Legumes fix nitrogen for the next crop. 3) Different root depths access different soil nutrients. 4) Reduces weed pressure. Common rotation: Rice-Wheat, Cotton-Wheat, Maize-Chickpea. Avoid growing the same crop family back-to-back."
+  },
+  {
+    "question": "How to use neem as pesticide",
+    "answer": "Neem-based pest control: 1) Neem oil spray (3-5 ml per liter of water) controls sucking pests like aphids, whiteflies, and jassids. 2) Neem cake (250 kg/ha) mixed in soil controls root pests and acts as fertilizer. 3) Neem kernel extract — crush 500g neem seeds, soak overnight in 10 liters water, filter and spray. Neem is safe for beneficial insects and has no waiting period."
+  },
+  {
+    "question": "How to store grains after harvest",
+    "answer": "Proper grain storage: 1) Dry grains to 12-14% moisture before storage. 2) Clean and fumigate storage bins. 3) Use hermetic (airtight) storage bags to prevent insect infestation. 4) Store in cool, dry place away from walls. 5) Use neem leaves or dried turmeric powder as natural preservatives. 6) Check stored grain monthly for moisture and insects. Government warehouses offer scientific storage through FCI."
+  },
+  {
+    "question": "What is drip irrigation",
+    "answer": "Drip irrigation delivers water directly to plant roots through a network of pipes with emitters. Benefits: 1) Saves 40-60% water compared to flood irrigation. 2) Reduces weed growth. 3) Fertilizers can be applied through drip (fertigation). 4) Increases yield by 20-30%. Best for: vegetables, fruits, sugarcane, and cotton. Government provides 55-90% subsidy under PM Krishi Sinchayee Yojana."
+  },
+  {
+    "question": "How to increase crop yield",
+    "answer": "To increase crop yield: 1) Use high-yielding certified seeds. 2) Follow recommended sowing time for your region. 3) Apply fertilizers based on soil test results. 4) Ensure timely irrigation at critical growth stages. 5) Practice integrated pest management. 6) Maintain proper plant spacing. 7) Use micronutrients (zinc, boron) where deficient. 8) Adopt modern techniques like SRI for rice or raised bed planting for wheat."
+  },
+  {
+    "question": "What is vermicompost and how to make it",
+    "answer": "Vermicompost is organic fertilizer made using earthworms. How to make: 1) Build a bed (3m x 1m x 0.5m) in shade. 2) Layer with dry leaves, cow dung, and kitchen waste. 3) Add 1000-1500 Eisenia fetida (red wiggler) worms. 4) Keep moist but not waterlogged. 5) Turn material every 15 days. 6) Ready in 45-60 days when material turns dark brown. Apply 5-10 tons/hectare. It improves soil structure and provides slow-release nutrients."
+  }
+]

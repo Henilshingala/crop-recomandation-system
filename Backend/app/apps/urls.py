@@ -15,7 +15,7 @@ from .views import (
     available_crops,
     model_limits,
     index,
-    gemini_chat,
+    assistant_chat,
 )
 
 # DRF Router for ViewSets
@@ -38,7 +38,7 @@ urlpatterns = [
     path('model/limits/', model_limits, name='model-limits'),
     
     # AI Assistant chat proxy (POST)
-    path('assistant/chat/', gemini_chat, name='gemini-chat'),
+    path('assistant/chat/', assistant_chat, name='assistant-chat'),
 
     # Index page
     path('index/', index, name='index'),
