@@ -32,6 +32,8 @@ export interface CropRecommendation {
   explanation?: string;
   model_consensus?: 'strong' | 'moderate' | 'weak';
   confidence_label?: string;
+  ncs?: number;
+  environmental_match?: 'strong' | 'acceptable' | 'weak' | 'unknown';
   image_url?: string;
   image_urls?: string[];
   expected_yield?: string | null;

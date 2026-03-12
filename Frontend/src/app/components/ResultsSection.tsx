@@ -218,6 +218,29 @@ function ConfidenceLabel({ label }: { label?: string }) {
   );
 }
 
+/* ── V9: Environmental Match pill ─────────────────────────────────── */
+
+function EnvironmentalMatchPill({ match }: { match?: string }) {
+  const { t } = useTranslation();
+  if (!match || match === "unknown") return null;
+  const m = match.toLowerCase();
+  const cls = m === "strong"
+    ? "bg-teal-100 text-teal-700 border-teal-200"
+    : m === "acceptable"
+    ? "bg-sky-100 text-sky-700 border-sky-200"
+    : "bg-orange-100 text-orange-700 border-orange-200";
+  const label = m === "strong"
+    ? t("envMatch.strong", { defaultValue: "Env: Strong" })
+    : m === "acceptable"
+    ? t("envMatch.acceptable", { defaultValue: "Env: OK" })
+    : t("envMatch.weak", { defaultValue: "Env: Weak" });
+  return (
+    <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${cls}`}>
+      {label}
+    </Badge>
+  );
+}
+
 /* ── Limiting-factor banner (V8 FINAL STABLE) ────────────────────── */
 
 function LimitingFactorBanner({ data }: { data: PredictionResponse }) {
@@ -425,6 +448,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
             </Badge>
             <ConsensusPill consensus={selected.model_consensus} />
             <ConfidenceLabel label={selected.confidence_label} />
+            <EnvironmentalMatchPill match={selected.environmental_match} />
           </div>
         </div>
 
@@ -633,6 +657,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <ConsensusPill consensus={crop.model_consensus} />
                   <ConfidenceLabel label={crop.confidence_label} />
+                  <EnvironmentalMatchPill match={crop.environmental_match} />
                 </div>
 
                 {/* Mini explanation preview */}

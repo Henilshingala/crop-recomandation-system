@@ -1,10 +1,15 @@
 """
-Crop Recommendation ML API — V8 FINAL STABLE
+Crop Recommendation ML API — V9 NCS+EMS Decision System
 ===================================================================
-Stabilized advisory system with guaranteed non-empty responses,
-consistent confidence caps, and fallback logic.
+V9 upgrades the advisory engine with:
+  - Normalized Confidence Score (NCS): fixes softmax dilution by
+    measuring probability above the 1/51 uniform baseline.
+  - Environmental Match Score (EMS): per-crop Z-score from training
+    data statistics (crop_stats.json) replaces hard global midpoints.
+  - Decision Matrix: 3×3 grid (NCS confidence × EMS match) maps to
+    advisory tiers, replacing the old hard confidence thresholds.
 
-V8 FINAL STABLE phases:
+Legacy V8 phases still active:
   1. Hard feasibility gate (±5°C temp, ±0.5 pH, <30% min rain)
   2. Fallback: least-violating crop if all excluded (cap 35%)
   3. Gradual stress penalty (weighted per-crop deviation)
@@ -14,8 +19,8 @@ V8 FINAL STABLE phases:
   7. Safety disclaimer in every response
   8. Startup assertions (fail-fast validation)
   9. Limiting factor identification (per request)
-  10. Confidence interpretation labels
-  11. Global unsuitable detection (max_conf<25% or all-not-recommended)
+  10. Confidence interpretation labels (now NCS-based)
+  11. Global unsuitable detection (NCS<10 + max_conf<25% or all-not-rec)
 
 Models:
   "soil"      -> V6 stacked ensemble (51 crops)
@@ -45,7 +50,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ml_api_v7")
 
-app = FastAPI(title="Crop Recommendation ML API", version="8.2")
+app = FastAPI(title="Crop Recommendation ML API", version="9.0")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,6 +61,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _RANGES_PATH = os.path.join(BASE_DIR, "feature_ranges.json")
 with open(_RANGES_PATH, encoding="utf-8") as _f:
     FEATURE_RANGES: dict = json.load(_f)
+
+_CROP_STATS_PATH = os.path.join(BASE_DIR, "crop_stats.json")
+with open(_CROP_STATS_PATH, encoding="utf-8") as _f:
+    CROP_STATS: dict = json.load(_f)
+logger.info("Loaded crop_stats.json (%d crops)", len(CROP_STATS))
 
 _ACC = FEATURE_RANGES["acceptance"]
 _V6_FEAT = FEATURE_RANGES["v6_soil_model"]["features"]
@@ -641,7 +651,7 @@ def compute_ood_dampening(ood_warnings: list) -> Tuple[float, float, str]:
 
 
 # ===================================================================
-# STEP 3 — STRESS SCORE CALCULATION
+# STEP 3 — STRESS SCORE CALCULATION (uses global midpoints as fallback)
 # ===================================================================
 
 STRESS_REFERENCE = {
@@ -653,6 +663,9 @@ STRESS_REFERENCE = {
     "ph":          {"mid": 6.5, "half_width": 2.0},
     "rainfall":    {"mid": 800, "half_width": 800},
 }
+
+# V9 features used for Environmental Match Score
+_EMS_FEATURES = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
 
 
 def compute_stress_index(input_dict: dict) -> Tuple[float, Dict[str, float]]:
@@ -670,6 +683,146 @@ def compute_stress_index(input_dict: dict) -> Tuple[float, Dict[str, float]]:
 
     overall = sum(per_feature.values()) / len(per_feature)
     return round(overall, 4), per_feature
+
+
+# ===================================================================
+# V9 — NORMALIZED CONFIDENCE SCORE (NCS)
+# ===================================================================
+
+_NUM_CLASSES = 51
+_UNIFORM_BASELINE = 1.0 / _NUM_CLASSES  # ~1.96%
+
+
+def compute_ncs(top1_prob: float, top2_prob: float) -> dict:
+    """
+    Compute Normalized Confidence Score from the top-2 raw probabilities.
+
+    NCS lifts raw probability above the uniform baseline so that a
+    prediction that is even 2× the baseline is correctly valued, instead
+    of appearing as "only 4%".
+
+    Returns dict with:
+      ncs        — 0-100 normalized score
+      dominance  — ratio of P1/P2 (how much #1 dominates #2)
+      gap        — absolute gap P1-P2
+      confidence_level — "strong" / "moderate" / "weak"
+    """
+    # Clamp inputs
+    top1_prob = max(top1_prob, 0.0)
+    top2_prob = max(top2_prob, 0.0)
+
+    # NCS: how far above uniform baseline, scaled to 0-100
+    ncs = ((top1_prob - _UNIFORM_BASELINE) / (1.0 - _UNIFORM_BASELINE)) * 100.0
+    ncs = max(0.0, min(ncs, 100.0))
+
+    # Dominance ratio: how much top-1 leads over top-2
+    dominance = (top1_prob / top2_prob) if top2_prob > 1e-9 else 50.0
+
+    # Absolute gap
+    gap = top1_prob - top2_prob
+
+    # Confidence classification
+    if (ncs >= 40 and dominance >= 2.0) or gap >= 0.15:
+        level = "strong"
+    elif (ncs >= 20 and dominance >= 1.5) or gap >= 0.08:
+        level = "moderate"
+    else:
+        level = "weak"
+
+    return {
+        "ncs": round(ncs, 2),
+        "dominance": round(dominance, 2),
+        "gap": round(gap, 4),
+        "confidence_level": level,
+    }
+
+
+# ===================================================================
+# V9 — ENVIRONMENTAL MATCH SCORE (EMS) — per-crop Z-score
+# ===================================================================
+
+def compute_environmental_match(crop: str, input_dict: dict) -> dict:
+    """
+    Compute how well the input conditions match the training data
+    for a specific crop, using per-feature Z-scores from crop_stats.json.
+
+    Returns dict with:
+      ems         — average |Z-score| across features (lower = better)
+      z_scores    — per-feature Z-scores
+      match_level — "strong" / "acceptable" / "weak"
+    """
+    stats = CROP_STATS.get(crop)
+    if stats is None:
+        # Fallback: unknown crop → neutral match
+        return {"ems": 1.0, "z_scores": {}, "match_level": "acceptable"}
+
+    z_scores: Dict[str, float] = {}
+    for feat in _EMS_FEATURES:
+        val = input_dict.get(feat)
+        if val is None:
+            continue
+        feat_stats = stats.get(feat)
+        if feat_stats is None:
+            continue
+
+        mean = feat_stats["mean"]
+        std = feat_stats["std"]
+
+        if std < 1e-6:
+            # Near-zero std: if value is close to mean, z=0, else z=3
+            z = 0.0 if abs(val - mean) < 1e-3 else 3.0
+        else:
+            z = abs(val - mean) / std
+
+        # Cap individual Z-score at 3.0 to avoid extreme outlier domination
+        z = min(z, 3.0)
+        z_scores[feat] = round(z, 3)
+
+    if not z_scores:
+        return {"ems": 1.0, "z_scores": {}, "match_level": "acceptable"}
+
+    ems = sum(z_scores.values()) / len(z_scores)
+
+    if ems < 1.0:
+        match_level = "strong"
+    elif ems < 2.0:
+        match_level = "acceptable"
+    else:
+        match_level = "weak"
+
+    return {
+        "ems": round(ems, 3),
+        "z_scores": z_scores,
+        "match_level": match_level,
+    }
+
+
+# ===================================================================
+# V9 — DECISION MATRIX (NCS confidence × EMS environmental)
+# ===================================================================
+
+def decision_matrix_tier(confidence_level: str, match_level: str) -> str:
+    """
+    3×3 decision matrix combining NCS confidence level with EMS match level.
+
+    | Confidence \\ Env | strong       | acceptable                 | weak             |
+    |------------------|-------------|---------------------------|-----------------|
+    | strong           | Strongly Rec | Recommended               | Conditional     |
+    | moderate         | Recommended  | Conditional / Trial Basis | Not Recommended |
+    | weak             | Conditional  | Not Recommended           | Not Recommended |
+    """
+    _MATRIX = {
+        ("strong", "strong"):     "Strongly Recommended",
+        ("strong", "acceptable"): "Recommended",
+        ("strong", "weak"):       "Conditional / Trial Basis",
+        ("moderate", "strong"):   "Recommended",
+        ("moderate", "acceptable"): "Conditional / Trial Basis",
+        ("moderate", "weak"):     "Not Recommended",
+        ("weak", "strong"):       "Conditional / Trial Basis",
+        ("weak", "acceptable"):   "Not Recommended",
+        ("weak", "weak"):         "Not Recommended",
+    }
+    return _MATRIX.get((confidence_level, match_level), "Not Recommended")
 
 
 def apply_stress_reduction(
@@ -736,11 +889,19 @@ def compute_limiting_factor(input_dict: dict) -> dict:
 
 
 # ===================================================================
-# V8 FINAL STABLE — CONFIDENCE INTERPRETATION LABELS
+# V9 — CONFIDENCE INTERPRETATION LABELS (NCS-based)
 # ===================================================================
 
-def confidence_label(confidence_pct: float) -> str:
-    """Map confidence % to human-readable match strength label."""
+def confidence_label(confidence_pct: float, ncs_info: Optional[dict] = None) -> str:
+    """
+    Map confidence to human-readable match strength label.
+    When NCS info is available, use the V9 classification.
+    Falls back to threshold-based for backward compat.
+    """
+    if ncs_info is not None:
+        level = ncs_info.get("confidence_level", "weak")
+        return {"strong": "Strong Match", "moderate": "Moderate Match", "weak": "Weak Match"}.get(level, "Weak Match")
+    # Legacy fallback
     if confidence_pct > 60:
         return "Strong Match"
     if confidence_pct >= 30:
@@ -749,10 +910,9 @@ def confidence_label(confidence_pct: float) -> str:
 
 
 # ===================================================================
-# STEP 6 — ADVISORY RISK TIERS
+# V9 — ADVISORY RISK TIERS (decision matrix + downgrade)
 # ===================================================================
 
-# V8 PHASE 4 — CONFIDENCE CALIBRATION & TIER RULES
 _TIER_DOWNGRADE = {
     "Strongly Recommended": "Recommended",
     "Recommended": "Conditional / Trial Basis",
@@ -766,29 +926,37 @@ def advisory_tier(
     is_ood: bool = False,
     stress_factor: float = 0.0,
     severe_count: int = 0,
+    ncs_info: Optional[dict] = None,
+    ems_info: Optional[dict] = None,
 ) -> str:
     """
-    V8 tier boundaries:
-      > 80%  → Strongly Recommended
-      60-80% → Recommended
-      40-60% → Conditional / Trial Basis
-      < 40%  → Not Recommended
+    V9 tier assignment using the Decision Matrix when NCS/EMS are available.
 
-    Downgrades:
+    Falls back to V8 hard-threshold logic for backward compatibility.
+
+    Downgrades still apply:
       - OOD → -1 tier
       - stress_factor > 0.4 → -1 tier
-      - multiple severe stresses (severe_count >= 2) → -2 tiers total
+      - severe_count >= 2 → -1 tier, >= 3 → -2 tiers
     """
-    if confidence_pct > 80:
-        tier = "Strongly Recommended"
-    elif confidence_pct > 60:
-        tier = "Recommended"
-    elif confidence_pct > 40:
-        tier = "Conditional / Trial Basis"
+    # V9 path: use decision matrix
+    if ncs_info is not None and ems_info is not None:
+        tier = decision_matrix_tier(
+            ncs_info.get("confidence_level", "weak"),
+            ems_info.get("match_level", "acceptable"),
+        )
     else:
-        tier = "Not Recommended"
+        # Legacy V8 hard thresholds
+        if confidence_pct > 80:
+            tier = "Strongly Recommended"
+        elif confidence_pct > 60:
+            tier = "Recommended"
+        elif confidence_pct > 40:
+            tier = "Conditional / Trial Basis"
+        else:
+            tier = "Not Recommended"
 
-    # V8.1 — stress-based downgrades (mutually exclusive tiers)
+    # Stress-based downgrades
     stress_down = 0
     if stress_factor > 0.6:
         stress_down = 2
@@ -1822,11 +1990,26 @@ async def recommend(data: RecommendInput):
                 seen_in_model.add(cname)
 
     # Build candidate list — deduplicate by crop, keep best confidence
+    # V9: Also collect raw probabilities across models for NCS computation
+    _crop_raw_probs: Dict[str, List[float]] = {}  # crop → list of raw probs from each model
     candidates: Dict[str, dict] = {}
     for mname, mres in model_results.items():
+        # V9: Build per-crop probability map for this model
+        proba = mres.get("proba")
+        crops_list = mres.get("crops_list", [])
+        _model_prob_map: Dict[str, float] = {}
+        if proba is not None and len(crops_list) > 0:
+            for idx, cname_raw in enumerate(crops_list):
+                if idx < len(proba):
+                    _model_prob_map[cname_raw] = float(proba[idx])
+
         for entry in mres.get("top_3", []):
             cname = entry["crop"]
             conf = entry["confidence"] / 100.0  # normalise to 0-1
+
+            # V9: Record raw probability for NCS
+            raw_prob = _model_prob_map.get(cname, conf)
+            _crop_raw_probs.setdefault(cname, []).append(raw_prob)
 
             # Agreement bonus: +10% if 2+ models have this crop in top-3
             agreement = 0.10 if crop_votes.get(cname, 0) >= 2 else 0.0
@@ -1851,6 +2034,9 @@ async def recommend(data: RecommendInput):
 
             if cname not in candidates or score > candidates[cname]["_score"]:
                 tier_pct = round(score * 100, 2)
+                # V9: Compute EMS for this crop
+                ems_info = compute_environmental_match(cname, canonical)
+
                 candidates[cname] = {
                     "crop": cname,
                     "confidence": tier_pct,
@@ -1870,6 +2056,8 @@ async def recommend(data: RecommendInput):
                     ),
                     "nutrition": get_nutrition(cname),
                     "_score": score,
+                    "_ems_info": ems_info,
+                    "_raw_prob": raw_prob,
                 }
 
     # ── V8 Phase 1: Hard Feasibility Gate (±5°C) ─────────────────────
@@ -1909,16 +2097,42 @@ async def recommend(data: RecommendInput):
     # Sort by score descending, take top 3
     ranked = sorted(viable.values(), key=lambda c: c["_score"], reverse=True)[:3]
 
-    # V8 Phase 4: Re-compute advisory tier with stress-based downgrade
+    # V9: Compute NCS for ranked candidates using averaged raw probabilities
+    # We need the top-2 raw probabilities to feed into NCS
+    # Average raw_prob across models for each crop, then sort for top-2
+    _avg_raw: Dict[str, float] = {}
+    for cname, probs in _crop_raw_probs.items():
+        _avg_raw[cname] = sum(probs) / len(probs) if probs else 0.0
+
+    # For each ranked candidate, compute NCS using the global top-2 raw probs
+    sorted_raw = sorted(_avg_raw.values(), reverse=True)
+    global_p1 = sorted_raw[0] if len(sorted_raw) > 0 else 0.0
+    global_p2 = sorted_raw[1] if len(sorted_raw) > 1 else 0.0
+
+    # V9 Phase 4: Re-compute advisory tier with NCS + EMS decision matrix
     for c in ranked:
         sf = c.get("_stress_factor", 0.0)
         sc = c.get("_severe_count", 0)
+        ems_info = c.get("_ems_info")
+
+        # Compute NCS for this specific crop vs the runner-up
+        crop_p1 = _avg_raw.get(c["crop"], 0.0)
+        # Find highest raw prob that ISN'T this crop for the gap/dominance calc
+        others = [v for k, v in _avg_raw.items() if k != c["crop"]]
+        crop_p2 = max(others) if others else 0.0
+        ncs_info = compute_ncs(crop_p1, crop_p2)
+
         c["advisory_tier"] = advisory_tier(
             c["confidence"], is_ood,
             stress_factor=sf, severe_count=sc,
+            ncs_info=ncs_info, ems_info=ems_info,
         )
-        # V8F: Add confidence interpretation label
-        c["confidence_label"] = confidence_label(c["confidence"])
+        c["confidence_label"] = confidence_label(c["confidence"], ncs_info=ncs_info)
+
+        # V9: Expose NCS and EMS on the response for transparency
+        c["ncs"] = ncs_info["ncs"]
+        c["environmental_match"] = ems_info["match_level"] if ems_info else "unknown"
+
         # V8.1: Fallback mode hard cap
         if fallback_mode:
             c["confidence"] = min(c["confidence"], FALLBACK_CONFIDENCE_CAP)
@@ -1932,7 +2146,10 @@ async def recommend(data: RecommendInput):
 
     # ── V8F: Global unsuitable detection ───────────────────────────
     max_confidence = max((c["confidence"] for c in ranked), default=0)
-    global_unsuitable = (max_confidence < 25) or all_not_recommended
+    max_ncs = max((c.get("ncs", 0) for c in ranked), default=0)
+    # V9: Use NCS for global unsuitable — NCS < 10 means model barely
+    # distinguishes this crop from random; OR legacy max_conf < 25
+    global_unsuitable = (max_ncs < 10 and max_confidence < 25) or all_not_recommended
 
     # ── V8F: Limiting factor identification ────────────────────────
     limiting = compute_limiting_factor(canonical)
@@ -1946,6 +2163,8 @@ async def recommend(data: RecommendInput):
         c.pop("_score", None)
         c.pop("_stress_factor", None)
         c.pop("_severe_count", None)
+        c.pop("_ems_info", None)
+        c.pop("_raw_prob", None)
         top_recommendations.append(c)
 
     latency = round((time.time() - start) * 1000, 1)
@@ -1971,7 +2190,7 @@ async def recommend(data: RecommendInput):
             "This AI advisory is based on provided environmental parameters. "
             "Consult local agricultural experts before final decision."
         ),
-        "version": "8.2-final",
+        "version": "9.0-ncs",
         "latency_ms": latency,
     }
 
@@ -2009,8 +2228,8 @@ async def recommend(data: RecommendInput):
 def recommend_hint():
     return {
         "message": "Use POST with JSON body.",
-        "version": "8.2-final",
-        "description": "V8 FINAL STABLE — no model selection, guaranteed non-empty, limiting factor ID.",
+        "version": "9.0-ncs",
+        "description": "V9 NCS+EMS Decision Matrix — normalized confidence, per-crop environmental match.",
         "required_fields": ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"],
         "optional_fields": ["soil_type", "irrigation", "moisture", "season"],
         "phases": [
@@ -2019,9 +2238,12 @@ def recommend_hint():
             "Gradual stress penalty (per-crop weighted deviation)",
             "Salinity override (pH≥8.8 + rain≥2500)",
             "Confidence caps (75% stress, 60% chaos, 85% hard max)",
+            "V9 NCS: Normalized Confidence Score (above uniform baseline)",
+            "V9 EMS: Environmental Match Score (per-crop Z-score)",
+            "V9 Decision Matrix (NCS level × EMS level → tier)",
             "Tier downgrade (stress>0.4 → -1, >0.6 → -2)",
             "Limiting factor identification",
-            "Confidence interpretation labels (Weak/Moderate/Strong)",
-            "Global unsuitable detection (max_conf<25% or all not-recommended)",
+            "Confidence interpretation labels (Weak/Moderate/Strong via NCS)",
+            "Global unsuitable detection (NCS<10 + max_conf<25% or all not-rec)",
         ],
     }

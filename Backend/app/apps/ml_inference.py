@@ -88,14 +88,19 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
         # V8 FINAL STABLE — confidence interpretation label
         if "confidence_label" in r:
             entry["confidence_label"] = r["confidence_label"]
+        # V9 — NCS and Environmental Match
+        if "ncs" in r:
+            entry["ncs"] = r["ncs"]
+        if "environmental_match" in r:
+            entry["environmental_match"] = r["environmental_match"]
         top3.append(entry)
 
     result = {
         "top_3": top3,
         "model_info": {
-            "type": "unified-advisory-v8.2-final",
+            "type": "unified-advisory-v9-ncs",
             "coverage": 51,
-            "version": "8.2-final",
+            "version": "9.0-ncs",
         },
         "stress_index": hf_resp.get("stress_index", 0),
         "stress_per_feature": hf_resp.get("stress_per_feature", {}),
