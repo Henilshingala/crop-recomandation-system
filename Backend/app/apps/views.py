@@ -347,16 +347,28 @@ def model_limits(request):
 
 from .services.faq_search import search_faq
 from .services.openrouter_client import call_openrouter, FALLBACK_RESPONSE
-from .services.translator import translate_text, get_language_change_response, _is_language_change_request
+from .services.translator import translate_text, translate_to_english, _is_language_change_request
 
-# Base greeting message (English) — translated at runtime
-GREETING_BASE = "Hello! I am Krishi Mitra 🌱. How can I help you with farming today?"
+# English-only static messages (localized versions live in frontend JSON files;
+# these are used only when the LLM translate_text call is needed as a fallback).
+LANGUAGE_CHANGE_MSG_EN = (
+    "To change the assistant language, please select your preferred "
+    "language from the language menu in the website header. "
+    "I will automatically respond in whichever language you select there. 🌐"
+)
+GREETING_EN = "Hello! I am Krishi Mitra 🌱. How can I help you with farming today?"
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def assistant_chat(request):
-    """POST /api/assistant/chat/ — hybrid FAQ search + OpenRouter LLM fallback."""
+    """
+    POST /api/assistant/chat/
+
+    Hybrid FAQ search + OpenRouter LLM fallback.
+    English is the internal processing language.
+    Translation happens exactly once at the end.
+    """
     user_message = request.data.get("message", "").strip()
     lang_code = request.data.get("lang", "en")
 
@@ -366,37 +378,46 @@ def assistant_chat(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # 0. Detect in-chat language change requests → redirect to header
+    # ── Step 0: Detect in-chat language change requests ─────────────
     if _is_language_change_request(user_message):
-        redirect_msg = get_language_change_response(lang_code)
-        return Response({"answer": redirect_msg, "source": "system"})
+        answer_en = LANGUAGE_CHANGE_MSG_EN
+        final_answer = translate_text(answer_en, lang_code) if lang_code != "en" else answer_en
+        return Response({"answer": final_answer, "source": "system"})
 
-    # 1. Handle simple greetings (translate to selected language)
+    # ── Step 1: Translate user message → English ────────────────────
+    if lang_code != "en":
+        user_message_en = translate_to_english(user_message, lang_code)
+    else:
+        user_message_en = user_message
+
+    # ── Step 2: Handle simple greetings ─────────────────────────────
     GREETINGS = {"hi", "hello", "hey", "hii", "helo", "namaste", "namaskar"}
-    if user_message.lower().strip() in GREETINGS:
-        greeting = translate_text(GREETING_BASE, lang_code)
-        return Response({"answer": greeting, "source": "greeting"})
+    if user_message_en.lower().strip() in GREETINGS:
+        answer_en = GREETING_EN
+        final_answer = translate_text(answer_en, lang_code) if lang_code != "en" else answer_en
+        return Response({"answer": final_answer, "source": "greeting"})
 
-    # 2. Try FAQ keyword search
+    # ── Step 3: FAQ search (English) ────────────────────────────────
     try:
-        faq_answer, score = search_faq(user_message)
+        faq_answer, score = search_faq(user_message_en)
         if faq_answer:
-            logger.info("FAQ match (score=%.3f) for: %s", score, user_message[:80])
-            # Translate FAQ answer to selected language
-            translated = translate_text(faq_answer, lang_code)
-            return Response({"answer": translated, "source": "faq", "confidence": round(score, 3)})
+            logger.info("FAQ match (score=%.3f) for: %s", score, user_message_en[:80])
+            answer_en = faq_answer
+            final_answer = translate_text(answer_en, lang_code) if lang_code != "en" else answer_en
+            return Response({"answer": final_answer, "source": "faq", "confidence": round(score, 3)})
     except Exception as e:
         logger.error("FAQ search failed: %s", e)
-        # Continue to LLM fallback
 
-    # 3. Fallback to OpenRouter LLM (already handles lang via system prompt)
+    # ── Step 4: LLM fallback (always English) ───────────────────────
     try:
-        llm_answer = call_openrouter(user_message, lang_code)
-        return Response({"answer": llm_answer, "source": "llm"})
+        answer_en = call_openrouter(user_message_en)
     except Exception as e:
         logger.error("OpenRouter fallback failed: %s", e)
-        translated_fallback = translate_text(FALLBACK_RESPONSE, lang_code)
-        return Response({"answer": translated_fallback, "source": "fallback"})
+        answer_en = FALLBACK_RESPONSE
+
+    # ── Step 5: Translate final answer → user's language ────────────
+    final_answer = translate_text(answer_en, lang_code) if lang_code != "en" else answer_en
+    return Response({"answer": final_answer, "source": "llm"})
 
 
 class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):
