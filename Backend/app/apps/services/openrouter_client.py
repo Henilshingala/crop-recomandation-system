@@ -21,9 +21,10 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "meta-llama/llama-3-8b-instruct"
 
 SYSTEM_PROMPT = (
-    "You are Krishi Mitra, an AI farming assistant that helps farmers "
-    "with crops, soil, fertilizers, irrigation, and pest control. "
-    "Answer clearly and simply in a helpful tone."
+    "You are Krishi Mitra, an agricultural assistant helping farmers "
+    "with crop selection, soil management, fertilizers, irrigation, "
+    "and pest control. Provide clear and practical farming advice. "
+    "Always respond in English."
 )
 
 FALLBACK_RESPONSE = (
@@ -33,30 +34,24 @@ FALLBACK_RESPONSE = (
 )
 
 
-def call_openrouter(user_message: str, lang_code: str = "en") -> str:
+def call_openrouter(user_message: str) -> str:
     """
     Send a chat completion request to OpenRouter.
+    Always generates responses in English.
 
     Args:
-        user_message: The user's question.
-        lang_code: Language code for response (e.g. 'hi', 'gu', 'en').
+        user_message: The user's question (in English).
 
     Returns:
-        The assistant's reply text. Never returns empty — returns a
+        The assistant's reply text in English. Never returns empty — returns a
         fallback message if the API call fails.
     """
     if not OPENROUTER_API_KEY:
         logger.warning("OPENROUTER_API_KEY not configured, returning fallback")
         return FALLBACK_RESPONSE
 
-    # Build system prompt with language instruction
+    # Build system prompt — always English
     system_content = SYSTEM_PROMPT
-    if lang_code and lang_code != "en":
-        system_content += (
-            f"\n\nIMPORTANT: You MUST reply in the language with "
-            f"code '{lang_code}'. Every word of your response must "
-            f"be in that language."
-        )
 
     try:
         resp = requests.post(
