@@ -115,6 +115,7 @@ export function AiAssistant() {
   };
 
   const suggestions = t("assistant.suggestions", { returnObjects: true }) as string[];
+  const suggestionsEn = t("assistant.suggestionsEn", { returnObjects: true }) as string[];
 
   return (
     <>
@@ -217,7 +218,7 @@ export function AiAssistant() {
                         <motion.button
                           key={i}
                           className="chat-suggestion-btn"
-                          onClick={() => { setInput(s); inputRef.current?.focus(); }}
+                          onClick={() => { setInput(suggestionsEn[i] ?? s); inputRef.current?.focus(); }}
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.25 + i * 0.08 }}
