@@ -111,7 +111,7 @@ CROP_AGRO_CONSTRAINTS = {
     "castor":         {"ph_range": [5.0, 8.0], "temp_range": [20, 38], "rainfall_range": [300, 800],  "humidity_range": [30, 70]},
     "chickpea":       {"ph_range": [6.0, 8.0], "temp_range": [15, 30], "rainfall_range": [300, 700],  "humidity_range": [30, 60]},
     "citrus":         {"ph_range": [5.5, 7.5], "temp_range": [15, 35], "rainfall_range": [500, 1500], "humidity_range": [40, 80]},
-    "coconut":        {"ph_range": [5.0, 9.5], "temp_range": [22, 38], "rainfall_range": [1000, 3500],"humidity_range": [60, 95]},
+    "coconut":        {"ph_range": [5.0, 8.0], "temp_range": [22, 38], "rainfall_range": [1000, 3200],"humidity_range": [60, 95]},
     "coffee":         {"ph_range": [5.0, 6.5], "temp_range": [15, 28], "rainfall_range": [1000, 2500],"humidity_range": [60, 90]},
     "cole_crop":      {"ph_range": [6.0, 7.5], "temp_range": [5, 22],  "rainfall_range": [400, 1500], "humidity_range": [50, 85]},
     "cotton":         {"ph_range": [5.5, 8.5], "temp_range": [25, 40], "rainfall_range": [500, 1200], "humidity_range": [40, 75]},
@@ -342,12 +342,12 @@ def _fallback_least_violating(
 # ===================================================================
 
 _SALT_SENSITIVE = {
-    "banana", "sapota", "citrus", "apple", "papaya",
+    "banana", "coconut", "sapota", "citrus", "apple", "papaya",
     "coffee", "guava", "custard_apple", "grapes",
 }
 _SALT_TOLERANT = {
     "rice", "barley", "bajra", "jowar", "ragi", "cotton",
-    "date_palm", "ber", "spinach", "mothbeans", "sugarcane", "coconut",
+    "date_palm", "ber", "spinach", "mothbeans", "sugarcane",
 }
 # Everything else is moderately tolerant (factor 0.6)
 
@@ -484,7 +484,7 @@ def _apply_stress_penalty(candidates: dict, input_dict: dict) -> dict:
     Caps:
       - Any stress case: max 75%
       - Chaos (multiple severe stresses): max 60%
-      - Stressed environment cap: max 80%
+      - No extreme environment may exceed 80%
     """
     adjusted: dict = {}
 
@@ -495,15 +495,14 @@ def _apply_stress_penalty(candidates: dict, input_dict: dict) -> dict:
         base_conf = cdata["confidence"]
         penalised = base_conf * (1.0 - stress_factor)
 
-        # Apply confidence caps only when crop actually has stress
+        # Apply confidence caps
         if severe_count >= 2:  # chaos
             penalised = min(penalised, 60.0)
-        elif stress_factor > 0.3:  # significant stress
+        elif stress_factor > 0.1:  # any stress
             penalised = min(penalised, 75.0)
 
-        # Universal cap only applies when there IS some stress
-        if stress_factor > 0.1:
-            penalised = min(penalised, 80.0)
+        # Universal extreme-environment cap
+        penalised = min(penalised, 80.0)
 
         cdata["confidence"] = round(penalised, 2)
         cdata["_stress_factor"] = stress_factor
@@ -1460,15 +1459,20 @@ async def predict(data: PredictionInput):
     best = model_results[best_name]
 
     # Step 4: Calibrated confidence
-    # Model confidence is primary; agreement and entropy are minor bonuses
     agreement_score = (
         1.0 if len(unique_crops) == 1
         else (0.5 if len(unique_crops) == 2 else 0.0)
     )
+    max_ent = (float(np.log(best["num_classes"]))
+               if best["num_classes"] > 1 else 1.0)
+    inv_entropy = (max(0.0, 1.0 - (best["entropy"] / max_ent))
+                   if max_ent > 0 else 0.0)
 
-    calibrated_conf = (best["confidence"] / 100)
-    # Add agreement bonus (up to +10%)
-    calibrated_conf += 0.10 * agreement_score
+    calibrated_conf = (
+        0.6 * (best["confidence"] / 100)
+        + 0.2 * agreement_score
+        + 0.2 * inv_entropy
+    )
     calibrated_conf = min(calibrated_conf, HARD_CONFIDENCE_CAP)
     calibrated_conf_pct = round(calibrated_conf * 100, 2)
 
@@ -1824,19 +1828,25 @@ async def recommend(data: RecommendInput):
             cname = entry["crop"]
             conf = entry["confidence"] / 100.0  # normalise to 0-1
 
-            # Agreement bonus: +5% if 2+ models, +10% if all 3 models agree
-            agreement_bonus = 0.0
-            votes = crop_votes.get(cname, 0)
-            if votes >= total_models:
-                agreement_bonus = 0.10
-            elif votes >= 2:
-                agreement_bonus = 0.05
+            # Agreement bonus: +10% if 2+ models have this crop in top-3
+            agreement = 0.10 if crop_votes.get(cname, 0) >= 2 else 0.0
 
-            # Low stress bonus: +5% when conditions are favourable
-            low_stress_bonus = 0.05 if stress_index < 0.3 else 0.0
+            # Inverse entropy (from the model that produced this candidate)
+            num_classes = mres.get("num_classes", 51)
+            max_ent = float(np.log(num_classes)) if num_classes > 1 else 1.0
+            entropy = mres.get("entropy", 0)
+            inv_entropy = max(0.0, 1.0 - (entropy / max_ent)) if max_ent > 0 else 0.0
 
-            # Final score: model confidence is primary, bonuses are additive
-            score = conf + agreement_bonus + low_stress_bonus
+            # Low stress bonus
+            low_stress = 0.10 if stress_index < 0.3 else 0.0
+
+            # Final score
+            score = (
+                0.5 * conf
+                + 0.2 * agreement
+                + 0.2 * inv_entropy
+                + 0.1 * low_stress
+            )
             score = min(score, HARD_CONFIDENCE_CAP)
 
             if cname not in candidates or score > candidates[cname]["_score"]:
