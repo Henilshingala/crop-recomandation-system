@@ -136,16 +136,16 @@ function AdvisoryBadge({ tier }: { tier?: string }) {
 
 /* ── Consensus pill ───────────────────────────────────────────────── */
 
-function ConsensusPill({ consensus }: { consensus?: string }) {
+function ConsensusPill({ ncsLevel }: { ncsLevel?: string }) {
   const { t } = useTranslation();
-  if (!consensus) return null;
+  if (!ncsLevel) return null;
   const cls =
-    consensus === "strong" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-    : consensus === "moderate" ? "bg-amber-100 text-amber-700 border-amber-200"
+    ncsLevel === "strong" ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+    : ncsLevel === "moderate" ? "bg-amber-100 text-amber-700 border-amber-200"
     : "bg-gray-100 text-gray-600 border-gray-200";
 
-  const label = consensus === "strong" ? t("consensus.strong")
-    : consensus === "moderate" ? t("consensus.moderate")
+  const label = ncsLevel === "strong" ? t("consensus.strong")
+    : ncsLevel === "moderate" ? t("consensus.moderate")
     : t("consensus.weak");
 
   return (
@@ -155,65 +155,22 @@ function ConsensusPill({ consensus }: { consensus?: string }) {
   );
 }
 
-/* ── Stress indicator badge with tooltip ──────────────────────────── */
+/* ── Confidence interpretation label (V9 NCS) ─────────────────────── */
 
-function StressBadge({ stressIndex }: { stressIndex?: number }) {
+function ConfidenceLabel({ ncsLevel }: { ncsLevel?: string }) {
   const { t } = useTranslation();
-  if (stressIndex === undefined || stressIndex === null) return null;
-  const [showTip, setShowTip] = useState(false);
-
-  const label =
-    stressIndex < 0.2 ? t("stress.low")
-    : stressIndex < 0.4 ? t("stress.moderate")
-    : stressIndex < 0.6 ? t("stress.high")
-    : t("stress.extreme");
-
-  const cls =
-    stressIndex < 0.2 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-    : stressIndex < 0.4 ? "bg-amber-100 text-amber-700 border-amber-200"
-    : stressIndex < 0.6 ? "bg-orange-100 text-orange-700 border-orange-200"
-    : "bg-red-100 text-red-700 border-red-200";
-
-  return (
-    <div className="relative inline-block">
-      <button
-        onMouseEnter={() => setShowTip(true)}
-        onMouseLeave={() => setShowTip(false)}
-        onClick={() => setShowTip(v => !v)}
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${cls} cursor-help transition-colors`}
-      >
-        <ShieldAlert className="w-3 h-3" />
-        {label}
-      </button>
-      {showTip && (
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900/95 backdrop-blur-xl text-white text-xs rounded-xl p-3 shadow-2xl border border-gray-700 pointer-events-none">
-          <p className="font-medium mb-1">{t("stress.indexLabel", { value: (stressIndex * 100).toFixed(0) })}</p>
-          <p className="text-gray-300 leading-relaxed">
-            {t("stress.description")}
-          </p>
-          <div className="tooltip-arrow" />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Confidence interpretation label (V8 FINAL STABLE) ────────────── */
-
-function ConfidenceLabel({ label }: { label?: string }) {
-  const { t } = useTranslation();
-  if (!label) return null;
-  const l = label.toLowerCase();
-  const cls = l.includes("strong")
+  if (!ncsLevel) return null;
+  const l = ncsLevel.toLowerCase();
+  const cls = l === "strong"
     ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-    : l.includes("moderate")
+    : l === "moderate"
     ? "bg-blue-100 text-blue-700 border-blue-200"
     : "bg-gray-100 text-gray-600 border-gray-200";
-  const i18nKey = l.includes("strong") ? "match.strong"
-    : l.includes("moderate") ? "match.moderate" : "match.weak";
+  const i18nKey = l === "strong" ? "match.strong"
+    : l === "moderate" ? "match.moderate" : "match.weak";
   return (
     <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${cls}`}>
-      {t(i18nKey, { defaultValue: label })}
+      {t(i18nKey, { defaultValue: ncsLevel })}
     </Badge>
   );
 }
@@ -346,17 +303,6 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
       parts.push(t("warnings.oodValues", { fields: oodMatch[1] }));
     }
 
-    // "High agricultural stress detected (index=0.XX)."
-    const stressMatch = warning.match(/High agricultural stress detected \(index=([\d.]+)\)/);
-    if (stressMatch) {
-      parts.push(t("warnings.highStress", { index: stressMatch[1] }));
-    }
-    // Also match the older format "High agricultural stress (index=0.XX). Confidence reduced."
-    const stressOldMatch = warning.match(/High agricultural stress \(index=([\d.]+)\)/);
-    if (stressOldMatch && !stressMatch) {
-      parts.push(t("warnings.highStress", { index: stressOldMatch[1] }));
-    }
-
     if (warning.includes("Conditions may be challenging for most crops")) {
       parts.push(t("warnings.challengingConditions"));
     }
@@ -374,6 +320,14 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
     return parts.length > 0 ? parts.join(" ") : warning;
   };
 
+  const advisoryNoticeFromTier = (tier?: string): string => {
+    const tl = (tier || "").toLowerCase();
+    if (tl.includes("strongly")) return t("tiers.stronglyRecommended");
+    if (tl === "recommended") return t("tiers.recommended");
+    if (tl.includes("conditional")) return t("tiers.conditional");
+    return t("tiers.notRecommended");
+  };
+
   const { top_1, top_3 } = data;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = top_3[selectedIdx] ?? top_1;
@@ -384,12 +338,8 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // V8 FINAL STABLE: Detect all-not-recommended / fallback / global-unsuitable
-  const allNotRecommended = data.all_not_recommended
-    ?? top_3.every(c => c.advisory_tier?.toLowerCase().includes("not recommended"));
-  const fallbackMode = data.fallback_mode ?? false;
-  const globalUnsuitable = data.global_unsuitable ?? false;
-  const isUnsuitableState = globalUnsuitable || allNotRecommended || fallbackMode;
+  // V9: Use backend advisory_tier as single source of truth for state
+  const isUnsuitableState = top_3.every(c => c.advisory_tier?.toLowerCase().includes("not recommended"));
 
   // Collapsible top-3 when globally unsuitable (collapsed by default)
   const [top3Expanded, setTop3Expanded] = useState(!isUnsuitableState);
@@ -437,7 +387,6 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <AdvisoryBadge tier={selected.advisory_tier} />
-              <StressBadge stressIndex={data.stress_index} />
             </div>
           </div>
 
@@ -446,8 +395,8 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
             <Badge className="bg-white/15 backdrop-blur text-white text-sm font-semibold px-3 py-1 border border-white/20">
               {t("results.match", { value: selected.confidence.toFixed(1) })}
             </Badge>
-            <ConsensusPill consensus={selected.model_consensus} />
-            <ConfidenceLabel label={selected.confidence_label} />
+            <ConsensusPill ncsLevel={selected.ncs_level} />
+            <ConfidenceLabel ncsLevel={selected.ncs_level} />
             <EnvironmentalMatchPill match={selected.environmental_match} />
           </div>
         </div>
@@ -456,11 +405,7 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
         {isUnsuitableState && (
           <div className="bg-amber-900/30 border-t border-amber-400/40 px-6 py-3">
             <p className="text-amber-100 text-sm leading-relaxed">
-              {globalUnsuitable
-                ? t("results.globalUnsuitableBanner")
-                : fallbackMode
-                ? t("results.unsuitableWarningAll")
-                : t("results.unsuitableWarningMost")}
+              {t("results.unsuitableWarningAll")}
             </p>
           </div>
         )}
@@ -562,18 +507,19 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
             </div>
           </div>
 
-          {/* Warning alert */}
-          {data.warning && (
-            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-              <div className="p-1.5 rounded-lg bg-amber-100">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-              </div>
-              <div className="text-sm">
-                <p className="font-semibold mb-1 text-amber-800">{t("results.advisoryNotice")}</p>
-                <p className="text-amber-700">{translateWarning(data.warning)}</p>
-              </div>
+          {/* Advisory notice (strictly from backend advisory_tier) */}
+          <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <div className="p-1.5 rounded-lg bg-amber-100">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
             </div>
-          )}
+            <div className="text-sm">
+              <p className="font-semibold mb-1 text-amber-800">{t("results.advisoryNotice")}</p>
+              <p className="text-amber-700">{advisoryNoticeFromTier(selected.advisory_tier)}</p>
+              {data.warning && (
+                <p className="text-amber-700 mt-1">{translateWarning(data.warning)}</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -655,8 +601,8 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
 
                 {/* Consensus + confidence label */}
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <ConsensusPill consensus={crop.model_consensus} />
-                  <ConfidenceLabel label={crop.confidence_label} />
+                  <ConsensusPill ncsLevel={crop.ncs_level} />
+                  <ConfidenceLabel ncsLevel={crop.ncs_level} />
                   <EnvironmentalMatchPill match={crop.environmental_match} />
                 </div>
 

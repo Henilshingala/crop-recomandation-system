@@ -28,12 +28,11 @@ export interface CropRecommendation {
   confidence: number;
   risk_level?: 'low' | 'medium' | 'high';
   advisory_tier?: string;
-  stress_index?: number;
   explanation?: string;
-  model_consensus?: 'strong' | 'moderate' | 'weak';
-  confidence_label?: string;
   ncs?: number;
+  ncs_level?: 'strong' | 'moderate' | 'weak';
   environmental_match?: 'strong' | 'acceptable' | 'weak' | 'unknown';
+  ems?: number;
   image_url?: string;
   image_urls?: string[];
   expected_yield?: string | null;
@@ -73,7 +72,6 @@ export interface PredictionResponse {
   top_1: CropRecommendation;
   top_3: CropRecommendation[];
   model_info: ModelInfo;
-  stress_index?: number;
   environment_info?: Record<string, unknown>;
   warning?: string;
   disclaimer?: string;

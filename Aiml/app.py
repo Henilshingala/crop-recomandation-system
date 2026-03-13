@@ -86,10 +86,7 @@ HARD_CONFIDENCE_CAP = 0.85          # V8.1: never allow >85% in any stress
 OOD_DAMPEN_FACTOR = 0.30
 OOD_CAP_THRESHOLD = 0.50
 OOD_MAX_CONFIDENCE = 0.65
-STRESS_HIGH_THRESHOLD = 0.60
 FALLBACK_CONFIDENCE_CAP = 35.0      # V8.1: fallback mode hard cap
-STRESS_REDUCTION_MIN = 0.20
-STRESS_REDUCTION_MAX = 0.40
 AGRONOMIC_PENALTY_MILD = 0.05
 AGRONOMIC_PENALTY_EXTREME = 0.001
 ENTROPY_WARNING_THRESHOLD = 2.0
@@ -651,38 +648,10 @@ def compute_ood_dampening(ood_warnings: list) -> Tuple[float, float, str]:
 
 
 # ===================================================================
-# STEP 3 — STRESS SCORE CALCULATION (uses global midpoints as fallback)
+# V9 — ENVIRONMENTAL MATCH + CONFIDENCE CORE
 # ===================================================================
 
-STRESS_REFERENCE = {
-    "N":           {"mid": 80,  "half_width": 80},
-    "P":           {"mid": 50,  "half_width": 50},
-    "K":           {"mid": 50,  "half_width": 50},
-    "temperature": {"mid": 25,  "half_width": 15},
-    "humidity":    {"mid": 65,  "half_width": 35},
-    "ph":          {"mid": 6.5, "half_width": 2.0},
-    "rainfall":    {"mid": 800, "half_width": 800},
-}
-
-# V9 features used for Environmental Match Score
 _EMS_FEATURES = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
-
-
-def compute_stress_index(input_dict: dict) -> Tuple[float, Dict[str, float]]:
-    per_feature = {}
-    for feat, ref in STRESS_REFERENCE.items():
-        val = input_dict.get(feat)
-        if val is None:
-            continue
-        distance = abs(val - ref["mid"])
-        normalised = min(distance / ref["half_width"], 2.0) / 2.0
-        per_feature[feat] = round(normalised, 4)
-
-    if not per_feature:
-        return 0.0, {}
-
-    overall = sum(per_feature.values()) / len(per_feature)
-    return round(overall, 4), per_feature
 
 
 # ===================================================================
@@ -812,70 +781,41 @@ def decision_matrix_tier(confidence_level: str, match_level: str) -> str:
     | weak             | Conditional  | Not Recommended           | Not Recommended |
     """
     _MATRIX = {
-        ("strong", "strong"):     "Strongly Recommended",
+        ("strong", "strong"): "Strongly Recommended",
         ("strong", "acceptable"): "Recommended",
-        ("strong", "weak"):       "Conditional / Trial Basis",
-        ("moderate", "strong"):   "Recommended",
-        ("moderate", "acceptable"): "Conditional / Trial Basis",
-        ("moderate", "weak"):     "Not Recommended",
-        ("weak", "strong"):       "Conditional / Trial Basis",
-        ("weak", "acceptable"):   "Not Recommended",
-        ("weak", "weak"):         "Not Recommended",
+        ("strong", "weak"): "Conditional / Trial Basis",
+        ("moderate", "strong"): "Recommended",
+        ("moderate", "acceptable"): "Conditional",
+        ("moderate", "weak"): "Not Recommended",
+        ("weak", "strong"): "Conditional",
+        ("weak", "acceptable"): "Not Recommended",
+        ("weak", "weak"): "Not Recommended",
     }
     return _MATRIX.get((confidence_level, match_level), "Not Recommended")
 
 
-def apply_stress_reduction(
-    confidence: float, stress_index: float,
-) -> Tuple[float, float]:
-    """
-    High stress (>0.6) reduces confidence by 20-40%.
-    Returns (adjusted, reduction_fraction).
-    """
-    if stress_index <= STRESS_HIGH_THRESHOLD:
-        return confidence, 0.0
-
-    t = min((stress_index - STRESS_HIGH_THRESHOLD) / (1.0 - STRESS_HIGH_THRESHOLD), 1.0)
-    reduction = STRESS_REDUCTION_MIN + t * (STRESS_REDUCTION_MAX - STRESS_REDUCTION_MIN)
-    adjusted = confidence * (1.0 - reduction)
-    return adjusted, reduction
-
-
-def flatten_distribution(proba: np.ndarray, stress_index: float) -> np.ndarray:
-    """Blend toward uniform when stress is high (increases entropy)."""
-    if stress_index <= STRESS_HIGH_THRESHOLD:
-        return proba
-
-    t = min((stress_index - STRESS_HIGH_THRESHOLD) / (1.0 - STRESS_HIGH_THRESHOLD), 1.0)
-    blend = 0.3 * t
-    uniform = np.ones_like(proba) / len(proba)
-    flattened = (1.0 - blend) * proba + blend * uniform
-
-    total = flattened.sum()
-    if total > 0:
-        flattened /= total
-    return flattened
-
-
 # ===================================================================
-# V8 FINAL STABLE — LIMITING FACTOR IDENTIFICATION
+# V9 — LIMITING FACTOR IDENTIFICATION (range deviation)
 # ===================================================================
 
 def compute_limiting_factor(input_dict: dict) -> dict:
     """
-    For each input feature, compute normalised deviation from the
-    centre of the training-range midpoint.  Return the feature with
-    the largest deviation as the primary limiting factor.
+    Identify the feature with highest normalized deviation from
+    accepted feature ranges. This replaces midpoint-based stress logic.
     """
-    # Reference midpoints (from STRESS_REFERENCE)
     deviations: Dict[str, float] = {}
-    for feat, ref in STRESS_REFERENCE.items():
+    for feat in _EMS_FEATURES:
+        bounds = _ACC.get(feat)
         val = input_dict.get(feat)
-        if val is None:
+        if bounds is None or val is None:
             continue
-        distance = abs(val - ref["mid"])
-        normalised = min(distance / ref["half_width"], 2.0) / 2.0
-        deviations[feat] = round(normalised, 4)
+
+        low = bounds["min"]
+        high = bounds["max"]
+        mid = (low + high) / 2.0
+        half = max((high - low) / 2.0, 1e-6)
+        norm = min(abs(val - mid) / half, 2.0) / 2.0
+        deviations[feat] = round(norm, 4)
 
     if not deviations:
         return {"feature": "unknown", "deviation": 0, "all_deviations": {}}
@@ -910,15 +850,8 @@ def confidence_label(confidence_pct: float, ncs_info: Optional[dict] = None) -> 
 
 
 # ===================================================================
-# V9 — ADVISORY RISK TIERS (decision matrix + downgrade)
+# V9 — ADVISORY RISK TIERS (decision matrix only)
 # ===================================================================
-
-_TIER_DOWNGRADE = {
-    "Strongly Recommended": "Recommended",
-    "Recommended": "Conditional / Trial Basis",
-    "Conditional / Trial Basis": "Not Recommended",
-    "Not Recommended": "Not Recommended",
-}
 
 
 def advisory_tier(
@@ -930,53 +863,20 @@ def advisory_tier(
     ems_info: Optional[dict] = None,
 ) -> str:
     """
-    V9 tier assignment using the Decision Matrix when NCS/EMS are available.
-
-    Falls back to V8 hard-threshold logic for backward compatibility.
-
-    Downgrades still apply:
-      - OOD → -1 tier
-      - stress_factor > 0.4 → -1 tier
-      - severe_count >= 2 → -1 tier, >= 3 → -2 tiers
+    V9 tier assignment using Decision Matrix only.
+    Frontend must treat this as source of truth.
     """
-    # V9 path: use decision matrix
-    if ncs_info is not None and ems_info is not None:
-        tier = decision_matrix_tier(
-            ncs_info.get("confidence_level", "weak"),
-            ems_info.get("match_level", "acceptable"),
-        )
-    else:
-        # Legacy V8 hard thresholds
-        if confidence_pct > 80:
-            tier = "Strongly Recommended"
-        elif confidence_pct > 60:
-            tier = "Recommended"
-        elif confidence_pct > 40:
-            tier = "Conditional / Trial Basis"
-        else:
-            tier = "Not Recommended"
+    _ = confidence_pct, is_ood, stress_factor, severe_count
 
-    # Stress-based downgrades
-    stress_down = 0
-    if stress_factor > 0.6:
-        stress_down = 2
-    elif stress_factor > 0.4:
-        stress_down = 1
+    confidence_level = "weak"
+    if ncs_info is not None:
+        confidence_level = ncs_info.get("confidence_level", "weak")
 
-    severe_down = 0
-    if severe_count >= 3:
-        severe_down = 2
-    elif severe_count >= 2:
-        severe_down = 1
+    match_level = "acceptable"
+    if ems_info is not None:
+        match_level = ems_info.get("match_level", "acceptable")
 
-    downgrades = max(stress_down, severe_down)
-    if is_ood:
-        downgrades += 1
-
-    for _ in range(downgrades):
-        tier = _TIER_DOWNGRADE[tier]
-
-    return tier
+    return decision_matrix_tier(confidence_level, match_level)
 
 
 # ===================================================================
@@ -1390,13 +1290,11 @@ def run_model_pipeline(
     predictor, crops_list: list, input_dict: dict,
     model_name: str, model_type: str, checksum: str,
     feature_count: int, label_encoder=None,
-    ood_warnings: list = None, stress_index: float = 0.0,
-    stress_per_feature: dict = None,
+    ood_warnings: list = None,
 ) -> dict:
     """
-    Full V7 pipeline for one model:
-      Raw proba -> agronomic constraints -> stress flattening
-      -> OOD dampening -> stress reduction -> 92% cap
+        Full model pipeline:
+            Raw proba -> agronomic constraints -> OOD dampening -> hard cap
     """
     raw_proba = predictor.predict_proba(input_dict)
 
@@ -1404,9 +1302,6 @@ def run_model_pipeline(
     constrained_proba, agro_violations = apply_agronomic_constraints(
         raw_proba, crops_list, input_dict, label_encoder,
     )
-
-    # Step 3 (partial): Stress distribution flattening
-    constrained_proba = flatten_distribution(constrained_proba, stress_index)
 
     # Top crop from constrained distribution
     top_idx = int(np.argmax(constrained_proba))
@@ -1425,13 +1320,7 @@ def run_model_pipeline(
     dampened_prob = raw_top_prob * ood_mult
     dampened_prob = min(dampened_prob, ood_cap)
 
-    # Step 3: Stress confidence reduction
-    stress_adj_prob, stress_reduction = apply_stress_reduction(
-        dampened_prob, stress_index,
-    )
-
-    # Step 8: Hard cap at 92%
-    final_prob = min(stress_adj_prob, HARD_CONFIDENCE_CAP)
+    final_prob = min(dampened_prob, HARD_CONFIDENCE_CAP)
     final_conf_pct = round(final_prob * 100, 2)
 
     # Top-N with same V7 adjustments
@@ -1447,7 +1336,6 @@ def run_model_pipeline(
         cpct_raw = float(constrained_proba[idx])
         cpct_adj = cpct_raw * ood_mult
         cpct_adj = min(cpct_adj, ood_cap)
-        cpct_adj, _ = apply_stress_reduction(cpct_adj, stress_index)
         cpct_adj = min(cpct_adj, HARD_CONFIDENCE_CAP)
         cpct = round(cpct_adj * 100, 2)
 
@@ -1484,7 +1372,6 @@ def run_model_pipeline(
         "crops_list": crops_list,
         "agro_violations": agro_violations,
         "ood_dampening": ood_reason,
-        "stress_reduction": round(stress_reduction * 100, 1) if stress_reduction else 0.0,
     }
 
 
@@ -1528,8 +1415,8 @@ async def predict(data: PredictionInput):
     ood_warnings = validate_distribution(canonical, mode)
     is_ood = len(ood_warnings) > 0
 
-    # Stress index
-    stress_index, stress_per_feature = compute_stress_index(canonical)
+    # V9: legacy stress fields disabled
+    stress_per_feature = {}
 
     # Run ALL 3 models through V7 pipeline
     model_results: Dict[str, dict] = {}
@@ -1537,8 +1424,6 @@ async def predict(data: PredictionInput):
     pkw = dict(
         input_dict=input_dict,
         ood_warnings=ood_warnings,
-        stress_index=stress_index,
-        stress_per_feature=stress_per_feature,
     )
 
     try:
@@ -1670,7 +1555,6 @@ async def predict(data: PredictionInput):
         ood_mult, ood_cap, _ = compute_ood_dampening(ood_warnings)
         cpct_adj = cpct_raw * ood_mult
         cpct_adj = min(cpct_adj, ood_cap)
-        cpct_adj, _ = apply_stress_reduction(cpct_adj, stress_index)
         cpct_adj = min(cpct_adj, HARD_CONFIDENCE_CAP)
         cpct = round(cpct_adj * 100, 2)
 
@@ -1705,7 +1589,6 @@ async def predict(data: PredictionInput):
             "reliability_score": mres["reliability_score"],
             "entropy": mres["entropy"],
             "agreement_bonus": mres.get("agreement_bonus", False),
-            "stress_reduction_pct": mres["stress_reduction"],
             "ood_dampening": mres["ood_dampening"],
             "agro_violations_count": len(mres.get("agro_violations", {})),
             "top_3": mres["top_3"],
@@ -1721,8 +1604,6 @@ async def predict(data: PredictionInput):
         "best_reliability": best["reliability_score"],
         "advisory_tier": best_tier,
         "explanation": explanation,
-        "stress_index": stress_index,
-        "stress_per_feature": stress_per_feature,
         "comparisons": comparisons,
 
         # backward compat
@@ -1762,11 +1643,6 @@ async def predict(data: PredictionInput):
         resp["ood_warnings"] = ood_warnings
         fields = ", ".join(w["field"] for w in ood_warnings)
         warning_parts.append(f"OOD features: {fields}. Confidence dampened.")
-    if stress_index > STRESS_HIGH_THRESHOLD:
-        warning_parts.append(
-            f"High agricultural stress (index={stress_index:.2f}). "
-            "Confidence reduced."
-        )
     if calibrated_conf_pct < 40:
         warning_parts.append("Low confidence — conditions may be unsuitable.")
     if best.get("entropy", 0) > ENTROPY_WARNING_THRESHOLD:
@@ -1776,11 +1652,11 @@ async def predict(data: PredictionInput):
 
     logger.info(
         "PREDICT best=%s crop=%s cal=%.1f%% raw=%.1f%% tier=%s "
-        "stress=%.2f ood=%d ms=%.0f "
+        "ood=%d ms=%.0f "
         "N=%.1f P=%.1f K=%.1f T=%.1f H=%.1f pH=%.1f R=%.1f",
         best_name, best["crop"], calibrated_conf_pct,
         best["raw_model_probability"], best_tier,
-        stress_index, len(ood_warnings), latency,
+        len(ood_warnings), latency,
         data.N, data.P, data.K, data.temperature, data.humidity,
         data.ph, data.rainfall,
     )
@@ -1939,13 +1815,10 @@ async def recommend(data: RecommendInput):
     # Pre-compute shared signals
     ood_warnings = validate_distribution(canonical, "soil")
     is_ood = len(ood_warnings) > 0
-    stress_index, stress_per_feature = compute_stress_index(canonical)
 
     pkw = dict(
         input_dict=input_dict,
         ood_warnings=ood_warnings,
-        stress_index=stress_index,
-        stress_per_feature=stress_per_feature,
     )
 
     # Run all 3 models through V7 pipeline
@@ -2006,6 +1879,8 @@ async def recommend(data: RecommendInput):
         for entry in mres.get("top_3", []):
             cname = entry["crop"]
             conf = entry["confidence"] / 100.0  # normalise to 0-1
+            ems_info = compute_environmental_match(cname, canonical)
+            env_quality = max(0.0, 1.0 - (ems_info["ems"] / 3.0))
 
             # V9: Record raw probability for NCS
             raw_prob = _model_prob_map.get(cname, conf)
@@ -2020,39 +1895,30 @@ async def recommend(data: RecommendInput):
             entropy = mres.get("entropy", 0)
             inv_entropy = max(0.0, 1.0 - (entropy / max_ent)) if max_ent > 0 else 0.0
 
-            # Low stress bonus
-            low_stress = 0.10 if stress_index < 0.3 else 0.0
-
             # Final score
             score = (
                 0.5 * conf
                 + 0.2 * agreement
-                + 0.2 * inv_entropy
-                + 0.1 * low_stress
+                + 0.15 * inv_entropy
+                + 0.15 * env_quality
             )
             score = min(score, HARD_CONFIDENCE_CAP)
 
             if cname not in candidates or score > candidates[cname]["_score"]:
                 tier_pct = round(score * 100, 2)
-                # V9: Compute EMS for this crop
-                ems_info = compute_environmental_match(cname, canonical)
 
                 candidates[cname] = {
                     "crop": cname,
                     "confidence": tier_pct,
-                    "advisory_tier": advisory_tier(tier_pct, is_ood),
-                    "stress_index": stress_index,
+                    "advisory_tier": "Not Recommended",
                     "explanation": generate_explanation(
                         crop=cname,
                         input_dict=canonical,
-                        stress_per_feature=stress_per_feature,
+                        stress_per_feature={},
                         agro_violations=mres.get("agro_violations", {}),
                         confidence_pct=tier_pct,
                         is_ood=is_ood,
-                        tier=advisory_tier(tier_pct, is_ood),
-                    ),
-                    "model_consensus": _consensus_label(
-                        crop_votes.get(cname, 0), total_models,
+                        tier="Not Recommended",
                     ),
                     "nutrition": get_nutrition(cname),
                     "_score": score,
@@ -2088,11 +1954,7 @@ async def recommend(data: RecommendInput):
         fallback_mode = True
         logger.info("FALLBACK MODE activated — all crops failed feasibility")
 
-    # ── V8 Salinity Stress Override ──────────────────────────────
-    viable = _salinity_stress_override(viable, ph=data.ph, rainfall=data.rainfall)
-
-    # ── V8 Phase 2: Gradual Stress Penalty ───────────────────────
-    viable = _apply_stress_penalty(viable, canonical)
+    # V9: No legacy stress override or stress-penalty stage
 
     # Sort by score descending, take top 3
     ranked = sorted(viable.values(), key=lambda c: c["_score"], reverse=True)[:3]
@@ -2111,8 +1973,6 @@ async def recommend(data: RecommendInput):
 
     # V9 Phase 4: Re-compute advisory tier with NCS + EMS decision matrix
     for c in ranked:
-        sf = c.get("_stress_factor", 0.0)
-        sc = c.get("_severe_count", 0)
         ems_info = c.get("_ems_info")
 
         # Compute NCS for this specific crop vs the runner-up
@@ -2124,20 +1984,22 @@ async def recommend(data: RecommendInput):
 
         c["advisory_tier"] = advisory_tier(
             c["confidence"], is_ood,
-            stress_factor=sf, severe_count=sc,
             ncs_info=ncs_info, ems_info=ems_info,
         )
         c["confidence_label"] = confidence_label(c["confidence"], ncs_info=ncs_info)
 
         # V9: Expose NCS and EMS on the response for transparency
         c["ncs"] = ncs_info["ncs"]
+        c["ncs_level"] = ncs_info["confidence_level"]
         c["environmental_match"] = ems_info["match_level"] if ems_info else "unknown"
+        c["ems"] = ems_info["ems"] if ems_info else 1.0
 
         # V8.1: Fallback mode hard cap
         if fallback_mode:
             c["confidence"] = min(c["confidence"], FALLBACK_CONFIDENCE_CAP)
             c["advisory_tier"] = "Not Recommended"
             c["confidence_label"] = "Weak Match"
+            c["ncs_level"] = "weak"
 
     # Detect if ALL returned crops are "Not Recommended"
     all_not_recommended = all(
@@ -2171,8 +2033,6 @@ async def recommend(data: RecommendInput):
 
     resp: Dict[str, Any] = {
         "top_recommendations": top_recommendations,
-        "stress_index": stress_index,
-        "stress_per_feature": stress_per_feature,
         "fallback_mode": fallback_mode,
         "all_not_recommended": all_not_recommended,
         "global_unsuitable": global_unsuitable,
@@ -2203,22 +2063,17 @@ async def recommend(data: RecommendInput):
     if ood_warnings:
         fields = ", ".join(w["field"] for w in ood_warnings)
         warning_parts.append(f"Some values ({fields}) fall outside typical ranges. Confidence adjusted.")
-    if stress_index > STRESS_HIGH_THRESHOLD:
-        warning_parts.append(
-            f"High agricultural stress detected (index={stress_index:.2f}). "
-            "Recommendations may have reduced confidence."
-        )
     if top_recommendations and top_recommendations[0]["confidence"] < 40:
         warning_parts.append("Conditions may be challenging for most crops. Consider consulting local experts.")
     if warning_parts:
         resp["warning"] = " ".join(warning_parts)
 
     logger.info(
-        "RECOMMEND top=%s conf=%.1f%% consensus=%s stress=%.2f ood=%d ms=%.0f",
+        "RECOMMEND top=%s conf=%.1f%% tier=%s ood=%d ms=%.0f",
         top_recommendations[0]["crop"] if top_recommendations else "?",
         top_recommendations[0]["confidence"] if top_recommendations else 0,
-        top_recommendations[0]["model_consensus"] if top_recommendations else "?",
-        stress_index, len(ood_warnings), latency,
+        top_recommendations[0]["advisory_tier"] if top_recommendations else "?",
+        len(ood_warnings), latency,
     )
 
     return resp
@@ -2235,15 +2090,21 @@ def recommend_hint():
         "phases": [
             "Hard feasibility gate (±5°C, ±0.5 pH, <30% min rain)",
             "Fallback: least-violating crop if all excluded (cap 35%)",
-            "Gradual stress penalty (per-crop weighted deviation)",
-            "Salinity override (pH≥8.8 + rain≥2500)",
-            "Confidence caps (75% stress, 60% chaos, 85% hard max)",
+            "Confidence cap (85% hard max)",
             "V9 NCS: Normalized Confidence Score (above uniform baseline)",
             "V9 EMS: Environmental Match Score (per-crop Z-score)",
             "V9 Decision Matrix (NCS level × EMS level → tier)",
-            "Tier downgrade (stress>0.4 → -1, >0.6 → -2)",
             "Limiting factor identification",
             "Confidence interpretation labels (Weak/Moderate/Strong via NCS)",
             "Global unsuitable detection (NCS<10 + max_conf<25% or all not-rec)",
+        ],
+        "top_recommendation_fields": [
+            "crop",
+            "confidence",
+            "ncs",
+            "ncs_level",
+            "environmental_match",
+            "ems",
+            "advisory_tier",
         ],
     }

@@ -58,12 +58,12 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
         "top_recommendations": [
             {
                 "crop": "...", "confidence": ..., "advisory_tier": "...",
-                "stress_index": ..., "explanation": "...",
-                "model_consensus": "strong/moderate/weak",
+                "ncs": ..., "ncs_level": "strong/moderate/weak",
+                "environmental_match": "strong/acceptable/weak",
+                "ems": ..., "explanation": "...",
                 "nutrition": {...}
             }
         ],
-        "stress_index": ...,
         "environment_info": {...},
         "warning": "..."
     }
@@ -80,19 +80,17 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
             "confidence": round(float(r.get("confidence", 0)), 2),
             "advisory_tier": r.get("advisory_tier", "Not Recommended"),
             "risk_level": _tier_to_risk(r.get("advisory_tier", "")),
-            "stress_index": r.get("stress_index", 0),
             "explanation": r.get("explanation", ""),
-            "model_consensus": r.get("model_consensus", "weak"),
             "nutrition": r.get("nutrition"),
         }
-        # V8 FINAL STABLE — confidence interpretation label
-        if "confidence_label" in r:
-            entry["confidence_label"] = r["confidence_label"]
-        # V9 — NCS and Environmental Match
         if "ncs" in r:
             entry["ncs"] = r["ncs"]
+        if "ncs_level" in r:
+            entry["ncs_level"] = r["ncs_level"]
         if "environmental_match" in r:
             entry["environmental_match"] = r["environmental_match"]
+        if "ems" in r:
+            entry["ems"] = r["ems"]
         top3.append(entry)
 
     result = {
@@ -102,8 +100,6 @@ def _recommend_via_hf(payload: dict) -> Optional[Dict]:
             "coverage": 51,
             "version": "9.0-ncs",
         },
-        "stress_index": hf_resp.get("stress_index", 0),
-        "stress_per_feature": hf_resp.get("stress_per_feature", {}),
         "environment_info": hf_resp.get("environment_info", {}),
         "fallback_mode": hf_resp.get("fallback_mode", False),
         "all_not_recommended": hf_resp.get("all_not_recommended", False),
