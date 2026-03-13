@@ -69,39 +69,28 @@ FALLBACK_RESPONSES = {
 FALLBACK_RESPONSE = FALLBACK_RESPONSES["en"]
 
 
-def _get_fallback(lang_code: str) -> str:
+def _get_fallback(lang_code: str = "en") -> str:
     """Return a fallback message in the requested language if available, else English."""
     return FALLBACK_RESPONSES.get(lang_code, FALLBACK_RESPONSES["en"])
 
 
-def call_openrouter(user_message: str, lang_code: str = "en") -> str:
+def call_openrouter(user_message: str) -> str:
     """
     Send a chat completion request to OpenRouter.
-    Responds directly in the target language specified by lang_code.
+    Always generates responses in English — translation is handled separately.
 
     Args:
-        user_message: The user's question (translated to English).
-        lang_code: Target language code for the response (e.g. 'hi', 'gu').
-                   Defaults to 'en'. When non-English, the LLM is instructed
-                   to respond in that language directly — no separate translation.
+        user_message: The user's question (in English).
 
     Returns:
-        The assistant's reply in the target language. Never returns empty —
-        returns a fallback message if the API call fails.
+        The assistant's reply in English. Never returns empty — returns a
+        fallback message if the API call fails.
     """
     if not OPENROUTER_API_KEY:
         logger.warning("OPENROUTER_API_KEY not configured, returning fallback")
-        return _get_fallback(lang_code)
+        return FALLBACK_RESPONSE
 
-    lang_name = LANGUAGE_NAMES.get(lang_code, "English")
-    if lang_code != "en":
-        system_content = (
-            f"{SYSTEM_PROMPT_BASE} "
-            f"Always respond in {lang_name}. "
-            f"Do not respond in English; the farmer reads {lang_name}."
-        )
-    else:
-        system_content = f"{SYSTEM_PROMPT_BASE} Always respond in English."
+    system_content = f"{SYSTEM_PROMPT_BASE} Always respond in English."
 
     try:
         resp = requests.post(
@@ -126,7 +115,7 @@ def call_openrouter(user_message: str, lang_code: str = "en") -> str:
                 resp.status_code,
                 resp.text[:500],
             )
-            return _get_fallback(lang_code)
+            return FALLBACK_RESPONSE
 
         data = resp.json()
         text = (
@@ -138,16 +127,16 @@ def call_openrouter(user_message: str, lang_code: str = "en") -> str:
 
         if not text:
             logger.warning("Empty response from OpenRouter")
-            return _get_fallback(lang_code)
+            return FALLBACK_RESPONSE
 
         return text
 
     except requests.Timeout:
         logger.error("OpenRouter request timed out")
-        return _get_fallback(lang_code)
+        return FALLBACK_RESPONSE
     except requests.RequestException as e:
         logger.error("OpenRouter request failed: %s", e)
-        return _get_fallback(lang_code)
+        return FALLBACK_RESPONSE
     except (KeyError, IndexError, TypeError) as e:
         logger.error("Failed to parse OpenRouter response: %s", e)
-        return _get_fallback(lang_code)
+        return FALLBACK_RESPONSE

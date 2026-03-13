@@ -408,14 +408,16 @@ def assistant_chat(request):
     except Exception as e:
         logger.error("FAQ search failed: %s", e)
 
-    # ── Step 4: LLM fallback — responds directly in user's language ─────
+    # ── Step 4: LLM fallback (English) ──────────────────────────────────
     try:
-        answer = call_openrouter(user_message_en, lang_code)
+        answer_en = call_openrouter(user_message_en)
     except Exception as e:
         logger.error("OpenRouter fallback failed: %s", e)
-        answer = _get_fallback(lang_code)
+        answer_en = FALLBACK_RESPONSE
 
-    return Response({"answer": answer, "source": "llm"})
+    # ── Step 5: Translate final answer → user's language (via NLLB) ─────
+    final_answer = translate_text(answer_en, lang_code) if lang_code != "en" else answer_en
+    return Response({"answer": final_answer, "source": "llm"})
 
 
 class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):
