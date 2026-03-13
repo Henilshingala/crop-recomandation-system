@@ -346,7 +346,7 @@ def model_limits(request):
 # ═════════════════════════════════════════════════════════════════════════
 
 from .services.faq_search import search_faq
-from .services.openrouter_client import call_openrouter, FALLBACK_RESPONSE
+from .services.openrouter_client import call_openrouter, FALLBACK_RESPONSE, _get_fallback
 from .services.translator import translate_text, translate_to_english, _is_language_change_request
 
 # English-only static messages (localized versions live in frontend JSON files;
@@ -408,16 +408,14 @@ def assistant_chat(request):
     except Exception as e:
         logger.error("FAQ search failed: %s", e)
 
-    # ── Step 4: LLM fallback (always English) ───────────────────────
+    # ── Step 4: LLM fallback — responds directly in user's language ─────
     try:
-        answer_en = call_openrouter(user_message_en)
+        answer = call_openrouter(user_message_en, lang_code)
     except Exception as e:
         logger.error("OpenRouter fallback failed: %s", e)
-        answer_en = FALLBACK_RESPONSE
+        answer = _get_fallback(lang_code)
 
-    # ── Step 5: Translate final answer → user's language ────────────
-    final_answer = translate_text(answer_en, lang_code) if lang_code != "en" else answer_en
-    return Response({"answer": final_answer, "source": "llm"})
+    return Response({"answer": answer, "source": "llm"})
 
 
 class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):
