@@ -1,4 +1,4 @@
-﻿{
+{
   "app": {
     "title": "ᱡᱚᱢᱤᱱ ᱥᱤᱯᱷᱟᱨᱤᱥ ᱯᱨᱚᱱᱟᱞᱤ",
     "subtitle": "AI ᱵᱤᱥᱞᱮᱥᱚᱱ ᱫᱟᱨᱟᱭ ᱪᱟᱞᱤᱛ ᱥᱢᱟᱨᱴ ᱠᱤᱥᱟᱱᱤ ᱯᱷᱟᱭᱥᱚᱞᱟ"
@@ -198,18 +198,5 @@
     "tomato": "ᱴᱟᱢᱟᱴᱚᱨ",
     "watermelon": "ᱛᱟᱨᱵᱩᱡ",
     "wheat": "ᱜᱚᱢ"
-  },
-  "assistant": {
-    "title": "ᱠᱨᱤᱥᱤ ᱢᱤᱛᱨᱚ",
-    "subtitle": "AI ᱠᱨᱤᱥᱤ ᱥᱟᱦᱟᱭᱟᱠ",
-    "open": "Open AI Assistant",
-    "close": "Close",
-    "clear": "Clear chat",
-    "placeholder": "Ask any farming question...",
-    "send": "Send",
-    "welcome": "Hi! I'm Krishi Mitra, your AI farming assistant. Ask me anything about crops, soil, weather, or farming!",
-    "error": "Sorry, I couldn't get a response. Please try again.",
-    "suggestions": ["Which crop suits my soil?", "How to control pests?", "Best season for wheat?"],
-    "suggestionsEn": ["Which crop suits my soil?", "How to control pests?", "Best season for wheat?"]
   }
 }

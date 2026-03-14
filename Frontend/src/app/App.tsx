@@ -4,7 +4,6 @@ import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
 import { Sprout, Wheat, ShieldAlert, Globe } from "lucide-react";
 import { getPrediction, type PredictionResponse, type PredictionInput } from "@/app/services/api";
-import { AiAssistant } from "@/app/components/AiAssistant";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -167,9 +166,6 @@ export default function App() {
           )}
         </div>
       </main>
-
-      {/* ── AI Farming Assistant ── */}
-      <AiAssistant />
 
       {/* ── Footer ── */}
       <footer className="mt-20 border-t border-gray-200/60">
