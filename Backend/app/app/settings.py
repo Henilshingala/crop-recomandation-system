@@ -21,7 +21,7 @@ if not SECRET_KEY:
     raise ValueError("DJANGO_SECRET_KEY environment variable must be set")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "t")
 
 # Strict ALLOWED_HOSTS for production
 ALLOWED_HOSTS = os.environ.get(
@@ -56,13 +56,14 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "apps",
+    "Ai",
 ]
 
 MIDDLEWARE = [
-    "apps.middleware.RateLimitMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "apps.middleware.RateLimitMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -108,14 +109,22 @@ DATABASES = {
 # CACHE CONFIGURATION
 # =============================================================================
 
-# For production, Redis is recommended. For now, we use LocMemCache.
-# Note: LocMemCache is NOT shared between Gunicorn workers.
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "unique-snowflake",
+_REDIS_URL = os.environ.get("REDIS_URL")
+if _REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": _REDIS_URL,
+        }
     }
-}
+else:
+    # Fallback: LocMemCache (not shared between Gunicorn workers)
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        }
+    }
 
 
 
@@ -162,6 +171,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 STATICFILES_DIRS = [
     BASE_DIR / "media",
 ]
+
+# Path to the multilingual schemes JSON (configurable via env)
+SCHEMES_JSON_PATH = os.environ.get(
+    "SCHEMES_JSON_PATH",
+    str(BASE_DIR.parent.parent / "agriculture_schemes_multilingual.json")
+)
 
 
 # =============================================================================
@@ -250,7 +265,7 @@ if DEBUG:
 
 if not DEBUG:
     # SSL/HTTPS settings
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "True") == "True"
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     
