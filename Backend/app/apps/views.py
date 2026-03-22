@@ -27,6 +27,7 @@ from .ml_inference import recommend_crops, predict_top_crops, get_predictor, get
 from .serializers import CropSerializer, PredictionLogSerializer
 from .validators import SecurePredictionSerializer, FEATURE_RANGES, SAFE_RANGES
 from .nutrition import get_nutrition_data
+from .services.scheme_service import get_filtered_schemes, get_filter_options
 
 logger = logging.getLogger(__name__)
 
@@ -318,12 +319,19 @@ def health_check(request):
 @permission_classes([AllowAny])
 def available_crops(request):
     """GET /api/crops/available/?mode=soil|extended|both"""
+    VALID_MODES = {"soil", "extended", "both"}
     mode = request.query_params.get("mode", "soil")
+    if mode not in VALID_MODES:
+        return Response(
+            {"error": f"Invalid mode. Must be one of: {', '.join(sorted(VALID_MODES))}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     try:
         crops = get_available_crops(mode)
         return Response({"mode": mode, "count": len(crops), "crops": crops})
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        logger.error("Failed to get available crops: %s", e)
+        return Response({"error": "Service temporarily unavailable"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 @api_view(["GET"])
@@ -424,3 +432,49 @@ class PredictionLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PredictionLog.objects.all()
     serializer_class = PredictionLogSerializer
     permission_classes = [IsAuthenticated]
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# Scheme Recommendations
+# ═════════════════════════════════════════════════════════════════════════
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_schemes(request):
+    """GET /api/schemes/"""
+    state = request.query_params.get("state", "")
+    category = request.query_params.get("category", "")
+    keyword = request.query_params.get("keyword", "")
+    farmer_type = request.query_params.get("farmer_type", "")
+    income_level = request.query_params.get("income_level", "")
+    land_size = request.query_params.get("land_size", "")
+    language = request.query_params.get("language", "en")
+
+    try:
+        page = max(1, int(request.query_params.get("page", 1)))
+    except (ValueError, TypeError):
+        page = 1
+    try:
+        per_page = min(1500, max(1, int(request.query_params.get("per_page", 1000))))
+    except (ValueError, TypeError):
+        per_page = 1000
+
+    results = get_filtered_schemes(
+        state=state,
+        category=category,
+        keyword=keyword,
+        farmer_type=farmer_type,
+        income_level=income_level,
+        land_size=land_size,
+        language=language,
+        page=page,
+        per_page=per_page,
+    )
+    return Response(results)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_scheme_options(request):
+    """GET /api/schemes/options/ Returns available states and categories."""
+    options = get_filter_options()
+    return Response(options)
