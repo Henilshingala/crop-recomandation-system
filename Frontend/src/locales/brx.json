@@ -198,5 +198,29 @@
     "tomato": "बिलाही",
     "watermelon": "तरमुज",
     "wheat": "गम"
+  },
+  "chat": {
+    "title": "फसल सहायक",
+    "placeholder": "फसल, हा, सार बादि सोंनानै...",
+    "send": "हरनानै",
+    "serverError": "सर्भर मोनथां नाय। जोबनानै फेर गोनांथाय।",
+    "emptyResponse": "मानो गोरोन्थि जादों। फेर गोनांथाय।",
+    "savedForReview": "बे सोंनाय रिभिउ नायनो सेभ जादों।",
+    "typing": "टाइप जादों...",
+    "openChat": "चैट खुलनानै",
+    "closeChat": "चैट बन्द खानानै"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
