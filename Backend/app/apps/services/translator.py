@@ -14,7 +14,7 @@ import os
 import re
 
 import requests
-
+ 
 logger = logging.getLogger(__name__)
 
 # ── Configuration ────────────────────────────────────────────────────────
