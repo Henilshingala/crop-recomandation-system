@@ -46,3 +46,17 @@ Backups/
 .env.local
 .venv/
 staticfiles/
+
+# Large dev artifacts and datasets
+progress.json
+translation_progress.json
+qna_input.json
+
+*.pkl
+
+
+progress.json
+
+Backend/app/db.sqlite3
+
+translation_progress.json
