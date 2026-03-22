@@ -198,5 +198,18 @@
     "tomato": "ਟਮਾਟਰ",
     "watermelon": "ਤਰਬੂਜ",
     "wheat": "ਕਣਕ"
+  },
+  "tabs": {
+    "cropRecommendation": "ਫ਼ਸਲ ਸਿਫ਼ਾਰਸ਼",
+    "governmentSchemes": "ਸਰਕਾਰੀ ਸਕੀਮਾਂ"
+  },
+  "schemes": {
+    "findTitle": "ਸਰਕਾਰੀ ਸਕੀਮਾਂ ਲੱਭੋ",
+    "keywordLabel": "ਕੀਵਰਡ ਖੋਜ",
+    "stateLabel": "ਰਾਜ",
+    "searchButton": "ਖੇਤੀਬਾੜੀ ਸਕੀਮਾਂ ਲੱਭੋ",
+    "noResults": "ਕੋਈ ਸਕੀਮਾਂ ਨਹੀਂ ਮਿਲੀਆਂ",
+    "noResultsHint": "ਆਪਣੇ ਫਿਲਟਰ ਜਾਂ ਖੋਜ ਕੀਵਰਡਾਂ ਨੂੰ ਵਿਵਸਥਿਤ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+    "loadError": "ਡਾਟਾ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
   }
 }
