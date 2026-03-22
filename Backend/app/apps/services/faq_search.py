@@ -12,6 +12,7 @@ import logging
 import os
 import re
 from difflib import SequenceMatcher
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,22 @@ def _load():
     ]
 
 
+@lru_cache(maxsize=256)
+def _cached_search(query_normalized: str) -> tuple:
+    best_score = 0.0
+    best_idx = 0
+
+    for idx, faq_q in enumerate(_faq_questions_normalized):
+        score = SequenceMatcher(None, query_normalized, faq_q).ratio()
+        if score > best_score:
+            best_score = score
+            best_idx = idx
+
+    if best_score >= SIMILARITY_THRESHOLD:
+        return _faq_entries[best_idx]["answer"], best_score
+
+    return None, best_score
+
 def search_faq(user_query: str) -> tuple:
     """
     Search FAQ for the best match using difflib.SequenceMatcher.
@@ -83,25 +100,14 @@ def search_faq(user_query: str) -> tuple:
         return None, 0.0
 
     query_normalized = _normalize(user_query)
-
-    best_score = 0.0
-    best_idx = 0
-
-    for idx, faq_q in enumerate(_faq_questions_normalized):
-        score = SequenceMatcher(None, query_normalized, faq_q).ratio()
-        if score > best_score:
-            best_score = score
-            best_idx = idx
+    
+    answer, best_score = _cached_search(query_normalized)
 
     logger.info(
-        "FAQ search: query=%r best_match=%r score=%.3f threshold=%.2f",
+        "FAQ search: query=%r score=%.3f threshold=%.2f",
         user_query[:80],
-        _faq_entries[best_idx]["question"][:80],
         best_score,
         SIMILARITY_THRESHOLD,
     )
 
-    if best_score >= SIMILARITY_THRESHOLD:
-        return _faq_entries[best_idx]["answer"], best_score
-
-    return None, best_score
+    return answer, best_score
