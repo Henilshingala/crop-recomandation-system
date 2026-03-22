@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import DOMPurify from "dompurify";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
+import { SchemesRecommendation } from "@/app/components/SchemesRecommendation";
+import ChatWidget from "@/app/components/ChatWidget";
 import { Sprout, Wheat, ShieldAlert, Globe } from "lucide-react";
 import { getPrediction, type PredictionResponse, type PredictionInput } from "@/app/services/api";
 
@@ -33,10 +36,13 @@ const LANGUAGES = [
 
 export default function App() {
   const { t, i18n } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'crop' | 'schemes'>('crop');
   const [results, setResults] = useState<PredictionResponse | null>(null);
   const [lastInput, setLastInput] = useState<PredictionInput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,55 +122,87 @@ export default function App() {
       </header>
 
       {/* ── Main Content ── */}
-      <main className="container mx-auto px-4 py-10 max-w-6xl">
-        <div className="space-y-8">
-          <InputForm onSubmit={handleSubmit} isLoading={isLoading} />
-
-          {/* Loading */}
-          {isLoading && (
-            <div className="glass-card p-12 flex flex-col items-center justify-center gap-4 animate-fade-in">
-              <div className="flex gap-3">
-                <div className="loading-dot" />
-                <div className="loading-dot" />
-                <div className="loading-dot" />
-              </div>
-              <p className="text-emerald-700/70 text-sm font-medium">{t("loading")}</p>
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div className="glass-card !border-red-200 p-6 animate-fade-in-up">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <ShieldAlert className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-red-800">{t("errors.title")}</p>
-                  <p className="text-red-600/80 text-sm mt-1">{error}</p>
-                  <p className="text-red-400 text-xs mt-2">{t("errors.serverHint")}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Results */}
-          {results && !isLoading && <ResultsSection data={results} userInput={lastInput} />}
-
-          {/* How It Works */}
-          {!results && !isLoading && (
-            <div className="glass-card p-6 animate-fade-in-up delay-200">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Sprout className="w-5 h-5 text-emerald-600" />
-                {t("howItWorks.title")}
-              </h3>
-              <div className="text-sm text-gray-600 space-y-2">
-                <p>{t("howItWorks.description")}</p>
-                <p className="pt-2 text-emerald-700/60" dangerouslySetInnerHTML={{ __html: t("howItWorks.getStarted") }} />
-              </div>
-            </div>
-          )}
+      <main className="container mx-auto px-4 py-10 max-w-6xl w-full">
+        {/* Navigation Tabs */}
+        <div className="flex justify-center mb-10 mt-2 z-10 relative">
+          <div className="inline-flex bg-white/50 backdrop-blur-sm border border-gray-200 p-1.5 rounded-2xl shadow-sm">
+            <button
+               onClick={() => setActiveTab('crop')}
+               className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                 activeTab === 'crop' 
+                 ? 'bg-emerald-600 text-white shadow-md transform scale-[1.02]' 
+                 : 'text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95'
+               }`}
+            >
+              <Sprout className="w-4 h-4" />
+              {t("tabs.cropRecommendation")}
+            </button>
+            <button
+               onClick={() => setActiveTab('schemes')}
+               className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                 activeTab === 'schemes' 
+                 ? 'bg-emerald-600 text-white shadow-md transform scale-[1.02]' 
+                 : 'text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95'
+               }`}
+            >
+              <Wheat className="w-4 h-4" />
+              {t("tabs.governmentSchemes")}
+            </button>
+          </div>
         </div>
+
+        {activeTab === 'crop' ? (
+          <div className="space-y-8 animate-fade-in-up">
+            <InputForm onSubmit={handleSubmit} isLoading={isLoading} />
+
+            {/* Loading */}
+            {isLoading && (
+              <div className="glass-card p-12 flex flex-col items-center justify-center gap-4 animate-fade-in">
+                <div className="flex gap-3">
+                  <div className="loading-dot" />
+                  <div className="loading-dot" />
+                  <div className="loading-dot" />
+                </div>
+                <p className="text-emerald-700/70 text-sm font-medium">{t("loading")}</p>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div className="glass-card !border-red-200 p-6 animate-fade-in-up">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <ShieldAlert className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-red-800">{t("errors.title")}</p>
+                    <p className="text-red-600/80 text-sm mt-1">{error}</p>
+                    <p className="text-red-400 text-xs mt-2">{t("errors.serverHint")}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Results */}
+            {results && !isLoading && <ResultsSection data={results} userInput={lastInput} />}
+
+            {/* How It Works */}
+            {!results && !isLoading && (
+              <div className="glass-card p-6 animate-fade-in-up delay-200">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sprout className="w-5 h-5 text-emerald-600" />
+                  {t("howItWorks.title")}
+                </h3>
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p>{t("howItWorks.description")}</p>
+                  <p className="pt-2 text-emerald-700/60" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t("howItWorks.getStarted")) }} />
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <SchemesRecommendation />
+        )}
       </main>
 
       {/* ── Footer ── */}
@@ -179,6 +217,9 @@ export default function App() {
           </p>
         </div>
       </footer>
+
+      {/* ── Chat Widget ── */}
+      <ChatWidget />
     </div>
   );
 }
