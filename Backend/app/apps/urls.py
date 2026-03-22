@@ -16,6 +16,8 @@ from .views import (
     model_limits,
     index,
     assistant_chat,
+    get_schemes,
+    get_scheme_options,
 )
 
 # DRF Router for ViewSets
@@ -45,6 +47,10 @@ urlpatterns = [
     
     # Include router URLs (CRUD for crops and logs)
     path('', include(router.urls)),
+    
+    # Schemes Recommendations
+    path('schemes/', get_schemes, name='get-schemes'),
+    path('schemes/options/', get_scheme_options, name='get-scheme-options'),
 ]
 
 """

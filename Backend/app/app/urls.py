@@ -23,6 +23,7 @@ urlpatterns = [
     
     # API endpoints (v1)
     path("api/", include("apps.urls")),
+    path("api/ai/", include("Ai.urls")),
 ]
 
 
