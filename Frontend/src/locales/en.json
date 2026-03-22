@@ -198,5 +198,29 @@
     "tomato": "Tomato",
     "watermelon": "Watermelon",
     "wheat": "Wheat"
+  },
+  "chat": {
+    "title": "Crop Assistant",
+    "placeholder": "Ask about crops, soil, fertilizers...",
+    "send": "Send",
+    "serverError": "Server not reachable. Please try again.",
+    "emptyResponse": "Something went wrong. Please try again.",
+    "savedForReview": "This question has been saved for review.",
+    "typing": "Typing...",
+    "openChat": "Open Chat",
+    "closeChat": "Close Chat"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
