@@ -198,5 +198,29 @@
     "tomato": "टमाटर",
     "watermelon": "तरबूज",
     "wheat": "गेहूँ"
+  },
+  "chat": {
+    "title": "Crop Assistant",
+    "placeholder": "Ask about crops, soil, fertilizers...",
+    "send": "Send",
+    "serverError": "Server not reachable. Please try again.",
+    "emptyResponse": "Something went wrong. Please try again.",
+    "savedForReview": "This question has been saved for review.",
+    "typing": "Typing...",
+    "openChat": "Open Chat",
+    "closeChat": "Close Chat"
+  },
+  "tabs": {
+    "cropRecommendation": "फसल अनुशंसा",
+    "governmentSchemes": "सरकारी योजनाएं"
+  },
+  "schemes": {
+    "findTitle": "सरकारी योजनाएं खोजें",
+    "keywordLabel": "कीवर्ड खोजें",
+    "stateLabel": "राज्य",
+    "searchButton": "कृषि योजनाएं खोजें",
+    "noResults": "कोई योजना नहीं मिली",
+    "noResultsHint": "अपने फ़िल्टर या खोज कीवर्ड को समायोजित करने का प्रयास करें।",
+    "loadError": "डेटा लोड करने में विफल। कृपया पुन: प्रयास करें।"
   }
 }
