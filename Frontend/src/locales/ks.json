@@ -198,5 +198,29 @@
     "tomato": "رُوَٹِس / ٹماٹر",
     "watermelon": "ہِنٛدٕوؠن",
     "wheat": "کَنَک"
+  },
+  "chat": {
+    "title": "فصل کٲمِک",
+    "placeholder": "فصلاں، مٹی، کھاد بارہ پُچھو...",
+    "send": "بھیجیو",
+    "serverError": "سرور نِہ تھاوٕت۔ دوبارہ کوشِش کٕریو۔",
+    "emptyResponse": "کٲہِش غَلَٹ تھاو۔ دوبارہ کوشِش کٕریو۔",
+    "savedForReview": "یہ سوال جٲژری خٲطرٰ محفوظ تھاو۔",
+    "typing": "ٹایپ تھاوان...",
+    "openChat": "چیٹ کھولیو",
+    "closeChat": "چیٹ بند کٕریو"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
