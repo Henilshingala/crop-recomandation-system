@@ -4,7 +4,7 @@
  * No direct HuggingFace calls from the frontend.
  */
 
-const API_BASE_URL = (
+export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
   'https://crop-recomandation-system.onrender.com/api'
 ).replace(/\/$/, '');
