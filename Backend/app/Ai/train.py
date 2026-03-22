@@ -31,7 +31,7 @@ def train_model():
             question = content.get('question', '')
             answer = content.get('answer', '')
             if question and answer:
-                cleaned = tokenize_and_clean_simple(question)
+                cleaned = tokenize_and_clean(question)
                 all_questions.append(cleaned)
                 all_metadata.append({
                     'qna_key': qna_key,
