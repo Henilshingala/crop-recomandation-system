@@ -198,5 +198,29 @@
     "tomato": "ᱴᱟᱢᱟᱴᱚᱨ",
     "watermelon": "ᱛᱟᱨᱵᱩᱡ",
     "wheat": "ᱜᱚᱢ"
+  },
+  "chat": {
+    "title": "ᱯᱟᱠ ᱜᱚᱲᱟᱣᱤᱭᱟᱹ",
+    "placeholder": "ᱯᱟᱠ, ᱦᱟᱥᱟ, ᱥᱟᱨᱟ ᱠᱚ ᱵᱟᱵᱮ ᱠᱚᱞ...",
+    "send": "ᱵᱷᱮᱡᱚᱜ",
+    "serverError": "ᱥᱟᱨᱵᱷᱟᱨ ᱥᱮᱴᱮᱨ ᱵᱟᱭ ᱥᱮᱴᱮᱨ ᱞᱮᱱᱟ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢ ᱢᱮ᱾",
+    "emptyResponse": "ᱪᱷᱚᱠ ᱦᱚᱭᱮᱱᱟ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱫᱚᱦᱲᱟ ᱠᱩᱨᱩᱢ ᱢᱮ᱾",
+    "savedForReview": "ᱱᱚᱶᱟ ᱥᱟᱱᱟᱨᱮ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱧᱪᱟᱣ ᱮᱱᱟ᱾",
+    "typing": "ᱚᱞᱚᱜ ᱠᱟᱱᱟ...",
+    "openChat": "ᱪᱮᱴ ᱡᱷᱤᱡᱚᱜ",
+    "closeChat": "ᱪᱮᱴ ᱵᱚᱸᱫᱚᱜ"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
