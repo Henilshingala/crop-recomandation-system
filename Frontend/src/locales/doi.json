@@ -198,5 +198,29 @@
     "tomato": "टमाटर",
     "watermelon": "तरबूज",
     "wheat": "कनक"
+  },
+  "chat": {
+    "title": "फसल सहायक",
+    "placeholder": "फसलें, मिट्टी, खाद दे बारे च पुछो...",
+    "send": "भेजो",
+    "serverError": "सर्वर उपलब्ध नेई है। कृपया फिरी कोशिश करो।",
+    "emptyResponse": "कुछ गलत होई गेआ। फिरी कोशिश करो।",
+    "savedForReview": "एह् सवाल समीक्षा लेई सहेजेआ गेआ है।",
+    "typing": "टाइप होई रहा है...",
+    "openChat": "चैट खोलो",
+    "closeChat": "चैट बंद करो"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
