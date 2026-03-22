@@ -198,5 +198,29 @@
     "tomato": "খমেন অশিঞ্জা",
     "watermelon": "তরবুজ",
     "wheat": "গেহু"
+  },
+  "chat": {
+    "title": "ফাই অঙাংবা",
+    "placeholder": "ফাই, মাটি, ফাওবগীদা অমসুং পীরো...",
+    "send": "শীজিনৌ",
+    "serverError": "সর্ভার হল্লকপা যায়। অমুক হৌবা ফৎঙদা নোংবা শকতোয়।",
+    "emptyResponse": "অমসুং অমৌঙদা অমা হৌবা। অমুক হৌবা ফৎঙদা নোংবা শকতোয়।",
+    "savedForReview": "মসিগী পোনবীদা হৌবা ফৎঙদা শেমগৎলৈ।",
+    "typing": "টাইপ হৌনবা...",
+    "openChat": "চেট হৌবা",
+    "closeChat": "চেট তৌবা"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
