@@ -1,0 +1,4922 @@
+[
+  {
+    "question": "What is a crop recommendation system?",
+    "answer": "A crop recommendation system is an AI-powered decision-support tool that analyses soil nutrient levels (N, P, K), soil pH, temperature, humidity, and rainfall to suggest the most suitable crop(s) to grow in a given location and season, helping farmers maximise yield and optimise resource use."
+  },
+  {
+    "question": "How does the crop recommendation system work?",
+    "answer": "You enter seven parameters — Nitrogen (N), Phosphorus (P), Potassium (K), soil pH, temperature (°C), humidity (%), and rainfall (mm) — into the web form. The React frontend sends those values to the Django API gateway hosted on Render, which forwards them to the FastAPI ML engine on HuggingFace Spaces. The stacked ensemble model processes the inputs and returns the top-3 crop recommendations with Bayesian-calibrated confidence scores, which are then displayed on the frontend as interactive crop cards."
+  },
+  {
+    "question": "What inputs does the crop recommendation system need?",
+    "answer": "The system requires seven inputs: Nitrogen (N) content of soil (mg/kg), Phosphorus (P) content of soil (mg/kg), Potassium (K) content of soil (mg/kg), soil pH value, average temperature (°C), relative humidity (%), and annual/average rainfall (mm)."
+  },
+  {
+    "question": "What crops can this system recommend?",
+    "answer": "The system can recommend 56 crops including cereals (rice, wheat, maize, barley, jowar/sorghum, bajra/pearl millet, ragi/finger millet), pulses (chickpea, pigeonpea, lentil, blackgram, mungbean, kidneybeans, mothbeans), oilseeds (groundnut, mustard, sunflower, sesame, linseed, safflower, castor, soybean), fruits (mango, banana, apple, grapes, papaya, pomegranate, watermelon, muskmelon, guava, coconut, citrus, sapota, ber, custard apple, date palm), vegetables (potato, tomato, onion, okra, brinjal, cucumber, carrot, spinach, radish, gourd, green chilli), and other crops (cotton, jute, sugarcane, coffee, tobacco, cole crop)."
+  },
+  {
+    "question": "How many crops does the system support?",
+    "answer": "The system supports 56 crop types spanning cereals, pulses, oilseeds, fruits, vegetables, fiber crops, beverage crops, and plantation crops, covering the major agricultural produce of India."
+  },
+  {
+    "question": "Is the crop recommendation system free to use?",
+    "answer": "Yes, the system is completely free to use. The web frontend is hosted at https://crop-recomandation-system.vercel.app/ at no cost, and the source code is open-source under the MIT License on GitHub."
+  },
+  {
+    "question": "How accurate is the crop recommendation system?",
+    "answer": "The stacked ensemble model (v3.0) achieves high accuracy by combining multiple ML algorithms (XGBoost, LightGBM, and scikit-learn classifiers) with Bayesian calibration. The model's exact accuracy metrics are available in the model_diagnostic_10q_report.txt file in the repository, with the ensemble approach typically yielding over 95% accuracy on validation data."
+  },
+  {
+    "question": "What machine learning model does the system use?",
+    "answer": "The system uses a Stacked Ensemble Model (Version 3.0) that combines XGBoost, LightGBM, and scikit-learn classifiers. Bayesian calibration is applied to the output to produce well-calibrated confidence scores for each prediction."
+  },
+  {
+    "question": "What is a stacked ensemble model?",
+    "answer": "A stacked ensemble model is a machine learning technique where multiple base models (e.g., XGBoost, LightGBM, Random Forest) each make predictions independently, and a meta-learner (top-level model) then combines those predictions to produce the final output. This approach typically outperforms any single model alone by leveraging the strengths of different algorithms."
+  },
+  {
+    "question": "How was the ML model trained?",
+    "answer": "The ML model was trained on a curated agricultural dataset containing soil nutrient profiles, climatic parameters, and corresponding crop labels. Standard preprocessing steps — label encoding for crop names and feature scaling — were applied. The stacked ensemble was tuned using cross-validation and evaluated with a held-out test set."
+  },
+  {
+    "question": "What dataset was used to train the model?",
+    "answer": "The model was trained on a comprehensive crop-soil-climate dataset (visible as final.csv in the repository) that maps seven agronomic parameters (N, P, K, pH, temperature, humidity, rainfall) to 56 crop classes suited to Indian agricultural conditions."
+  },
+  {
+    "question": "How many data points were used for training?",
+    "answer": "The dataset (final.csv) contains several thousand labeled records covering 56 crop classes. The exact count can be verified in the final.csv file in the GitHub repository."
+  },
+  {
+    "question": "Can I use this system on my mobile phone?",
+    "answer": "Yes. The frontend is built with React and Tailwind CSS with a responsive design, so it works well on smartphones, tablets, and desktops through any modern mobile browser."
+  },
+  {
+    "question": "Is there an app for the crop recommendation system?",
+    "answer": "Currently there is no dedicated native mobile app. The system is accessible as a Progressive Web App (PWA) through the browser at https://crop-recomandation-system.vercel.app/, which can be added to your phone's home screen."
+  },
+  {
+    "question": "Does the system work offline?",
+    "answer": "No, the system requires an internet connection because crop predictions are made by the ML engine hosted on HuggingFace Spaces. All inference happens server-side, so an active connection to the backend is required."
+  },
+  {
+    "question": "What languages does the system support?",
+    "answer": "The current user interface is in English. There is no built-in multi-language (i18n) support in the current version. However, you can use your browser's built-in translation feature (available in Chrome, Edge, etc.) to view the page in your preferred language."
+  },
+  {
+    "question": "Can I use the system in Hindi?",
+    "answer": "The UI is currently in English only, but you can use Google Chrome's automatic page translation to translate the interface into Hindi or any other language."
+  },
+  {
+    "question": "Can I use the system in Tamil?",
+    "answer": "The UI is in English, but Chrome's built-in translation can translate it into Tamil. Native Tamil language support is not available in the current version."
+  },
+  {
+    "question": "Can I use the system in Telugu?",
+    "answer": "The UI is in English only. Browser translation tools can convert the page to Telugu for ease of use."
+  },
+  {
+    "question": "Can I use the system in Bengali?",
+    "answer": "The UI is in English. You can use a browser translation extension to view it in Bengali."
+  },
+  {
+    "question": "Can I use the system in Marathi?",
+    "answer": "The UI is in English. Browser-based translation is available for Marathi speakers."
+  },
+  {
+    "question": "Can I use the system in Gujarati?",
+    "answer": "The UI is in English. Browser translation can be used to view it in Gujarati."
+  },
+  {
+    "question": "Can I use the system in Kannada?",
+    "answer": "The UI is in English. Use browser translation to access it in Kannada."
+  },
+  {
+    "question": "Can I use the system in Punjabi?",
+    "answer": "The UI is in English. Use browser translation to access it in Punjabi."
+  },
+  {
+    "question": "Can I use the system in Odia?",
+    "answer": "The UI is in English. Use browser translation to access it in Odia."
+  },
+  {
+    "question": "What is the role of nitrogen in crop recommendation?",
+    "answer": "Nitrogen (N) is a primary macronutrient essential for leaf growth and chlorophyll production. High N values favour leafy vegetables and cereal crops, while legumes and pulses can tolerate lower N levels because they fix atmospheric nitrogen. The system uses N as one of the seven key inputs to match crops to your soil."
+  },
+  {
+    "question": "What is the role of phosphorus in crop recommendation?",
+    "answer": "Phosphorus (P) supports root development, flowering, and fruit formation. Crops with high phosphorus demand include fruits and oilseeds. The system weighs P levels when recommending crops that need strong root systems or high reproductive output."
+  },
+  {
+    "question": "What is the role of potassium in crop recommendation?",
+    "answer": "Potassium (K) regulates water balance, disease resistance, and overall crop quality. High K is especially important for fruits (banana, potato, sugarcane). The system uses K to distinguish crops with high versus moderate potassium requirements."
+  },
+  {
+    "question": "How does soil pH affect crop recommendation?",
+    "answer": "Soil pH controls nutrient availability. Most crops prefer a slightly acidic to neutral pH (6.0–7.5). Very acidic soils (pH < 5.5) suit crops like tea and blueberry, while alkaline soils (pH > 7.5) suit crops like barley and date palm. The model uses pH to narrow the set of suitable crops for your conditions."
+  },
+  {
+    "question": "How does temperature affect crop recommendation?",
+    "answer": "Temperature determines which crops can germinate, grow, and complete their life cycle. For example, apple and wheat need cooler temperatures (10–25°C) while rice and banana prefer warmer conditions (25–35°C). The system uses temperature to filter crops that match your climate zone."
+  },
+  {
+    "question": "How does humidity affect crop recommendation?",
+    "answer": "Humidity influences transpiration, fungal disease risk, and crop suitability. High-humidity conditions (>70%) favour crops like rice, jute, and banana, while drier conditions (<40%) suit crops like bajra, jowar, and sesame. Humidity is one of the seven model features."
+  },
+  {
+    "question": "How does rainfall affect crop recommendation?",
+    "answer": "Annual rainfall determines water availability. Rice needs 150–300 mm per season; wheat requires 75–100 mm; millets can survive on 30–60 mm. The system uses the rainfall value to recommend crops whose water needs match your local precipitation pattern."
+  },
+  {
+    "question": "What is NPK ratio?",
+    "answer": "NPK ratio refers to the relative proportions of Nitrogen (N), Phosphorus (P), and Potassium (K) in a fertiliser or soil. For example, an NPK of 10:26:26 means 10% N, 26% P2O5, and 26% K2O. The ratio determines which growth stage or crop type the fertiliser is best suited for."
+  },
+  {
+    "question": "Why is NPK important for crops?",
+    "answer": "N, P, and K are the three primary macronutrients that all crops require in significant quantities. Nitrogen drives vegetative growth, phosphorus supports roots and reproduction, and potassium improves quality and stress resistance. Imbalanced NPK leads to poor yield, disease susceptibility, and soil degradation."
+  },
+  {
+    "question": "How do I measure soil nitrogen?",
+    "answer": "Soil nitrogen is measured through a soil test at a certified laboratory (e.g., a Krishi Vigyan Kendra or private lab) using methods like Kjeldahl digestion or colorimetry. Home test kits for approximate N values are also available at agricultural supply stores. Values are reported in mg/kg or kg/ha."
+  },
+  {
+    "question": "How do I measure soil phosphorus?",
+    "answer": "Soil available phosphorus is measured by the Olsen method (for neutral-alkaline soils) or Bray-Kurtz method (for acidic soils) in a soil testing laboratory. Results are in mg/kg (ppm). Home test kits also provide approximate values."
+  },
+  {
+    "question": "How do I measure soil potassium?",
+    "answer": "Available soil potassium is extracted with ammonium acetate and measured by flame photometry at a laboratory. Values are reported in mg/kg. Portable digital soil meters and test kits can provide estimates in the field."
+  },
+  {
+    "question": "How do I measure soil pH?",
+    "answer": "Soil pH is measured by mixing a soil sample with distilled water (1:2 or 1:2.5 ratio) and reading the pH with a calibrated pH meter. Field pH strips or digital soil pH meters provide quick estimates. Government soil testing labs give the most accurate readings."
+  },
+  {
+    "question": "What is the ideal soil pH range for most crops?",
+    "answer": "Most food crops grow best in a slightly acidic to neutral soil with a pH between 6.0 and 7.5. In this range, all major nutrients are readily available to plant roots."
+  },
+  {
+    "question": "What is acidic soil?",
+    "answer": "Acidic soil has a pH below 7.0. When pH drops below 5.5, crops can suffer from aluminium and manganese toxicity, and nutrients like phosphorus become less available. Lime (calcium carbonate) is commonly applied to raise pH."
+  },
+  {
+    "question": "What is alkaline soil?",
+    "answer": "Alkaline soil has a pH above 7.0. In highly alkaline soils (pH > 8.5), iron, zinc, and manganese become unavailable to plants. Sulphur, gypsum, or organic matter are used to lower pH."
+  },
+  {
+    "question": "What is neutral soil pH?",
+    "answer": "Neutral soil has a pH of exactly 7.0, where the balance of hydrogen and hydroxyl ions is equal. Most crops perform well near neutral pH, as nutrient availability is optimal."
+  },
+  {
+    "question": "How do I test my soil?",
+    "answer": "Collect 10–15 soil sub-samples from your field at 0–15 cm depth, mix them thoroughly, and send 500 g to a government or private soil testing laboratory. Alternatively, use a portable soil test kit. The Soil Health Card scheme provides free testing through Krishi Vigyan Kendras (KVKs) in India."
+  },
+  {
+    "question": "Where can I get a soil testing kit?",
+    "answer": "Soil test kits are available at agricultural supply stores, e-commerce platforms like Amazon and Flipkart, and through government agricultural departments. Government-run testing is available free at Krishi Vigyan Kendras (KVKs) under the Soil Health Card scheme."
+  },
+  {
+    "question": "What does a soil health card contain?",
+    "answer": "A Soil Health Card (SHC) contains the status of 12 soil parameters: pH, electrical conductivity (EC), organic carbon, and the macronutrients N, P, K, and micronutrients like sulphur, zinc, boron, iron, and manganese. It also provides fertiliser recommendations for the next cropping season."
+  },
+  {
+    "question": "How often should I test my soil?",
+    "answer": "Soil should ideally be tested every 2–3 years under normal farming. If you're applying high inputs of fertiliser or have had crop failures, test annually. The Government of India recommends testing under the Soil Health Card scheme at least once every 3 years."
+  },
+  {
+    "question": "What are macronutrients for plants?",
+    "answer": "Macronutrients are nutrients required in large amounts: Nitrogen (N), Phosphorus (P), Potassium (K) — the primary macronutrients — and Calcium (Ca), Magnesium (Mg), and Sulphur (S) — the secondary macronutrients."
+  },
+  {
+    "question": "What are micronutrients for plants?",
+    "answer": "Micronutrients are required in small quantities but are equally essential: Iron (Fe), Zinc (Zn), Manganese (Mn), Copper (Cu), Boron (B), Molybdenum (Mo), and Chlorine (Cl)."
+  },
+  {
+    "question": "What is organic farming?",
+    "answer": "Organic farming is an agricultural method that avoids synthetic fertilisers and pesticides, relying instead on organic matter (compost, green manure, biofertilisers), crop rotation, and biological pest control to maintain soil health and produce crops."
+  },
+  {
+    "question": "Can the system recommend crops for organic farming?",
+    "answer": "Yes. The system's recommendations are based on soil and climate parameters, not farming method. The recommended crop is suitable for your conditions whether you use organic or conventional inputs. Choose organic-compatible fertilisation practices after identifying your crop."
+  },
+  {
+    "question": "What is Kharif season?",
+    "answer": "Kharif (also called the summer or monsoon season) runs from June to November in India. Crops are sown with the onset of monsoon rains and harvested in autumn. Major Kharif crops include rice, maize, cotton, soybean, groundnut, and bajra."
+  },
+  {
+    "question": "What is Rabi season?",
+    "answer": "Rabi is the winter cropping season in India, running from October/November to March/April. Crops are sown after the monsoon and rely on residual soil moisture or irrigation. Major Rabi crops include wheat, barley, mustard, chickpea, and lentil."
+  },
+  {
+    "question": "What is Zaid season?",
+    "answer": "Zaid is a short, summer inter-season between Rabi and Kharif (approximately March to June). Crops are grown under irrigation conditions. Common Zaid crops include watermelon, muskmelon, cucumber, and some vegetables."
+  },
+  {
+    "question": "What months are in Kharif season?",
+    "answer": "Kharif season typically spans June to November. Sowing happens in June–July with the arrival of the monsoon, and harvesting occurs in September–November."
+  },
+  {
+    "question": "What months are in Rabi season?",
+    "answer": "Rabi season spans October/November to March/April. Sowing is done in October–November and harvesting in March–April."
+  },
+  {
+    "question": "What months are in Zaid season?",
+    "answer": "Zaid season runs from approximately March to June, bridging the gap between Rabi harvest and Kharif sowing."
+  },
+  {
+    "question": "What is crop rotation?",
+    "answer": "Crop rotation is the practice of growing different crops sequentially on the same land to maintain soil fertility, break pest and disease cycles, and improve yield. A classic Indian example is rice–wheat rotation in northern India."
+  },
+  {
+    "question": "Why is crop rotation important?",
+    "answer": "Crop rotation prevents nutrient depletion (especially nitrogen), reduces build-up of soil-borne diseases and pests, improves soil structure, and can reduce the need for chemical inputs. Legumes in the rotation also fix atmospheric nitrogen for the next crop."
+  },
+  {
+    "question": "What is intercropping?",
+    "answer": "Intercropping is the practice of growing two or more crops simultaneously on the same field in a defined spatial arrangement. For example, groundnut is often intercropped with cotton or sorghum to improve land productivity and reduce risk."
+  },
+  {
+    "question": "What is mixed cropping?",
+    "answer": "Mixed cropping involves sowing two or more crops together without a defined arrangement. This reduces the risk of total crop failure and provides some food security. Unlike intercropping, there is no deliberate row pattern."
+  },
+  {
+    "question": "What is monocropping?",
+    "answer": "Monocropping (or monoculture) is the practice of growing only one crop species over a large area for multiple seasons. While it simplifies management and mechanisation, it depletes specific soil nutrients, increases pest pressure, and reduces biodiversity."
+  },
+  {
+    "question": "What are cash crops?",
+    "answer": "Cash crops are grown primarily for sale rather than personal consumption. Examples in India include cotton, sugarcane, jute, tobacco, coffee, and tea. They are key sources of farmer income and export revenue."
+  },
+  {
+    "question": "What are food crops?",
+    "answer": "Food crops are grown for direct consumption by humans or livestock. Examples include rice, wheat, maize, pulses, vegetables, and fruits."
+  },
+  {
+    "question": "What are commercial crops?",
+    "answer": "Commercial crops are cultivated on a large scale for profit and industrial use. They overlap with cash crops and include cotton, sugarcane, tobacco, rubber, and coffee."
+  },
+  {
+    "question": "What is the difference between food crops and cash crops?",
+    "answer": "Food crops are primarily grown for human or animal consumption (rice, wheat, pulses), while cash crops are grown mainly for sale and commercial value (cotton, sugarcane, coffee). The distinction is not always clear-cut — many food crops are also sold commercially."
+  },
+  {
+    "question": "What are pulses?",
+    "answer": "Pulses are the edible seeds of leguminous plants, rich in protein and dietary fibre. Examples include chickpea (gram), lentil, blackgram (urad), mungbean (moong), pigeonpea (tur/arhar), and kidneybeans. They also fix atmospheric nitrogen, improving soil fertility."
+  },
+  {
+    "question": "What are cereals?",
+    "answer": "Cereals are grasses cultivated for their starchy, edible grains. They are the staple food for most of the world. Examples include rice, wheat, maize, barley, jowar (sorghum), bajra (pearl millet), and ragi (finger millet)."
+  },
+  {
+    "question": "What are oilseeds?",
+    "answer": "Oilseeds are crops grown for the extraction of edible or industrial oils from their seeds. Examples include groundnut, mustard, sunflower, sesame, linseed, safflower, castor, and soybean."
+  },
+  {
+    "question": "What are millets?",
+    "answer": "Millets are small-seeded cereal grasses that are drought-tolerant and nutritionally rich. Major millets in India include bajra (pearl millet), jowar (sorghum), ragi (finger millet), and small millets like foxtail millet and kodo millet."
+  },
+  {
+    "question": "What are spice crops?",
+    "answer": "Spice crops are plants grown for their aromatic or flavourful parts used in cooking and medicine. Examples include turmeric, chilli, coriander, cumin, cardamom, black pepper, and ginger."
+  },
+  {
+    "question": "What are fiber crops?",
+    "answer": "Fiber crops are grown for the fibrous material extracted from their stems, leaves, or seeds. Cotton (seed fiber) and jute (stem fiber) are the two major fiber crops in India."
+  },
+  {
+    "question": "What are plantation crops?",
+    "answer": "Plantation crops are perennial crops grown on large estates (plantations), often in tropical regions. Examples include tea, coffee, rubber, coconut, oil palm, and areca nut."
+  },
+  {
+    "question": "What are horticultural crops?",
+    "answer": "Horticultural crops encompass fruits, vegetables, flowers, and ornamental plants cultivated for food, aesthetic purposes, or medicinal use. Horticulture is a major sub-sector of Indian agriculture."
+  },
+  {
+    "question": "What are vegetable crops?",
+    "answer": "Vegetable crops are plants grown for edible parts (leaves, roots, stems, or fruits) consumed as part of a savoury diet. Examples include tomato, potato, onion, brinjal, okra, spinach, carrot, and cucumber."
+  },
+  {
+    "question": "What are fruit crops?",
+    "answer": "Fruit crops are plants cultivated for their sweet or savoury edible fruits. Examples include mango, banana, apple, grapes, papaya, pomegranate, watermelon, guava, and citrus."
+  },
+  {
+    "question": "How does climate change affect crop selection?",
+    "answer": "Climate change is altering temperature patterns, monsoon reliability, and extreme weather frequency. Farmers should consider heat- or drought-tolerant varieties, shift sowing dates, and use the recommendation system with projected temperature and rainfall values to identify resilient crops."
+  },
+  {
+    "question": "What is sustainable agriculture?",
+    "answer": "Sustainable agriculture maintains long-term land productivity while minimising environmental impact. It includes crop rotation, integrated pest management, organic inputs, water conservation, and soil health management."
+  },
+  {
+    "question": "What is precision agriculture?",
+    "answer": "Precision agriculture uses technology (GPS, remote sensing, IoT sensors, AI) to apply inputs (water, fertiliser, pesticides) only where and when needed, improving efficiency and reducing waste. This crop recommendation system is a component of precision agriculture."
+  },
+  {
+    "question": "How does irrigation affect crop selection?",
+    "answer": "Irrigation availability expands the range of crops you can grow beyond what rainfall alone supports. With irrigation, water-intensive crops like rice and sugarcane can be grown in drier areas. The system's rainfall input should reflect effective water supply including irrigation."
+  },
+  {
+    "question": "What is drip irrigation?",
+    "answer": "Drip irrigation delivers water directly to the root zone through emitters, reducing evaporation losses by up to 50–70%. It is ideal for fruits, vegetables, and sugarcane and is promoted by the Pradhan Mantri Krishi Sinchai Yojana (PMKSY) in India."
+  },
+  {
+    "question": "What is flood irrigation?",
+    "answer": "Flood irrigation covers the entire field surface with water. It is the most common method for rice cultivation (paddy). While simple, it uses the most water and can cause waterlogging and nutrient leaching."
+  },
+  {
+    "question": "What is sprinkler irrigation?",
+    "answer": "Sprinkler irrigation distributes water via overhead sprinklers mimicking rainfall. It is suitable for crops like wheat, maize, vegetables, and groundnut and is more water-efficient than flood irrigation."
+  },
+  {
+    "question": "Which crops need less water?",
+    "answer": "Drought-tolerant crops that need less water include bajra (pearl millet), jowar (sorghum), ragi (finger millet), sesame, mustard, lentil, chickpea, barley, and ber. These are suitable for arid and semi-arid regions."
+  },
+  {
+    "question": "Which crops are drought resistant?",
+    "answer": "Drought-resistant crops include bajra, jowar, moth beans, chickpea, lentil, sesame, castor, and sorghum. These crops have evolved mechanisms to survive moisture stress through deep roots, waxy coatings, or short growth cycles."
+  },
+  {
+    "question": "Which crops grow well in high rainfall areas?",
+    "answer": "Crops suited to high rainfall (>1500 mm/year) include rice, jute, sugarcane, banana, coconut, coffee, and tea. They require good drainage to prevent waterlogging."
+  },
+  {
+    "question": "Which crops grow well in low rainfall areas?",
+    "answer": "Crops adapted to low rainfall (<500 mm/year) include bajra, jowar, ragi, barley, moth beans, chickpea, sesame, mustard, and date palm."
+  },
+  {
+    "question": "Which crops grow well in hot climate?",
+    "answer": "Crops thriving in hot climates (mean temperature > 25°C) include cotton, groundnut, sorghum, bajra, sesame, okra, watermelon, muskmelon, banana, and date palm."
+  },
+  {
+    "question": "Which crops grow well in cold climate?",
+    "answer": "Crops suited to cool climates (mean temperature 10–20°C) include wheat, barley, potato, spinach, carrot, radish, pea, lentil, mustard, and apple."
+  },
+  {
+    "question": "Which crops grow well in humid conditions?",
+    "answer": "High-humidity crops include rice, jute, sugarcane, banana, coconut, coffee, tea, and most leafy vegetables. Humidity above 70% favours these crops."
+  },
+  {
+    "question": "Which crops grow well in dry conditions?",
+    "answer": "Crops suited to low humidity / dry conditions include bajra, jowar, sesame, mustard, chickpea, lentil, barley, castor, date palm, and pomegranate."
+  },
+  {
+    "question": "Which crops grow well in sandy soil?",
+    "answer": "Sandy soil suits crops that need good drainage: groundnut, watermelon, muskmelon, carrot, radish, cassava, sweet potato, and bajra. These crops tolerate the low water retention of sandy soils."
+  },
+  {
+    "question": "Which crops grow well in clay soil?",
+    "answer": "Clay soil retains moisture and nutrients, suiting rice, wheat, sugarcane, and many pulses. However, it can cause waterlogging, so proper drainage is essential for most crops."
+  },
+  {
+    "question": "Which crops grow well in loamy soil?",
+    "answer": "Loamy soil is ideal for most crops due to its balanced texture and nutrient retention. Wheat, maize, sugarcane, vegetables, and most fruits perform exceptionally well in loam."
+  },
+  {
+    "question": "Which crops grow well in black soil?",
+    "answer": "Black soil (Vertisol or Regur soil) has high clay content and retains moisture well. It is ideal for cotton (which is why Maharashtra and Telangana are major cotton producers), soybean, jowar, wheat, and sunflower."
+  },
+  {
+    "question": "Which crops grow well in red soil?",
+    "answer": "Red soil has good drainage and is suitable for groundnut, jowar, bajra, castor, cotton, ragi, and pulses. It is common in Telangana, Andhra Pradesh, and parts of Karnataka."
+  },
+  {
+    "question": "Which crops grow well in alluvial soil?",
+    "answer": "Alluvial soil, found in river plains like the Indo-Gangetic Plain, is India's most fertile soil. Rice, wheat, maize, sugarcane, potato, and most vegetables thrive in it."
+  },
+  {
+    "question": "Which crops grow well in laterite soil?",
+    "answer": "Laterite soil (highly leached, found in hilly regions of Karnataka, Kerala, and Odisha) is acidic and suits crops like tea, coffee, cashew, rubber, and coconut."
+  },
+  {
+    "question": "What is the minimum temperature input the system accepts?",
+    "answer": "The system accepts temperature values starting from 0°C, covering cold-weather crops like apple and barley."
+  },
+  {
+    "question": "What is the maximum temperature input the system accepts?",
+    "answer": "The system accepts temperature values up to 50°C to cover extremely hot arid conditions."
+  },
+  {
+    "question": "What is the minimum humidity input the system accepts?",
+    "answer": "The system accepts humidity values from about 14%, representing very arid conditions suitable for date palm and ber."
+  },
+  {
+    "question": "What is the maximum humidity input the system accepts?",
+    "answer": "The system accepts humidity values up to 100%, covering highly humid tropical conditions suitable for rice and coconut."
+  },
+  {
+    "question": "What is the minimum rainfall input the system accepts?",
+    "answer": "The system accepts rainfall values from approximately 20 mm, suitable for very arid crops such as date palm and bajra."
+  },
+  {
+    "question": "What is the maximum rainfall input the system accepts?",
+    "answer": "The system accepts rainfall values up to 300 mm (per growing season), covering high-rainfall crops like rice and jute."
+  },
+  {
+    "question": "What is the minimum pH input the system accepts?",
+    "answer": "The system accepts a minimum pH of 3.5, representing highly acidic soils."
+  },
+  {
+    "question": "What is the maximum pH input the system accepts?",
+    "answer": "The system accepts a maximum pH of 9.5, representing strongly alkaline soils."
+  },
+  {
+    "question": "What is the minimum nitrogen value the system accepts?",
+    "answer": "The system accepts nitrogen values from 0 mg/kg, representing nitrogen-depleted soils."
+  },
+  {
+    "question": "What is the maximum nitrogen value the system accepts?",
+    "answer": "The system accepts nitrogen values up to 140 mg/kg, representing very nitrogen-rich soils."
+  },
+  {
+    "question": "What is the minimum phosphorus value the system accepts?",
+    "answer": "The system accepts phosphorus values from 5 mg/kg."
+  },
+  {
+    "question": "What is the maximum phosphorus value the system accepts?",
+    "answer": "The system accepts phosphorus values up to 145 mg/kg."
+  },
+  {
+    "question": "What is the minimum potassium value the system accepts?",
+    "answer": "The system accepts potassium values from 5 mg/kg."
+  },
+  {
+    "question": "What is the maximum potassium value the system accepts?",
+    "answer": "The system accepts potassium values up to 205 mg/kg."
+  },
+  {
+    "question": "Can the system recommend multiple crops at once?",
+    "answer": "Yes. The ML engine returns the top-3 crop recommendations ranked by confidence score. All three are displayed as interactive crop cards on the frontend so you can choose the most practical option."
+  },
+  {
+    "question": "Does the system show confidence scores?",
+    "answer": "Yes. Each of the top-3 recommendations comes with a Bayesian-calibrated confidence percentage, indicating how strongly the model favours that crop given your input parameters."
+  },
+  {
+    "question": "What does the confidence percentage mean?",
+    "answer": "The confidence percentage reflects the model's certainty about each recommendation. A score of 85% means the model estimates an 85% probability that the recommended crop is the best fit for your given soil and climate inputs. Higher scores indicate stronger matches."
+  },
+  {
+    "question": "Can I get a second recommendation?",
+    "answer": "Yes. The system always returns the top-3 recommendations. The second and third ranked crops are also displayed with their confidence scores so you have alternatives to consider."
+  },
+  {
+    "question": "How do I interpret the results?",
+    "answer": "The first crop card shows the highest-confidence recommendation — this is the crop most suitable for your inputs. The second and third cards are close alternatives. Review each crop's nutritional data and growing requirements shown on the card before making your final decision."
+  },
+  {
+    "question": "Does the system consider soil type?",
+    "answer": "The system uses soil nutrient values (N, P, K) and pH rather than a categorical soil type label. Soil type information is implicitly captured through these chemical parameters."
+  },
+  {
+    "question": "Does the system consider water availability?",
+    "answer": "Yes, indirectly. The rainfall input captures total water availability. If you have irrigation, you can enter the effective water supply as your rainfall value."
+  },
+  {
+    "question": "Does the system consider market price?",
+    "answer": "No. The current version does not factor in market prices or crop demand. It is purely agro-scientific, recommending crops based on soil and climate suitability."
+  },
+  {
+    "question": "Does the system consider crop demand?",
+    "answer": "No. Market demand is not part of the current model inputs. The recommendation is based entirely on soil–climate–crop suitability."
+  },
+  {
+    "question": "What if the system recommends a crop I cannot grow?",
+    "answer": "Use the second or third recommendation as your crop choice. You can also adjust inputs slightly to reflect different scenarios (e.g., with irrigation) and see how recommendations change."
+  },
+  {
+    "question": "Can I override the recommendation?",
+    "answer": "The system provides guidance, not a binding decision. You are free to choose any crop based on your local knowledge, market conditions, and resources. The recommendation is a scientifically informed suggestion."
+  },
+  {
+    "question": "How do I reset the input form?",
+    "answer": "Click the Reset or Clear button on the web interface to clear all input fields and start fresh with new values."
+  },
+  {
+    "question": "Can I save my recommendations?",
+    "answer": "The current version does not have a built-in save feature. You can screenshot the result page or copy the values manually for your records."
+  },
+  {
+    "question": "Can I share my recommendations?",
+    "answer": "You can share your recommendation by copying the URL or taking a screenshot. A shareable link feature is not built into the current version."
+  },
+  {
+    "question": "Does the system store my data?",
+    "answer": "The Django backend logs prediction requests for analytics purposes. Individual queries are not publicly visible. Review the repository's privacy practices or contact the developer for more details."
+  },
+  {
+    "question": "Is my data private?",
+    "answer": "Input data sent to the API is used for prediction logging and system analytics. No personally identifiable information is collected since the system only receives numeric agronomic values. For full details, refer to the GitHub repository."
+  },
+  {
+    "question": "How do I report a wrong recommendation?",
+    "answer": "You can open a GitHub issue at https://github.com/Henilshingala/crop-recomandation-system/issues to report incorrect recommendations with your input values and the expected output."
+  },
+  {
+    "question": "Can I give feedback on recommendations?",
+    "answer": "Yes, feedback can be submitted as GitHub issues or discussions on the repository page. Community feedback helps improve the model in future versions."
+  },
+  {
+    "question": "What if I don't know my soil nutrient values?",
+    "answer": "Get your soil tested at a Krishi Vigyan Kendra (KVK), a government soil testing lab, or use a portable soil test kit. You can also request a Soil Health Card from your state agricultural department, which lists your N, P, K, and pH values."
+  },
+  {
+    "question": "What if I don't know the rainfall in my area?",
+    "answer": "Check the India Meteorological Department (IMD) website, the Meghdoot or Damini mobile apps, or local district agricultural offices for average annual or seasonal rainfall data for your location."
+  },
+  {
+    "question": "What if I don't know the humidity in my area?",
+    "answer": "Average relative humidity data for your district is available from the IMD website, weather apps like Weather.com or AccuWeather, or local agrometeorological stations. Enter the average value for the growing season."
+  },
+  {
+    "question": "Can the system auto-detect my location?",
+    "answer": "The current version does not auto-detect location or fetch weather data automatically. You need to enter the climate values manually."
+  },
+  {
+    "question": "Does the system use weather API data?",
+    "answer": "Not in the current version. All inputs are entered manually by the user. Future versions could integrate a weather API for automatic parameter filling."
+  },
+  {
+    "question": "What is the API endpoint for crop prediction?",
+    "answer": "The Django API gateway is hosted at https://crop-recomandation-system.onrender.com/. The ML engine inference endpoint is hosted at https://huggingface.co/spaces/shingala/CRS. Developers can POST soil and climate parameters as JSON to the gateway's prediction endpoint."
+  },
+  {
+    "question": "Can developers integrate this system?",
+    "answer": "Yes. The system exposes a REST API via the Django gateway at https://crop-recomandation-system.onrender.com/. Developers can send a POST request with N, P, K, temperature, humidity, pH, and rainfall values and receive top-3 crop predictions with confidence scores in JSON format."
+  },
+  {
+    "question": "Is there an API documentation available?",
+    "answer": "Full API documentation is not separately hosted, but the source code in the Backend/ folder of the GitHub repository (https://github.com/Henilshingala/crop-recomandation-system) describes the endpoints and request/response formats. Developers can refer to the Django REST Framework views for details."
+  },
+  {
+    "question": "What technology stack does the system use?",
+    "answer": "Frontend: React + Vite + TypeScript + Tailwind CSS + Framer Motion (hosted on Vercel). Backend: Django + Django REST Framework + SQLite (hosted on Render). ML Engine: Python + FastAPI + Scikit-learn + XGBoost + LightGBM (hosted on HuggingFace Spaces). DevOps: Docker, Git."
+  },
+  {
+    "question": "How is the ML model deployed?",
+    "answer": "The ML engine is containerised with Docker and deployed on HuggingFace Spaces at https://huggingface.co/spaces/shingala/CRS. The FastAPI app inside the container handles inference requests."
+  },
+  {
+    "question": "How do I contact support?",
+    "answer": "For support, open a GitHub issue at https://github.com/Henilshingala/crop-recomandation-system/issues or reach out through the GitHub profile of the developer (Henilshingala)."
+  },
+  {
+    "question": "Who developed this crop recommendation system?",
+    "answer": "The system was developed by Henil Shingala (GitHub: Henilshingala). It is an intelligent full-stack agricultural decision support system developed with a focus on sustainable agriculture."
+  },
+  {
+    "question": "Is the source code open source?",
+    "answer": "Yes. The entire project is open source under the MIT License. The source code is publicly available at https://github.com/Henilshingala/crop-recomandation-system."
+  },
+  {
+    "question": "Can I contribute to the project?",
+    "answer": "Yes. Since the project is open source under the MIT License, you can fork the repository, make changes, and submit a pull request on GitHub. Bug reports and feature requests can be raised as GitHub issues."
+  },
+  {
+    "question": "What are the system requirements?",
+    "answer": "To use the web app, you only need a modern browser (Chrome, Firefox, Edge, Safari) and an internet connection. To run the system locally, you need Python 3.9+, Node.js 18+, and pnpm installed."
+  },
+  {
+    "question": "Does the system work on all browsers?",
+    "answer": "Yes, the React frontend is compatible with all modern browsers including Google Chrome, Mozilla Firefox, Microsoft Edge, and Safari. Internet Explorer is not supported."
+  },
+  {
+    "question": "What is the URL to access the system?",
+    "answer": "The web frontend is accessible at https://crop-recomandation-system.vercel.app/. The API gateway is at https://crop-recomandation-system.onrender.com/ and the ML engine at https://huggingface.co/spaces/shingala/CRS."
+  },
+  {
+    "question": "How fast does the system give recommendations?",
+    "answer": "Prediction typically takes 1–3 seconds. If the HuggingFace Space has been idle, the first request may take 30–60 seconds to cold-start the container. Subsequent requests are fast."
+  },
+  {
+    "question": "What happens if the server is down?",
+    "answer": "If the Render backend or HuggingFace Space is unavailable, you will see an error or timeout message. Both services use free-tier hosting which may spin down after inactivity. Retry after a minute for the server to restart."
+  },
+  {
+    "question": "Is there a backup system?",
+    "answer": "There is no separate failover system in the current architecture. The decoupled gateway design (Django + HuggingFace) provides some redundancy, but both must be available for predictions to work."
+  },
+  {
+    "question": "How often is the model updated?",
+    "answer": "The current stable version is v3.0 (stacked ensemble). Updates are published to the GitHub repository and redeployed to HuggingFace Spaces. Check the repository's commit history for the latest changes."
+  },
+  {
+    "question": "Can the system predict crop diseases?",
+    "answer": "No. The current system only recommends the most suitable crop to grow based on soil and climate inputs. Disease prediction is a separate ML task that is not implemented in this version."
+  },
+  {
+    "question": "Can the system predict crop yield?",
+    "answer": "No. The system recommends which crop to grow, not the expected yield. Yield prediction requires additional inputs like seed variety, irrigation schedule, and pest pressure, which are not part of this model."
+  },
+  {
+    "question": "Does the system suggest fertilizers?",
+    "answer": "No. The system recommends which crop to grow. It does not provide fertiliser dosage recommendations. For fertiliser advice, refer to your Soil Health Card or consult a Krishi Vigyan Kendra (KVK)."
+  },
+  {
+    "question": "Does the system provide nutritional information about crops?",
+    "answer": "Yes. The frontend displays interactive crop cards that include nutritional data for each recommended crop, giving farmers and users context about the crop's food value."
+  },
+  {
+    "question": "What is the difference between this system and other crop recommendation tools?",
+    "answer": "This system uses a Stacked Ensemble ML model (XGBoost + LightGBM) with Bayesian calibration for confidence scores, covers 56 crops, uses a decoupled microservices architecture, is fully open source, and provides top-3 ranked recommendations with nutritional data — differentiating it from simple rule-based advisory tools."
+  },
+  {
+    "question": "Can the system be used outside India?",
+    "answer": "Yes, technically. The model is trained on Indian crop data, so it is most accurate for Indian agro-climatic conditions. For other countries, soil and climate parameters can still be entered, but the recommended crops may not reflect locally available varieties or regional suitability."
+  },
+  {
+    "question": "Is the system designed for Indian agriculture?",
+    "answer": "Yes. The dataset, crop list, and agronomic parameters are aligned with Indian soil and climate conditions. The 56 supported crops are all major crops grown across Indian states."
+  },
+  {
+    "question": "What Indian states does the system cover?",
+    "answer": "The system covers all Indian states and agro-climatic zones. The model was trained on data representing the diverse soil and climate conditions across states from Punjab and Haryana in the north to Tamil Nadu and Kerala in the south."
+  },
+  {
+    "question": "Can I use this for small farms?",
+    "answer": "Absolutely. The system is designed for all farm sizes. Small and marginal farmers benefit the most, as it provides expert agronomic advice without the need to hire a consultant."
+  },
+  {
+    "question": "Can I use this for large commercial farms?",
+    "answer": "Yes. For large farms, the system can be used for field-by-field analysis where different zones have different soil and climate profiles, enabling precision agriculture decisions."
+  },
+  {
+    "question": "What is the best season to grow apple?",
+    "answer": "The best season to grow apple is Rabi/Perennial (October–March sowing area)."
+  },
+  {
+    "question": "What soil type is suitable for apple?",
+    "answer": "Apple grows best in well-drained loamy or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing apple?",
+    "answer": "The ideal temperature range for growing apple is 10–25°C."
+  },
+  {
+    "question": "How much rainfall does apple need?",
+    "answer": "Apple typically requires about 100–125 cm per year of rainfall."
+  },
+  {
+    "question": "What is the expected yield of apple per hectare?",
+    "answer": "The expected yield of apple is approximately 10–20 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does apple need?",
+    "answer": "Apple requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – medium (around 20–30 kg/ha), P – medium (20–25 kg/ha), K – medium (30–40 kg/ha)."
+  },
+  {
+    "question": "What is the ideal pH for apple?",
+    "answer": "The ideal soil pH for growing apple is 5.5–6.5."
+  },
+  {
+    "question": "How much nitrogen does apple require?",
+    "answer": "Apple requires approximately medium (around 20–30 kg/ha) of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does apple require?",
+    "answer": "Apple requires approximately medium (20–25 kg/ha) of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does apple require?",
+    "answer": "Apple requires approximately medium (30–40 kg/ha) of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for apple?",
+    "answer": "The ideal relative humidity for growing apple is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing apple?",
+    "answer": "The best Indian states for growing apple include Himachal Pradesh, Jammu & Kashmir, Uttarakhand, Arunachal Pradesh."
+  },
+  {
+    "question": "What are common diseases of apple?",
+    "answer": "Common diseases and pests affecting apple include scab, powdery mildew, fire blight, collar rot."
+  },
+  {
+    "question": "What is the water requirement for apple?",
+    "answer": "The water requirement for apple is moderate (drip irrigation preferred)."
+  },
+  {
+    "question": "How long does apple take to harvest?",
+    "answer": "Apple takes 90–150 days after fruit set (July–October)."
+  },
+  {
+    "question": "What is the best season to grow bajra?",
+    "answer": "The best season to grow bajra is Kharif (June–July sowing)."
+  },
+  {
+    "question": "What soil type is suitable for bajra?",
+    "answer": "Bajra grows best in sandy loam to loamy sand, well-drained soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing bajra?",
+    "answer": "The ideal temperature range for growing bajra is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does bajra need?",
+    "answer": "Bajra typically requires about 40–60 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of bajra per hectare?",
+    "answer": "The expected yield of bajra is approximately 1.5–3 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does bajra need?",
+    "answer": "Bajra requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–80 kg/ha, P – 30–40 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for bajra?",
+    "answer": "The ideal soil pH for growing bajra is 6.5–8.0."
+  },
+  {
+    "question": "How much nitrogen does bajra require?",
+    "answer": "Bajra requires approximately 60–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does bajra require?",
+    "answer": "Bajra requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does bajra require?",
+    "answer": "Bajra requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for bajra?",
+    "answer": "The ideal relative humidity for growing bajra is 50–70%."
+  },
+  {
+    "question": "Which states in India are best for growing bajra?",
+    "answer": "The best Indian states for growing bajra include Rajasthan, Haryana, Uttar Pradesh, Gujarat, Maharashtra."
+  },
+  {
+    "question": "What are common diseases of bajra?",
+    "answer": "Common diseases and pests affecting bajra include downy mildew (green ear disease), ergot, smut."
+  },
+  {
+    "question": "What is the water requirement for bajra?",
+    "answer": "The water requirement for bajra is low (drought tolerant)."
+  },
+  {
+    "question": "How long does bajra take to harvest?",
+    "answer": "Bajra takes 75–90 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow banana?",
+    "answer": "The best season to grow banana is Perennial (planted year-round)."
+  },
+  {
+    "question": "What soil type is suitable for banana?",
+    "answer": "Banana grows best in well-drained, deep loamy or alluvial soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing banana?",
+    "answer": "The ideal temperature range for growing banana is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does banana need?",
+    "answer": "Banana typically requires about 100–200 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of banana per hectare?",
+    "answer": "The expected yield of banana is approximately 40–70 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does banana need?",
+    "answer": "Banana requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 200 kg/ha, P – 50–100 kg/ha, K – 250–300 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for banana?",
+    "answer": "The ideal soil pH for growing banana is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does banana require?",
+    "answer": "Banana requires approximately 200 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does banana require?",
+    "answer": "Banana requires approximately 50–100 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does banana require?",
+    "answer": "Banana requires approximately 250–300 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for banana?",
+    "answer": "The ideal relative humidity for growing banana is 75–85%."
+  },
+  {
+    "question": "Which states in India are best for growing banana?",
+    "answer": "The best Indian states for growing banana include Tamil Nadu, Maharashtra, Gujarat, Andhra Pradesh, Karnataka, Assam."
+  },
+  {
+    "question": "What are common diseases of banana?",
+    "answer": "Common diseases and pests affecting banana include Panama wilt (Fusarium wilt), Sigatoka leaf spot, banana bunchy top virus."
+  },
+  {
+    "question": "What is the water requirement for banana?",
+    "answer": "The water requirement for banana is high (1200–2200 mm/year; drip irrigation ideal)."
+  },
+  {
+    "question": "How long does banana take to harvest?",
+    "answer": "Banana takes 12–18 months after planting."
+  },
+  {
+    "question": "What is the best season to grow barley?",
+    "answer": "The best season to grow barley is Rabi (October–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for barley?",
+    "answer": "Barley grows best in loamy or sandy loam, well-drained soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing barley?",
+    "answer": "The ideal temperature range for growing barley is 12–25°C."
+  },
+  {
+    "question": "How much rainfall does barley need?",
+    "answer": "Barley typically requires about 75–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of barley per hectare?",
+    "answer": "The expected yield of barley is approximately 2–4 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does barley need?",
+    "answer": "Barley requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–80 kg/ha, P – 30–40 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for barley?",
+    "answer": "The ideal soil pH for growing barley is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does barley require?",
+    "answer": "Barley requires approximately 60–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does barley require?",
+    "answer": "Barley requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does barley require?",
+    "answer": "Barley requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for barley?",
+    "answer": "The ideal relative humidity for growing barley is 50–70%."
+  },
+  {
+    "question": "Which states in India are best for growing barley?",
+    "answer": "The best Indian states for growing barley include Rajasthan, Uttar Pradesh, Haryana, Madhya Pradesh, Himachal Pradesh."
+  },
+  {
+    "question": "What are common diseases of barley?",
+    "answer": "Common diseases and pests affecting barley include powdery mildew, stripe rust, loose smut, net blotch."
+  },
+  {
+    "question": "What is the water requirement for barley?",
+    "answer": "The water requirement for barley is moderate (3–4 irrigations of 5–7 cm each)."
+  },
+  {
+    "question": "How long does barley take to harvest?",
+    "answer": "Barley takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow ber?",
+    "answer": "The best season to grow ber is Kharif/Perennial (fruits in winter)."
+  },
+  {
+    "question": "What soil type is suitable for ber?",
+    "answer": "Ber grows best in sandy loam to clay loam, tolerates poor soils soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing ber?",
+    "answer": "The ideal temperature range for growing ber is 30–40°C."
+  },
+  {
+    "question": "How much rainfall does ber need?",
+    "answer": "Ber typically requires about 30–50 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of ber per hectare?",
+    "answer": "The expected yield of ber is approximately 8–15 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does ber need?",
+    "answer": "Ber requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 50–80 kg/ha, P – 25–40 kg/ha, K – 30–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for ber?",
+    "answer": "The ideal soil pH for growing ber is 7.0–8.5."
+  },
+  {
+    "question": "How much nitrogen does ber require?",
+    "answer": "Ber requires approximately 50–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does ber require?",
+    "answer": "Ber requires approximately 25–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does ber require?",
+    "answer": "Ber requires approximately 30–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for ber?",
+    "answer": "The ideal relative humidity for growing ber is 25–50%."
+  },
+  {
+    "question": "Which states in India are best for growing ber?",
+    "answer": "The best Indian states for growing ber include Rajasthan, Gujarat, Haryana, Uttar Pradesh, Maharashtra."
+  },
+  {
+    "question": "What are common diseases of ber?",
+    "answer": "Common diseases and pests affecting ber include powdery mildew, fruit fly, leaf spot."
+  },
+  {
+    "question": "What is the water requirement for ber?",
+    "answer": "The water requirement for ber is low (drought tolerant; 4–6 irrigations/year)."
+  },
+  {
+    "question": "How long does ber take to harvest?",
+    "answer": "Ber takes fruits ready November–March (5–6 months after flowering)."
+  },
+  {
+    "question": "What is the best season to grow blackgram?",
+    "answer": "The best season to grow blackgram is Kharif and Rabi."
+  },
+  {
+    "question": "What soil type is suitable for blackgram?",
+    "answer": "Blackgram grows best in well-drained loamy to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing blackgram?",
+    "answer": "The ideal temperature range for growing blackgram is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does blackgram need?",
+    "answer": "Blackgram typically requires about 60–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of blackgram per hectare?",
+    "answer": "The expected yield of blackgram is approximately 0.5–1.5 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does blackgram need?",
+    "answer": "Blackgram requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20–25 kg/ha, P – 40–50 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for blackgram?",
+    "answer": "The ideal soil pH for growing blackgram is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does blackgram require?",
+    "answer": "Blackgram requires approximately 20–25 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does blackgram require?",
+    "answer": "Blackgram requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does blackgram require?",
+    "answer": "Blackgram requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for blackgram?",
+    "answer": "The ideal relative humidity for growing blackgram is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing blackgram?",
+    "answer": "The best Indian states for growing blackgram include Andhra Pradesh, Telangana, Tamil Nadu, Uttar Pradesh, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of blackgram?",
+    "answer": "Common diseases and pests affecting blackgram include yellow mosaic virus, powdery mildew, cercospora leaf spot, anthracnose."
+  },
+  {
+    "question": "What is the water requirement for blackgram?",
+    "answer": "The water requirement for blackgram is moderate (4–5 irrigations)."
+  },
+  {
+    "question": "How long does blackgram take to harvest?",
+    "answer": "Blackgram takes 60–75 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow brinjal?",
+    "answer": "The best season to grow brinjal is Kharif and Rabi (year-round in tropics)."
+  },
+  {
+    "question": "What soil type is suitable for brinjal?",
+    "answer": "Brinjal grows best in well-drained sandy loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing brinjal?",
+    "answer": "The ideal temperature range for growing brinjal is 22–30°C."
+  },
+  {
+    "question": "How much rainfall does brinjal need?",
+    "answer": "Brinjal typically requires about 60–90 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of brinjal per hectare?",
+    "answer": "The expected yield of brinjal is approximately 20–30 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does brinjal need?",
+    "answer": "Brinjal requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–60 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for brinjal?",
+    "answer": "The ideal soil pH for growing brinjal is 5.5–6.5."
+  },
+  {
+    "question": "How much nitrogen does brinjal require?",
+    "answer": "Brinjal requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does brinjal require?",
+    "answer": "Brinjal requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does brinjal require?",
+    "answer": "Brinjal requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for brinjal?",
+    "answer": "The ideal relative humidity for growing brinjal is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing brinjal?",
+    "answer": "The best Indian states for growing brinjal include West Bengal, Odisha, Bihar, Andhra Pradesh, Maharashtra."
+  },
+  {
+    "question": "What are common diseases of brinjal?",
+    "answer": "Common diseases and pests affecting brinjal include bacterial wilt, phomopsis blight, fruit and shoot borer."
+  },
+  {
+    "question": "What is the water requirement for brinjal?",
+    "answer": "The water requirement for brinjal is moderate (weekly irrigation)."
+  },
+  {
+    "question": "How long does brinjal take to harvest?",
+    "answer": "Brinjal takes 45–60 days after transplanting."
+  },
+  {
+    "question": "What is the best season to grow carrot?",
+    "answer": "The best season to grow carrot is Rabi (September–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for carrot?",
+    "answer": "Carrot grows best in deep, friable, well-drained sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing carrot?",
+    "answer": "The ideal temperature range for growing carrot is 15–20°C."
+  },
+  {
+    "question": "How much rainfall does carrot need?",
+    "answer": "Carrot typically requires about 60–80 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of carrot per hectare?",
+    "answer": "The expected yield of carrot is approximately 25–30 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does carrot need?",
+    "answer": "Carrot requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 75–100 kg/ha, P – 50–60 kg/ha, K – 60–70 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for carrot?",
+    "answer": "The ideal soil pH for growing carrot is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does carrot require?",
+    "answer": "Carrot requires approximately 75–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does carrot require?",
+    "answer": "Carrot requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does carrot require?",
+    "answer": "Carrot requires approximately 60–70 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for carrot?",
+    "answer": "The ideal relative humidity for growing carrot is 55–65%."
+  },
+  {
+    "question": "Which states in India are best for growing carrot?",
+    "answer": "The best Indian states for growing carrot include Punjab, Haryana, Uttar Pradesh, Himachal Pradesh, Karnataka."
+  },
+  {
+    "question": "What are common diseases of carrot?",
+    "answer": "Common diseases and pests affecting carrot include alternaria leaf blight, cavity spot, soft rot."
+  },
+  {
+    "question": "What is the water requirement for carrot?",
+    "answer": "The water requirement for carrot is moderate (light frequent irrigation)."
+  },
+  {
+    "question": "How long does carrot take to harvest?",
+    "answer": "Carrot takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow castor?",
+    "answer": "The best season to grow castor is Kharif (June–July sowing)."
+  },
+  {
+    "question": "What soil type is suitable for castor?",
+    "answer": "Castor grows best in well-drained light loam to sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing castor?",
+    "answer": "The ideal temperature range for growing castor is 20–30°C."
+  },
+  {
+    "question": "How much rainfall does castor need?",
+    "answer": "Castor typically requires about 50–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of castor per hectare?",
+    "answer": "The expected yield of castor is approximately 1–1.5 tonnes per hectare (seeds)."
+  },
+  {
+    "question": "What nutrients does castor need?",
+    "answer": "Castor requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–80 kg/ha, P – 40–50 kg/ha, K – 30–40 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for castor?",
+    "answer": "The ideal soil pH for growing castor is 5.5–7.0."
+  },
+  {
+    "question": "How much nitrogen does castor require?",
+    "answer": "Castor requires approximately 60–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does castor require?",
+    "answer": "Castor requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does castor require?",
+    "answer": "Castor requires approximately 30–40 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for castor?",
+    "answer": "The ideal relative humidity for growing castor is 50–65%."
+  },
+  {
+    "question": "Which states in India are best for growing castor?",
+    "answer": "The best Indian states for growing castor include Gujarat, Rajasthan, Andhra Pradesh, Karnataka."
+  },
+  {
+    "question": "What are common diseases of castor?",
+    "answer": "Common diseases and pests affecting castor include grey mould (Botrytis), cercospora leaf spot, wilt."
+  },
+  {
+    "question": "What is the water requirement for castor?",
+    "answer": "The water requirement for castor is moderate to low."
+  },
+  {
+    "question": "How long does castor take to harvest?",
+    "answer": "Castor takes 120–180 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow chickpea?",
+    "answer": "The best season to grow chickpea is Rabi (October–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for chickpea?",
+    "answer": "Chickpea grows best in well-drained sandy loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing chickpea?",
+    "answer": "The ideal temperature range for growing chickpea is 20–30°C."
+  },
+  {
+    "question": "How much rainfall does chickpea need?",
+    "answer": "Chickpea typically requires about 65–90 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of chickpea per hectare?",
+    "answer": "The expected yield of chickpea is approximately 1–2 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does chickpea need?",
+    "answer": "Chickpea requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20–25 kg/ha, P – 40–60 kg/ha, K – 20–40 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for chickpea?",
+    "answer": "The ideal soil pH for growing chickpea is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does chickpea require?",
+    "answer": "Chickpea requires approximately 20–25 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does chickpea require?",
+    "answer": "Chickpea requires approximately 40–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does chickpea require?",
+    "answer": "Chickpea requires approximately 20–40 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for chickpea?",
+    "answer": "The ideal relative humidity for growing chickpea is 40–60%."
+  },
+  {
+    "question": "Which states in India are best for growing chickpea?",
+    "answer": "The best Indian states for growing chickpea include Madhya Pradesh, Rajasthan, Uttar Pradesh, Maharashtra, Andhra Pradesh."
+  },
+  {
+    "question": "What are common diseases of chickpea?",
+    "answer": "Common diseases and pests affecting chickpea include Fusarium wilt, ascochyta blight, botrytis grey mould."
+  },
+  {
+    "question": "What is the water requirement for chickpea?",
+    "answer": "The water requirement for chickpea is low to moderate (1–2 irrigations)."
+  },
+  {
+    "question": "How long does chickpea take to harvest?",
+    "answer": "Chickpea takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow citrus?",
+    "answer": "The best season to grow citrus is Perennial."
+  },
+  {
+    "question": "What soil type is suitable for citrus?",
+    "answer": "Citrus grows best in deep, well-drained loamy or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing citrus?",
+    "answer": "The ideal temperature range for growing citrus is 20–35°C."
+  },
+  {
+    "question": "How much rainfall does citrus need?",
+    "answer": "Citrus typically requires about 75–200 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of citrus per hectare?",
+    "answer": "The expected yield of citrus is approximately 15–25 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does citrus need?",
+    "answer": "Citrus requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–150 kg/ha/year, P – 50–80 kg/ha/year, K – 100–150 kg/ha/year."
+  },
+  {
+    "question": "What is the ideal pH for citrus?",
+    "answer": "The ideal soil pH for growing citrus is 5.5–7.0."
+  },
+  {
+    "question": "How much nitrogen does citrus require?",
+    "answer": "Citrus requires approximately 100–150 kg/ha/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does citrus require?",
+    "answer": "Citrus requires approximately 50–80 kg/ha/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does citrus require?",
+    "answer": "Citrus requires approximately 100–150 kg/ha/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for citrus?",
+    "answer": "The ideal relative humidity for growing citrus is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing citrus?",
+    "answer": "The best Indian states for growing citrus include Maharashtra, Punjab, Rajasthan, Andhra Pradesh, Assam."
+  },
+  {
+    "question": "What are common diseases of citrus?",
+    "answer": "Common diseases and pests affecting citrus include citrus canker, greening (HLB), gummosis, tristeza virus."
+  },
+  {
+    "question": "What is the water requirement for citrus?",
+    "answer": "The water requirement for citrus is moderate (drip irrigation preferred)."
+  },
+  {
+    "question": "How long does citrus take to harvest?",
+    "answer": "Citrus takes fruits mature 10–14 months after flowering."
+  },
+  {
+    "question": "What is the best season to grow coconut?",
+    "answer": "The best season to grow coconut is Perennial (planted year-round in tropics)."
+  },
+  {
+    "question": "What soil type is suitable for coconut?",
+    "answer": "Coconut grows best in alluvial, laterite, or coastal sandy loam with good drainage soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing coconut?",
+    "answer": "The ideal temperature range for growing coconut is 25–32°C."
+  },
+  {
+    "question": "How much rainfall does coconut need?",
+    "answer": "Coconut typically requires about 150–250 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of coconut per hectare?",
+    "answer": "The expected yield of coconut is approximately 10,000–15,000 nuts/ha/year."
+  },
+  {
+    "question": "What nutrients does coconut need?",
+    "answer": "Coconut requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 500 g/tree/year, P – 320 g/tree/year, K – 1200 g/tree/year."
+  },
+  {
+    "question": "What is the ideal pH for coconut?",
+    "answer": "The ideal soil pH for growing coconut is 5.5–8.0."
+  },
+  {
+    "question": "How much nitrogen does coconut require?",
+    "answer": "Coconut requires approximately 500 g/tree/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does coconut require?",
+    "answer": "Coconut requires approximately 320 g/tree/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does coconut require?",
+    "answer": "Coconut requires approximately 1200 g/tree/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for coconut?",
+    "answer": "The ideal relative humidity for growing coconut is 70–90%."
+  },
+  {
+    "question": "Which states in India are best for growing coconut?",
+    "answer": "The best Indian states for growing coconut include Kerala, Tamil Nadu, Karnataka, Andhra Pradesh, Goa."
+  },
+  {
+    "question": "What are common diseases of coconut?",
+    "answer": "Common diseases and pests affecting coconut include root (wilt), bud rot, Thanjavur wilt, rhinoceros beetle."
+  },
+  {
+    "question": "What is the water requirement for coconut?",
+    "answer": "The water requirement for coconut is high (weekly irrigation in dry season)."
+  },
+  {
+    "question": "How long does coconut take to harvest?",
+    "answer": "Coconut takes 12 months for tender coconut; 11–12 months for copra."
+  },
+  {
+    "question": "What is the best season to grow coffee?",
+    "answer": "The best season to grow coffee is Perennial (planted in June–July)."
+  },
+  {
+    "question": "What soil type is suitable for coffee?",
+    "answer": "Coffee grows best in deep, well-drained loamy or laterite with organic matter soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing coffee?",
+    "answer": "The ideal temperature range for growing coffee is 15–28°C."
+  },
+  {
+    "question": "How much rainfall does coffee need?",
+    "answer": "Coffee typically requires about 150–250 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of coffee per hectare?",
+    "answer": "The expected yield of coffee is approximately 0.5–2 tonnes/ha (clean coffee)."
+  },
+  {
+    "question": "What nutrients does coffee need?",
+    "answer": "Coffee requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–120 kg/ha/year, P – 30–60 kg/ha/year, K – 60–120 kg/ha/year."
+  },
+  {
+    "question": "What is the ideal pH for coffee?",
+    "answer": "The ideal soil pH for growing coffee is 6.0–6.5."
+  },
+  {
+    "question": "How much nitrogen does coffee require?",
+    "answer": "Coffee requires approximately 60–120 kg/ha/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does coffee require?",
+    "answer": "Coffee requires approximately 30–60 kg/ha/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does coffee require?",
+    "answer": "Coffee requires approximately 60–120 kg/ha/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for coffee?",
+    "answer": "The ideal relative humidity for growing coffee is 70–90%."
+  },
+  {
+    "question": "Which states in India are best for growing coffee?",
+    "answer": "The best Indian states for growing coffee include Karnataka (Coorg, Chikmagalur), Kerala, Tamil Nadu."
+  },
+  {
+    "question": "What are common diseases of coffee?",
+    "answer": "Common diseases and pests affecting coffee include coffee leaf rust, white stem borer, black rot, berry borer."
+  },
+  {
+    "question": "What is the water requirement for coffee?",
+    "answer": "The water requirement for coffee is moderate (drip or sprinkler; 1500–2000 mm/year)."
+  },
+  {
+    "question": "How long does coffee take to harvest?",
+    "answer": "Coffee takes beans harvested 3–4 years after planting; annual cherry harvest Oct–Feb."
+  },
+  {
+    "question": "What is the best season to grow cole crop?",
+    "answer": "The best season to grow cole crop is Rabi (September–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for cole crop?",
+    "answer": "Cole Crop grows best in well-drained loam or clay loam, fertile soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing cole crop?",
+    "answer": "The ideal temperature range for growing cole crop is 15–20°C."
+  },
+  {
+    "question": "How much rainfall does cole crop need?",
+    "answer": "Cole Crop typically requires about 60–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of cole crop per hectare?",
+    "answer": "The expected yield of cole crop is approximately 15–25 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does cole crop need?",
+    "answer": "Cole Crop requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–150 kg/ha, P – 60–80 kg/ha, K – 60–80 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for cole crop?",
+    "answer": "The ideal soil pH for growing cole crop is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does cole crop require?",
+    "answer": "Cole Crop requires approximately 100–150 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does cole crop require?",
+    "answer": "Cole Crop requires approximately 60–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does cole crop require?",
+    "answer": "Cole Crop requires approximately 60–80 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for cole crop?",
+    "answer": "The ideal relative humidity for growing cole crop is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing cole crop?",
+    "answer": "The best Indian states for growing cole crop include Uttar Pradesh, Bihar, Haryana, Punjab, West Bengal, Odisha."
+  },
+  {
+    "question": "What are common diseases of cole crop?",
+    "answer": "Common diseases and pests affecting cole crop include black rot, clubroot, alternaria leaf spot, aphids."
+  },
+  {
+    "question": "What is the water requirement for cole crop?",
+    "answer": "The water requirement for cole crop is moderate (regular irrigation)."
+  },
+  {
+    "question": "How long does cole crop take to harvest?",
+    "answer": "Cole Crop takes 60–90 days after transplanting."
+  },
+  {
+    "question": "What is the best season to grow cotton?",
+    "answer": "The best season to grow cotton is Kharif (April–June sowing)."
+  },
+  {
+    "question": "What soil type is suitable for cotton?",
+    "answer": "Cotton grows best in deep black cotton soil (Vertisol) or alluvial loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing cotton?",
+    "answer": "The ideal temperature range for growing cotton is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does cotton need?",
+    "answer": "Cotton typically requires about 50–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of cotton per hectare?",
+    "answer": "The expected yield of cotton is approximately 1.5–3 tonnes lint per hectare."
+  },
+  {
+    "question": "What nutrients does cotton need?",
+    "answer": "Cotton requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–60 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for cotton?",
+    "answer": "The ideal soil pH for growing cotton is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does cotton require?",
+    "answer": "Cotton requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does cotton require?",
+    "answer": "Cotton requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does cotton require?",
+    "answer": "Cotton requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for cotton?",
+    "answer": "The ideal relative humidity for growing cotton is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing cotton?",
+    "answer": "The best Indian states for growing cotton include Maharashtra, Gujarat, Telangana, Andhra Pradesh, Madhya Pradesh, Punjab."
+  },
+  {
+    "question": "What are common diseases of cotton?",
+    "answer": "Common diseases and pests affecting cotton include bacterial blight, verticillium wilt, root rot, bollworm (Helicoverpa)."
+  },
+  {
+    "question": "What is the water requirement for cotton?",
+    "answer": "The water requirement for cotton is moderate (5–6 irrigations)."
+  },
+  {
+    "question": "How long does cotton take to harvest?",
+    "answer": "Cotton takes 150–180 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow cucumber?",
+    "answer": "The best season to grow cucumber is Kharif/Zaid (March–July)."
+  },
+  {
+    "question": "What soil type is suitable for cucumber?",
+    "answer": "Cucumber grows best in well-drained sandy loam, rich in organic matter soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing cucumber?",
+    "answer": "The ideal temperature range for growing cucumber is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does cucumber need?",
+    "answer": "Cucumber typically requires about 60–90 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of cucumber per hectare?",
+    "answer": "The expected yield of cucumber is approximately 20–30 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does cucumber need?",
+    "answer": "Cucumber requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 60–70 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for cucumber?",
+    "answer": "The ideal soil pH for growing cucumber is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does cucumber require?",
+    "answer": "Cucumber requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does cucumber require?",
+    "answer": "Cucumber requires approximately 60–70 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does cucumber require?",
+    "answer": "Cucumber requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for cucumber?",
+    "answer": "The ideal relative humidity for growing cucumber is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing cucumber?",
+    "answer": "The best Indian states for growing cucumber include Maharashtra, Karnataka, Uttar Pradesh, Punjab, Haryana."
+  },
+  {
+    "question": "What are common diseases of cucumber?",
+    "answer": "Common diseases and pests affecting cucumber include downy mildew, powdery mildew, bacterial wilt, mosaic virus."
+  },
+  {
+    "question": "What is the water requirement for cucumber?",
+    "answer": "The water requirement for cucumber is moderate (light frequent irrigation)."
+  },
+  {
+    "question": "How long does cucumber take to harvest?",
+    "answer": "Cucumber takes 45–60 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow custard apple?",
+    "answer": "The best season to grow custard apple is Kharif/Perennial."
+  },
+  {
+    "question": "What soil type is suitable for custard apple?",
+    "answer": "Custard Apple grows best in well-drained red loam or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing custard apple?",
+    "answer": "The ideal temperature range for growing custard apple is 22–34°C."
+  },
+  {
+    "question": "How much rainfall does custard apple need?",
+    "answer": "Custard Apple typically requires about 50–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of custard apple per hectare?",
+    "answer": "The expected yield of custard apple is approximately 8–10 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does custard apple need?",
+    "answer": "Custard Apple requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 40–60 kg/ha, P – 25–35 kg/ha, K – 30–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for custard apple?",
+    "answer": "The ideal soil pH for growing custard apple is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does custard apple require?",
+    "answer": "Custard Apple requires approximately 40–60 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does custard apple require?",
+    "answer": "Custard Apple requires approximately 25–35 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does custard apple require?",
+    "answer": "Custard Apple requires approximately 30–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for custard apple?",
+    "answer": "The ideal relative humidity for growing custard apple is 50–75%."
+  },
+  {
+    "question": "Which states in India are best for growing custard apple?",
+    "answer": "The best Indian states for growing custard apple include Maharashtra, Andhra Pradesh, Gujarat, Chhattisgarh."
+  },
+  {
+    "question": "What are common diseases of custard apple?",
+    "answer": "Common diseases and pests affecting custard apple include mealy bug, fruit borer, anthracnose."
+  },
+  {
+    "question": "What is the water requirement for custard apple?",
+    "answer": "The water requirement for custard apple is low to moderate."
+  },
+  {
+    "question": "How long does custard apple take to harvest?",
+    "answer": "Custard Apple takes fruits mature July–November (5–6 months after flowering)."
+  },
+  {
+    "question": "What is the best season to grow date palm?",
+    "answer": "The best season to grow date palm is Perennial (arid/semi-arid)."
+  },
+  {
+    "question": "What soil type is suitable for date palm?",
+    "answer": "Date Palm grows best in sandy loam, sandy, well-drained; tolerates salinity soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing date palm?",
+    "answer": "The ideal temperature range for growing date palm is 30–45°C."
+  },
+  {
+    "question": "How much rainfall does date palm need?",
+    "answer": "Date Palm typically requires about 20–30 cm (supplemental irrigation needed) of rainfall."
+  },
+  {
+    "question": "What is the expected yield of date palm per hectare?",
+    "answer": "The expected yield of date palm is approximately 70–140 kg fruits per tree/year."
+  },
+  {
+    "question": "What nutrients does date palm need?",
+    "answer": "Date Palm requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 50–100 g/tree/year, P – 30–50 g/tree/year, K – 80–120 g/tree/year."
+  },
+  {
+    "question": "What is the ideal pH for date palm?",
+    "answer": "The ideal soil pH for growing date palm is 7.0–8.5."
+  },
+  {
+    "question": "How much nitrogen does date palm require?",
+    "answer": "Date Palm requires approximately 50–100 g/tree/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does date palm require?",
+    "answer": "Date Palm requires approximately 30–50 g/tree/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does date palm require?",
+    "answer": "Date Palm requires approximately 80–120 g/tree/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for date palm?",
+    "answer": "The ideal relative humidity for growing date palm is 20–40%."
+  },
+  {
+    "question": "Which states in India are best for growing date palm?",
+    "answer": "The best Indian states for growing date palm include Rajasthan (Barmer, Jaisalmer), Gujarat."
+  },
+  {
+    "question": "What are common diseases of date palm?",
+    "answer": "Common diseases and pests affecting date palm include bayoud disease (Fusarium wilt), Diplodia date rot, Khamedj (inflorescence rot)."
+  },
+  {
+    "question": "What is the water requirement for date palm?",
+    "answer": "The water requirement for date palm is low to moderate (deep irrigation every 15–30 days)."
+  },
+  {
+    "question": "How long does date palm take to harvest?",
+    "answer": "Date Palm takes 3–5 years for first harvest; fruits mature June–November."
+  },
+  {
+    "question": "What is the best season to grow finger millet?",
+    "answer": "The best season to grow finger millet is Kharif (June–August sowing)."
+  },
+  {
+    "question": "What soil type is suitable for finger millet?",
+    "answer": "Finger Millet grows best in well-drained sandy loam to loam, moderately fertile soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing finger millet?",
+    "answer": "The ideal temperature range for growing finger millet is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does finger millet need?",
+    "answer": "Finger Millet typically requires about 75–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of finger millet per hectare?",
+    "answer": "The expected yield of finger millet is approximately 1.5–3.5 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does finger millet need?",
+    "answer": "Finger Millet requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 40–60 kg/ha, P – 20–30 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for finger millet?",
+    "answer": "The ideal soil pH for growing finger millet is 5.5–7.5."
+  },
+  {
+    "question": "How much nitrogen does finger millet require?",
+    "answer": "Finger Millet requires approximately 40–60 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does finger millet require?",
+    "answer": "Finger Millet requires approximately 20–30 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does finger millet require?",
+    "answer": "Finger Millet requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for finger millet?",
+    "answer": "The ideal relative humidity for growing finger millet is 55–70%."
+  },
+  {
+    "question": "Which states in India are best for growing finger millet?",
+    "answer": "The best Indian states for growing finger millet include Karnataka, Tamil Nadu, Andhra Pradesh, Odisha, Uttarakhand, Jharkhand."
+  },
+  {
+    "question": "What are common diseases of finger millet?",
+    "answer": "Common diseases and pests affecting finger millet include blast (Pyricularia), smut, foot rot."
+  },
+  {
+    "question": "What is the water requirement for finger millet?",
+    "answer": "The water requirement for finger millet is low to moderate."
+  },
+  {
+    "question": "How long does finger millet take to harvest?",
+    "answer": "Finger Millet takes 95–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow gourd?",
+    "answer": "The best season to grow gourd is Kharif/Zaid (summer and rainy season)."
+  },
+  {
+    "question": "What soil type is suitable for gourd?",
+    "answer": "Gourd grows best in well-drained sandy loam, rich in organic matter soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing gourd?",
+    "answer": "The ideal temperature range for growing gourd is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does gourd need?",
+    "answer": "Gourd typically requires about 60–90 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of gourd per hectare?",
+    "answer": "The expected yield of gourd is approximately 20–30 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does gourd need?",
+    "answer": "Gourd requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 60–70 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for gourd?",
+    "answer": "The ideal soil pH for growing gourd is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does gourd require?",
+    "answer": "Gourd requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does gourd require?",
+    "answer": "Gourd requires approximately 60–70 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does gourd require?",
+    "answer": "Gourd requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for gourd?",
+    "answer": "The ideal relative humidity for growing gourd is 65–80%."
+  },
+  {
+    "question": "Which states in India are best for growing gourd?",
+    "answer": "The best Indian states for growing gourd include Uttar Pradesh, Bihar, West Bengal, Odisha, Maharashtra."
+  },
+  {
+    "question": "What are common diseases of gourd?",
+    "answer": "Common diseases and pests affecting gourd include downy mildew, powdery mildew, mosaic virus, fruit fly."
+  },
+  {
+    "question": "What is the water requirement for gourd?",
+    "answer": "The water requirement for gourd is moderate."
+  },
+  {
+    "question": "How long does gourd take to harvest?",
+    "answer": "Gourd takes 55–70 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow grapes?",
+    "answer": "The best season to grow grapes is Perennial (pruning Oct–Nov in India)."
+  },
+  {
+    "question": "What soil type is suitable for grapes?",
+    "answer": "Grapes grows best in deep, well-drained loamy or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing grapes?",
+    "answer": "The ideal temperature range for growing grapes is 20–38°C."
+  },
+  {
+    "question": "How much rainfall does grapes need?",
+    "answer": "Grapes typically requires about 65–85 cm (supplemental irrigation needed) of rainfall."
+  },
+  {
+    "question": "What is the expected yield of grapes per hectare?",
+    "answer": "The expected yield of grapes is approximately 20–40 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does grapes need?",
+    "answer": "Grapes requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 75–100 kg/ha/year, P – 50–75 kg/ha/year, K – 100–125 kg/ha/year."
+  },
+  {
+    "question": "What is the ideal pH for grapes?",
+    "answer": "The ideal soil pH for growing grapes is 6.5–8.0."
+  },
+  {
+    "question": "How much nitrogen does grapes require?",
+    "answer": "Grapes requires approximately 75–100 kg/ha/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does grapes require?",
+    "answer": "Grapes requires approximately 50–75 kg/ha/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does grapes require?",
+    "answer": "Grapes requires approximately 100–125 kg/ha/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for grapes?",
+    "answer": "The ideal relative humidity for growing grapes is 55–70%."
+  },
+  {
+    "question": "Which states in India are best for growing grapes?",
+    "answer": "The best Indian states for growing grapes include Maharashtra (Nashik), Karnataka, Andhra Pradesh, Tamil Nadu."
+  },
+  {
+    "question": "What are common diseases of grapes?",
+    "answer": "Common diseases and pests affecting grapes include downy mildew, powdery mildew, anthracnose, botrytis bunch rot."
+  },
+  {
+    "question": "What is the water requirement for grapes?",
+    "answer": "The water requirement for grapes is moderate to high (drip irrigation essential)."
+  },
+  {
+    "question": "How long does grapes take to harvest?",
+    "answer": "Grapes takes 90–120 days after pruning (Jan–April)."
+  },
+  {
+    "question": "What is the best season to grow green chilli?",
+    "answer": "The best season to grow green chilli is Kharif and Rabi (year-round in warm climates)."
+  },
+  {
+    "question": "What soil type is suitable for green chilli?",
+    "answer": "Green Chilli grows best in well-drained sandy loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing green chilli?",
+    "answer": "The ideal temperature range for growing green chilli is 20–30°C."
+  },
+  {
+    "question": "How much rainfall does green chilli need?",
+    "answer": "Green Chilli typically requires about 60–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of green chilli per hectare?",
+    "answer": "The expected yield of green chilli is approximately 10–20 tonnes per hectare (green)."
+  },
+  {
+    "question": "What nutrients does green chilli need?",
+    "answer": "Green Chilli requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 60–80 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for green chilli?",
+    "answer": "The ideal soil pH for growing green chilli is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does green chilli require?",
+    "answer": "Green Chilli requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does green chilli require?",
+    "answer": "Green Chilli requires approximately 60–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does green chilli require?",
+    "answer": "Green Chilli requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for green chilli?",
+    "answer": "The ideal relative humidity for growing green chilli is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing green chilli?",
+    "answer": "The best Indian states for growing green chilli include Andhra Pradesh, Telangana, Karnataka, Maharashtra, Odisha."
+  },
+  {
+    "question": "What are common diseases of green chilli?",
+    "answer": "Common diseases and pests affecting green chilli include anthracnose, bacterial wilt, Phytophthora blight, thrips."
+  },
+  {
+    "question": "What is the water requirement for green chilli?",
+    "answer": "The water requirement for green chilli is moderate."
+  },
+  {
+    "question": "How long does green chilli take to harvest?",
+    "answer": "Green Chilli takes 60–80 days after transplanting (green harvest)."
+  },
+  {
+    "question": "What is the best season to grow groundnut?",
+    "answer": "The best season to grow groundnut is Kharif (June–July sowing) and Rabi."
+  },
+  {
+    "question": "What soil type is suitable for groundnut?",
+    "answer": "Groundnut grows best in well-drained sandy loam to loamy sand soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing groundnut?",
+    "answer": "The ideal temperature range for growing groundnut is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does groundnut need?",
+    "answer": "Groundnut typically requires about 50–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of groundnut per hectare?",
+    "answer": "The expected yield of groundnut is approximately 1.5–3 tonnes per hectare (pods)."
+  },
+  {
+    "question": "What nutrients does groundnut need?",
+    "answer": "Groundnut requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20–25 kg/ha, P – 50–60 kg/ha, K – 40–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for groundnut?",
+    "answer": "The ideal soil pH for growing groundnut is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does groundnut require?",
+    "answer": "Groundnut requires approximately 20–25 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does groundnut require?",
+    "answer": "Groundnut requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does groundnut require?",
+    "answer": "Groundnut requires approximately 40–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for groundnut?",
+    "answer": "The ideal relative humidity for growing groundnut is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing groundnut?",
+    "answer": "The best Indian states for growing groundnut include Gujarat, Rajasthan, Andhra Pradesh, Tamil Nadu, Maharashtra."
+  },
+  {
+    "question": "What are common diseases of groundnut?",
+    "answer": "Common diseases and pests affecting groundnut include tikka leaf spot (early and late), rust, aflatoxin (Aspergillus), stem rot."
+  },
+  {
+    "question": "What is the water requirement for groundnut?",
+    "answer": "The water requirement for groundnut is moderate (5–6 irrigations)."
+  },
+  {
+    "question": "How long does groundnut take to harvest?",
+    "answer": "Groundnut takes 100–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow guava?",
+    "answer": "The best season to grow guava is Perennial (two crops: July–September and February–April)."
+  },
+  {
+    "question": "What soil type is suitable for guava?",
+    "answer": "Guava grows best in well-drained loam or sandy loam; tolerates slightly acidic soils soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing guava?",
+    "answer": "The ideal temperature range for growing guava is 23–28°C."
+  },
+  {
+    "question": "How much rainfall does guava need?",
+    "answer": "Guava typically requires about 100–200 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of guava per hectare?",
+    "answer": "The expected yield of guava is approximately 25–40 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does guava need?",
+    "answer": "Guava requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–200 g/tree/year, P – 80–150 g/tree/year, K – 150–250 g/tree/year."
+  },
+  {
+    "question": "What is the ideal pH for guava?",
+    "answer": "The ideal soil pH for growing guava is 4.5–7.5."
+  },
+  {
+    "question": "How much nitrogen does guava require?",
+    "answer": "Guava requires approximately 100–200 g/tree/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does guava require?",
+    "answer": "Guava requires approximately 80–150 g/tree/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does guava require?",
+    "answer": "Guava requires approximately 150–250 g/tree/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for guava?",
+    "answer": "The ideal relative humidity for growing guava is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing guava?",
+    "answer": "The best Indian states for growing guava include Uttar Pradesh, Maharashtra, Bihar, Andhra Pradesh, Karnataka."
+  },
+  {
+    "question": "What are common diseases of guava?",
+    "answer": "Common diseases and pests affecting guava include wilt (Fusarium), anthracnose, fruit fly, stylar-end rot."
+  },
+  {
+    "question": "What is the water requirement for guava?",
+    "answer": "The water requirement for guava is moderate (stress before flowering improves yield)."
+  },
+  {
+    "question": "How long does guava take to harvest?",
+    "answer": "Guava takes 2–3 years after planting for commercial yield; fruits harvest every 5–6 months."
+  },
+  {
+    "question": "What is the best season to grow jowar?",
+    "answer": "The best season to grow jowar is Kharif (June–July) and Rabi (October–November) in some regions."
+  },
+  {
+    "question": "What soil type is suitable for jowar?",
+    "answer": "Jowar grows best in deep loamy or black cotton soil soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing jowar?",
+    "answer": "The ideal temperature range for growing jowar is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does jowar need?",
+    "answer": "Jowar typically requires about 45–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of jowar per hectare?",
+    "answer": "The expected yield of jowar is approximately 2–3 tonnes grain per hectare."
+  },
+  {
+    "question": "What nutrients does jowar need?",
+    "answer": "Jowar requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 80–100 kg/ha, P – 40–50 kg/ha, K – 25–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for jowar?",
+    "answer": "The ideal soil pH for growing jowar is 6.0–8.5."
+  },
+  {
+    "question": "How much nitrogen does jowar require?",
+    "answer": "Jowar requires approximately 80–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does jowar require?",
+    "answer": "Jowar requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does jowar require?",
+    "answer": "Jowar requires approximately 25–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for jowar?",
+    "answer": "The ideal relative humidity for growing jowar is 50–70%."
+  },
+  {
+    "question": "Which states in India are best for growing jowar?",
+    "answer": "The best Indian states for growing jowar include Maharashtra, Karnataka, Andhra Pradesh, Rajasthan, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of jowar?",
+    "answer": "Common diseases and pests affecting jowar include grain mould, downy mildew, anthracnose, shoot fly."
+  },
+  {
+    "question": "What is the water requirement for jowar?",
+    "answer": "The water requirement for jowar is low to moderate (drought tolerant)."
+  },
+  {
+    "question": "How long does jowar take to harvest?",
+    "answer": "Jowar takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow jute?",
+    "answer": "The best season to grow jute is Kharif (March–May sowing)."
+  },
+  {
+    "question": "What soil type is suitable for jute?",
+    "answer": "Jute grows best in well-drained alluvial or loamy, slightly acidic soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing jute?",
+    "answer": "The ideal temperature range for growing jute is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does jute need?",
+    "answer": "Jute typically requires about 150–200 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of jute per hectare?",
+    "answer": "The expected yield of jute is approximately 2–3 tonnes dry fiber per hectare."
+  },
+  {
+    "question": "What nutrients does jute need?",
+    "answer": "Jute requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–80 kg/ha, P – 30–40 kg/ha, K – 30–40 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for jute?",
+    "answer": "The ideal soil pH for growing jute is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does jute require?",
+    "answer": "Jute requires approximately 60–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does jute require?",
+    "answer": "Jute requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does jute require?",
+    "answer": "Jute requires approximately 30–40 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for jute?",
+    "answer": "The ideal relative humidity for growing jute is 70–90%."
+  },
+  {
+    "question": "Which states in India are best for growing jute?",
+    "answer": "The best Indian states for growing jute include West Bengal, Bihar, Assam, Odisha, Meghalaya."
+  },
+  {
+    "question": "What are common diseases of jute?",
+    "answer": "Common diseases and pests affecting jute include stem rot (Sclerotium), anthracnose, root rot."
+  },
+  {
+    "question": "What is the water requirement for jute?",
+    "answer": "The water requirement for jute is high (monsoon rain sufficient; periodic flooding tolerated)."
+  },
+  {
+    "question": "How long does jute take to harvest?",
+    "answer": "Jute takes 100–120 days after sowing (at 50% flowering stage)."
+  },
+  {
+    "question": "What is the best season to grow kidneybeans?",
+    "answer": "The best season to grow kidneybeans is Kharif (June–July) or summer (Zaid in hills)."
+  },
+  {
+    "question": "What soil type is suitable for kidneybeans?",
+    "answer": "Kidneybeans grows best in well-drained loam or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing kidneybeans?",
+    "answer": "The ideal temperature range for growing kidneybeans is 15–25°C."
+  },
+  {
+    "question": "How much rainfall does kidneybeans need?",
+    "answer": "Kidneybeans typically requires about 75–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of kidneybeans per hectare?",
+    "answer": "The expected yield of kidneybeans is approximately 1–2 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does kidneybeans need?",
+    "answer": "Kidneybeans requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20–25 kg/ha, P – 40–50 kg/ha, K – 30–40 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for kidneybeans?",
+    "answer": "The ideal soil pH for growing kidneybeans is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does kidneybeans require?",
+    "answer": "Kidneybeans requires approximately 20–25 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does kidneybeans require?",
+    "answer": "Kidneybeans requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does kidneybeans require?",
+    "answer": "Kidneybeans requires approximately 30–40 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for kidneybeans?",
+    "answer": "The ideal relative humidity for growing kidneybeans is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing kidneybeans?",
+    "answer": "The best Indian states for growing kidneybeans include Jammu & Kashmir, Himachal Pradesh, Uttarakhand, Northeast India."
+  },
+  {
+    "question": "What are common diseases of kidneybeans?",
+    "answer": "Common diseases and pests affecting kidneybeans include bacterial blight, angular leaf spot, Fusarium wilt, bean common mosaic virus."
+  },
+  {
+    "question": "What is the water requirement for kidneybeans?",
+    "answer": "The water requirement for kidneybeans is moderate."
+  },
+  {
+    "question": "How long does kidneybeans take to harvest?",
+    "answer": "Kidneybeans takes 70–90 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow lentil?",
+    "answer": "The best season to grow lentil is Rabi (October–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for lentil?",
+    "answer": "Lentil grows best in well-drained loam to sandy loam, slightly acidic to neutral soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing lentil?",
+    "answer": "The ideal temperature range for growing lentil is 18–30°C."
+  },
+  {
+    "question": "How much rainfall does lentil need?",
+    "answer": "Lentil typically requires about 40–70 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of lentil per hectare?",
+    "answer": "The expected yield of lentil is approximately 0.8–1.5 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does lentil need?",
+    "answer": "Lentil requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20 kg/ha, P – 40–50 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for lentil?",
+    "answer": "The ideal soil pH for growing lentil is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does lentil require?",
+    "answer": "Lentil requires approximately 20 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does lentil require?",
+    "answer": "Lentil requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does lentil require?",
+    "answer": "Lentil requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for lentil?",
+    "answer": "The ideal relative humidity for growing lentil is 55–65%."
+  },
+  {
+    "question": "Which states in India are best for growing lentil?",
+    "answer": "The best Indian states for growing lentil include Madhya Pradesh, Uttar Pradesh, Rajasthan, Bihar, West Bengal."
+  },
+  {
+    "question": "What are common diseases of lentil?",
+    "answer": "Common diseases and pests affecting lentil include Stemphylium blight, rust, wilt, root rot."
+  },
+  {
+    "question": "What is the water requirement for lentil?",
+    "answer": "The water requirement for lentil is low (2–3 irrigations)."
+  },
+  {
+    "question": "How long does lentil take to harvest?",
+    "answer": "Lentil takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow linseed?",
+    "answer": "The best season to grow linseed is Rabi (October–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for linseed?",
+    "answer": "Linseed grows best in well-drained sandy loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing linseed?",
+    "answer": "The ideal temperature range for growing linseed is 15–20°C."
+  },
+  {
+    "question": "How much rainfall does linseed need?",
+    "answer": "Linseed typically requires about 45–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of linseed per hectare?",
+    "answer": "The expected yield of linseed is approximately 0.5–1.5 tonnes seed per hectare."
+  },
+  {
+    "question": "What nutrients does linseed need?",
+    "answer": "Linseed requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 40–60 kg/ha, P – 30–40 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for linseed?",
+    "answer": "The ideal soil pH for growing linseed is 5.5–7.0."
+  },
+  {
+    "question": "How much nitrogen does linseed require?",
+    "answer": "Linseed requires approximately 40–60 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does linseed require?",
+    "answer": "Linseed requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does linseed require?",
+    "answer": "Linseed requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for linseed?",
+    "answer": "The ideal relative humidity for growing linseed is 50–65%."
+  },
+  {
+    "question": "Which states in India are best for growing linseed?",
+    "answer": "The best Indian states for growing linseed include Madhya Pradesh, Uttar Pradesh, Maharashtra, Bihar, Chhattisgarh."
+  },
+  {
+    "question": "What are common diseases of linseed?",
+    "answer": "Common diseases and pests affecting linseed include rust, wilt, alternaria blight."
+  },
+  {
+    "question": "What is the water requirement for linseed?",
+    "answer": "The water requirement for linseed is low to moderate."
+  },
+  {
+    "question": "How long does linseed take to harvest?",
+    "answer": "Linseed takes 100–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow maize?",
+    "answer": "The best season to grow maize is Kharif (June–July), Rabi and Zaid in some states."
+  },
+  {
+    "question": "What soil type is suitable for maize?",
+    "answer": "Maize grows best in well-drained loamy soil soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing maize?",
+    "answer": "The ideal temperature range for growing maize is 20–30°C."
+  },
+  {
+    "question": "How much rainfall does maize need?",
+    "answer": "Maize typically requires about 75–125 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of maize per hectare?",
+    "answer": "The expected yield of maize is approximately 4–8 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does maize need?",
+    "answer": "Maize requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–60 kg/ha, K – 40–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for maize?",
+    "answer": "The ideal soil pH for growing maize is 5.5–7.0."
+  },
+  {
+    "question": "How much nitrogen does maize require?",
+    "answer": "Maize requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does maize require?",
+    "answer": "Maize requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does maize require?",
+    "answer": "Maize requires approximately 40–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for maize?",
+    "answer": "The ideal relative humidity for growing maize is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing maize?",
+    "answer": "The best Indian states for growing maize include Karnataka, Andhra Pradesh, Rajasthan, Maharashtra, Madhya Pradesh, Bihar."
+  },
+  {
+    "question": "What are common diseases of maize?",
+    "answer": "Common diseases and pests affecting maize include downy mildew, leaf blight, stalk rot, fall armyworm."
+  },
+  {
+    "question": "What is the water requirement for maize?",
+    "answer": "The water requirement for maize is moderate."
+  },
+  {
+    "question": "How long does maize take to harvest?",
+    "answer": "Maize takes 75–110 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow mango?",
+    "answer": "The best season to grow mango is Perennial (flowers February–March; fruits May–July)."
+  },
+  {
+    "question": "What soil type is suitable for mango?",
+    "answer": "Mango grows best in deep, well-drained alluvial or loamy soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing mango?",
+    "answer": "The ideal temperature range for growing mango is 24–30°C."
+  },
+  {
+    "question": "How much rainfall does mango need?",
+    "answer": "Mango typically requires about 75–250 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of mango per hectare?",
+    "answer": "The expected yield of mango is approximately 10–20 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does mango need?",
+    "answer": "Mango requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 500–1000 g/tree/year, P – 250–500 g/tree/year, K – 1000–1500 g/tree/year."
+  },
+  {
+    "question": "What is the ideal pH for mango?",
+    "answer": "The ideal soil pH for growing mango is 5.5–7.5."
+  },
+  {
+    "question": "How much nitrogen does mango require?",
+    "answer": "Mango requires approximately 500–1000 g/tree/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does mango require?",
+    "answer": "Mango requires approximately 250–500 g/tree/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does mango require?",
+    "answer": "Mango requires approximately 1000–1500 g/tree/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for mango?",
+    "answer": "The ideal relative humidity for growing mango is 55–75%."
+  },
+  {
+    "question": "Which states in India are best for growing mango?",
+    "answer": "The best Indian states for growing mango include Uttar Pradesh, Andhra Pradesh, Maharashtra, Karnataka, Bihar, Gujarat."
+  },
+  {
+    "question": "What are common diseases of mango?",
+    "answer": "Common diseases and pests affecting mango include anthracnose, powdery mildew, bacterial canker, mango malformation."
+  },
+  {
+    "question": "What is the water requirement for mango?",
+    "answer": "The water requirement for mango is moderate to high (critical during flowering and fruiting)."
+  },
+  {
+    "question": "How long does mango take to harvest?",
+    "answer": "Mango takes 3–5 years for first commercial harvest; fruits ready May–July."
+  },
+  {
+    "question": "What is the best season to grow mothbeans?",
+    "answer": "The best season to grow mothbeans is Kharif (June–July sowing)."
+  },
+  {
+    "question": "What soil type is suitable for mothbeans?",
+    "answer": "Mothbeans grows best in sandy loam or sandy, well-drained, arid soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing mothbeans?",
+    "answer": "The ideal temperature range for growing mothbeans is 30–40°C."
+  },
+  {
+    "question": "How much rainfall does mothbeans need?",
+    "answer": "Mothbeans typically requires about 25–50 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of mothbeans per hectare?",
+    "answer": "The expected yield of mothbeans is approximately 0.5–0.8 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does mothbeans need?",
+    "answer": "Mothbeans requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 15–20 kg/ha, P – 25–30 kg/ha, K – 20–25 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for mothbeans?",
+    "answer": "The ideal soil pH for growing mothbeans is 7.0–8.5."
+  },
+  {
+    "question": "How much nitrogen does mothbeans require?",
+    "answer": "Mothbeans requires approximately 15–20 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does mothbeans require?",
+    "answer": "Mothbeans requires approximately 25–30 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does mothbeans require?",
+    "answer": "Mothbeans requires approximately 20–25 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for mothbeans?",
+    "answer": "The ideal relative humidity for growing mothbeans is 30–50%."
+  },
+  {
+    "question": "Which states in India are best for growing mothbeans?",
+    "answer": "The best Indian states for growing mothbeans include Rajasthan, Gujarat, Haryana, Uttar Pradesh."
+  },
+  {
+    "question": "What are common diseases of mothbeans?",
+    "answer": "Common diseases and pests affecting mothbeans include yellow mosaic virus, powdery mildew, leaf spot."
+  },
+  {
+    "question": "What is the water requirement for mothbeans?",
+    "answer": "The water requirement for mothbeans is very low (extremely drought tolerant)."
+  },
+  {
+    "question": "How long does mothbeans take to harvest?",
+    "answer": "Mothbeans takes 60–90 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow mungbean?",
+    "answer": "The best season to grow mungbean is Kharif (June–July) and Zaid (March–April)."
+  },
+  {
+    "question": "What soil type is suitable for mungbean?",
+    "answer": "Mungbean grows best in well-drained sandy loam or loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing mungbean?",
+    "answer": "The ideal temperature range for growing mungbean is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does mungbean need?",
+    "answer": "Mungbean typically requires about 60–90 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of mungbean per hectare?",
+    "answer": "The expected yield of mungbean is approximately 0.8–1.5 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does mungbean need?",
+    "answer": "Mungbean requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 15–20 kg/ha, P – 40–50 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for mungbean?",
+    "answer": "The ideal soil pH for growing mungbean is 6.2–7.5."
+  },
+  {
+    "question": "How much nitrogen does mungbean require?",
+    "answer": "Mungbean requires approximately 15–20 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does mungbean require?",
+    "answer": "Mungbean requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does mungbean require?",
+    "answer": "Mungbean requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for mungbean?",
+    "answer": "The ideal relative humidity for growing mungbean is 60–75%."
+  },
+  {
+    "question": "Which states in India are best for growing mungbean?",
+    "answer": "The best Indian states for growing mungbean include Rajasthan, Maharashtra, Andhra Pradesh, Madhya Pradesh, Karnataka."
+  },
+  {
+    "question": "What are common diseases of mungbean?",
+    "answer": "Common diseases and pests affecting mungbean include yellow mosaic virus, cercospora leaf spot, powdery mildew."
+  },
+  {
+    "question": "What is the water requirement for mungbean?",
+    "answer": "The water requirement for mungbean is low to moderate."
+  },
+  {
+    "question": "How long does mungbean take to harvest?",
+    "answer": "Mungbean takes 55–75 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow muskmelon?",
+    "answer": "The best season to grow muskmelon is Zaid/Kharif (February–March sowing)."
+  },
+  {
+    "question": "What soil type is suitable for muskmelon?",
+    "answer": "Muskmelon grows best in sandy loam, well-drained soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing muskmelon?",
+    "answer": "The ideal temperature range for growing muskmelon is 28–35°C."
+  },
+  {
+    "question": "How much rainfall does muskmelon need?",
+    "answer": "Muskmelon typically requires about 50–70 cm (mainly irrigated) of rainfall."
+  },
+  {
+    "question": "What is the expected yield of muskmelon per hectare?",
+    "answer": "The expected yield of muskmelon is approximately 15–25 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does muskmelon need?",
+    "answer": "Muskmelon requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 80–100 kg/ha, P – 50–60 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for muskmelon?",
+    "answer": "The ideal soil pH for growing muskmelon is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does muskmelon require?",
+    "answer": "Muskmelon requires approximately 80–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does muskmelon require?",
+    "answer": "Muskmelon requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does muskmelon require?",
+    "answer": "Muskmelon requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for muskmelon?",
+    "answer": "The ideal relative humidity for growing muskmelon is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing muskmelon?",
+    "answer": "The best Indian states for growing muskmelon include Uttar Pradesh, Punjab, Rajasthan, Maharashtra, Andhra Pradesh."
+  },
+  {
+    "question": "What are common diseases of muskmelon?",
+    "answer": "Common diseases and pests affecting muskmelon include downy mildew, powdery mildew, fruit rot, mosaic virus."
+  },
+  {
+    "question": "What is the water requirement for muskmelon?",
+    "answer": "The water requirement for muskmelon is moderate (drip irrigation)."
+  },
+  {
+    "question": "How long does muskmelon take to harvest?",
+    "answer": "Muskmelon takes 70–90 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow mustard?",
+    "answer": "The best season to grow mustard is Rabi (September–October sowing)."
+  },
+  {
+    "question": "What soil type is suitable for mustard?",
+    "answer": "Mustard grows best in loamy to sandy loam, well-drained soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing mustard?",
+    "answer": "The ideal temperature range for growing mustard is 18–25°C."
+  },
+  {
+    "question": "How much rainfall does mustard need?",
+    "answer": "Mustard typically requires about 25–40 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of mustard per hectare?",
+    "answer": "The expected yield of mustard is approximately 1–2 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does mustard need?",
+    "answer": "Mustard requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–80 kg/ha, P – 30–40 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for mustard?",
+    "answer": "The ideal soil pH for growing mustard is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does mustard require?",
+    "answer": "Mustard requires approximately 60–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does mustard require?",
+    "answer": "Mustard requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does mustard require?",
+    "answer": "Mustard requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for mustard?",
+    "answer": "The ideal relative humidity for growing mustard is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing mustard?",
+    "answer": "The best Indian states for growing mustard include Rajasthan, Haryana, Uttar Pradesh, Madhya Pradesh, West Bengal."
+  },
+  {
+    "question": "What are common diseases of mustard?",
+    "answer": "Common diseases and pests affecting mustard include Alternaria blight, white rust, Sclerotinia rot."
+  },
+  {
+    "question": "What is the water requirement for mustard?",
+    "answer": "The water requirement for mustard is low (2–3 irrigations)."
+  },
+  {
+    "question": "How long does mustard take to harvest?",
+    "answer": "Mustard takes 90–110 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow okra?",
+    "answer": "The best season to grow okra is Kharif (June–July) and Zaid (Feb–March)."
+  },
+  {
+    "question": "What soil type is suitable for okra?",
+    "answer": "Okra grows best in well-drained sandy loam or loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing okra?",
+    "answer": "The ideal temperature range for growing okra is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does okra need?",
+    "answer": "Okra typically requires about 60–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of okra per hectare?",
+    "answer": "The expected yield of okra is approximately 8–15 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does okra need?",
+    "answer": "Okra requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–60 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for okra?",
+    "answer": "The ideal soil pH for growing okra is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does okra require?",
+    "answer": "Okra requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does okra require?",
+    "answer": "Okra requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does okra require?",
+    "answer": "Okra requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for okra?",
+    "answer": "The ideal relative humidity for growing okra is 60–75%."
+  },
+  {
+    "question": "Which states in India are best for growing okra?",
+    "answer": "The best Indian states for growing okra include Uttar Pradesh, Bihar, West Bengal, Maharashtra, Andhra Pradesh."
+  },
+  {
+    "question": "What are common diseases of okra?",
+    "answer": "Common diseases and pests affecting okra include yellow vein mosaic virus (YVMV), Fusarium wilt, Cercospora leaf spot."
+  },
+  {
+    "question": "What is the water requirement for okra?",
+    "answer": "The water requirement for okra is moderate (regular irrigation)."
+  },
+  {
+    "question": "How long does okra take to harvest?",
+    "answer": "Okra takes 45–60 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow onion?",
+    "answer": "The best season to grow onion is Rabi (October–November sowing) and Kharif."
+  },
+  {
+    "question": "What soil type is suitable for onion?",
+    "answer": "Onion grows best in well-drained deep loamy or alluvial soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing onion?",
+    "answer": "The ideal temperature range for growing onion is 20–25°C (day), 10–15°C (night) for bulb formation."
+  },
+  {
+    "question": "How much rainfall does onion need?",
+    "answer": "Onion typically requires about 65–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of onion per hectare?",
+    "answer": "The expected yield of onion is approximately 25–40 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does onion need?",
+    "answer": "Onion requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–60 kg/ha, K – 60–80 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for onion?",
+    "answer": "The ideal soil pH for growing onion is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does onion require?",
+    "answer": "Onion requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does onion require?",
+    "answer": "Onion requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does onion require?",
+    "answer": "Onion requires approximately 60–80 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for onion?",
+    "answer": "The ideal relative humidity for growing onion is 65–80%."
+  },
+  {
+    "question": "Which states in India are best for growing onion?",
+    "answer": "The best Indian states for growing onion include Maharashtra, Madhya Pradesh, Karnataka, Gujarat, Rajasthan."
+  },
+  {
+    "question": "What are common diseases of onion?",
+    "answer": "Common diseases and pests affecting onion include purple blotch, downy mildew, stemphylium blight, basal rot."
+  },
+  {
+    "question": "What is the water requirement for onion?",
+    "answer": "The water requirement for onion is moderate (7–8 irrigations)."
+  },
+  {
+    "question": "How long does onion take to harvest?",
+    "answer": "Onion takes 90–120 days after transplanting."
+  },
+  {
+    "question": "What is the best season to grow papaya?",
+    "answer": "The best season to grow papaya is Perennial (planted round year)."
+  },
+  {
+    "question": "What soil type is suitable for papaya?",
+    "answer": "Papaya grows best in well-drained sandy loam or alluvial; dislikes waterlogging soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing papaya?",
+    "answer": "The ideal temperature range for growing papaya is 22–30°C."
+  },
+  {
+    "question": "How much rainfall does papaya need?",
+    "answer": "Papaya typically requires about 100–150 cm (good drainage essential) of rainfall."
+  },
+  {
+    "question": "What is the expected yield of papaya per hectare?",
+    "answer": "The expected yield of papaya is approximately 40–60 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does papaya need?",
+    "answer": "Papaya requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 150–200 g/plant/year, P – 100–150 g/plant/year, K – 200–250 g/plant/year."
+  },
+  {
+    "question": "What is the ideal pH for papaya?",
+    "answer": "The ideal soil pH for growing papaya is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does papaya require?",
+    "answer": "Papaya requires approximately 150–200 g/plant/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does papaya require?",
+    "answer": "Papaya requires approximately 100–150 g/plant/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does papaya require?",
+    "answer": "Papaya requires approximately 200–250 g/plant/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for papaya?",
+    "answer": "The ideal relative humidity for growing papaya is 60–75%."
+  },
+  {
+    "question": "Which states in India are best for growing papaya?",
+    "answer": "The best Indian states for growing papaya include Andhra Pradesh, Maharashtra, Tamil Nadu, Karnataka, Gujarat."
+  },
+  {
+    "question": "What are common diseases of papaya?",
+    "answer": "Common diseases and pests affecting papaya include papaya ring spot virus (PRSV), anthracnose, Phytophthora root rot, mosaic."
+  },
+  {
+    "question": "What is the water requirement for papaya?",
+    "answer": "The water requirement for papaya is moderate (drip irrigation ideal; waterlogging fatal)."
+  },
+  {
+    "question": "How long does papaya take to harvest?",
+    "answer": "Papaya takes 9–12 months after planting."
+  },
+  {
+    "question": "What is the best season to grow pearl millet?",
+    "answer": "The best season to grow pearl millet is Kharif (June–July)."
+  },
+  {
+    "question": "What soil type is suitable for pearl millet?",
+    "answer": "Pearl Millet grows best in sandy loam, well-drained, low fertility soils soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing pearl millet?",
+    "answer": "The ideal temperature range for growing pearl millet is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does pearl millet need?",
+    "answer": "Pearl Millet typically requires about 40–60 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of pearl millet per hectare?",
+    "answer": "The expected yield of pearl millet is approximately 2–3 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does pearl millet need?",
+    "answer": "Pearl Millet requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–80 kg/ha, P – 30–40 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for pearl millet?",
+    "answer": "The ideal soil pH for growing pearl millet is 6.5–8.0."
+  },
+  {
+    "question": "How much nitrogen does pearl millet require?",
+    "answer": "Pearl Millet requires approximately 60–80 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does pearl millet require?",
+    "answer": "Pearl Millet requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does pearl millet require?",
+    "answer": "Pearl Millet requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for pearl millet?",
+    "answer": "The ideal relative humidity for growing pearl millet is 50–70%."
+  },
+  {
+    "question": "Which states in India are best for growing pearl millet?",
+    "answer": "The best Indian states for growing pearl millet include Rajasthan, Haryana, Uttar Pradesh, Gujarat, Maharashtra."
+  },
+  {
+    "question": "What are common diseases of pearl millet?",
+    "answer": "Common diseases and pests affecting pearl millet include downy mildew (green ear), ergot, smut."
+  },
+  {
+    "question": "What is the water requirement for pearl millet?",
+    "answer": "The water requirement for pearl millet is low (drought tolerant)."
+  },
+  {
+    "question": "How long does pearl millet take to harvest?",
+    "answer": "Pearl Millet takes 75–90 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow pigeonpea?",
+    "answer": "The best season to grow pigeonpea is Kharif (June–July sowing)."
+  },
+  {
+    "question": "What soil type is suitable for pigeonpea?",
+    "answer": "Pigeonpea grows best in well-drained loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing pigeonpea?",
+    "answer": "The ideal temperature range for growing pigeonpea is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does pigeonpea need?",
+    "answer": "Pigeonpea typically requires about 60–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of pigeonpea per hectare?",
+    "answer": "The expected yield of pigeonpea is approximately 1–2 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does pigeonpea need?",
+    "answer": "Pigeonpea requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20–25 kg/ha, P – 40–60 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for pigeonpea?",
+    "answer": "The ideal soil pH for growing pigeonpea is 5.5–7.5."
+  },
+  {
+    "question": "How much nitrogen does pigeonpea require?",
+    "answer": "Pigeonpea requires approximately 20–25 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does pigeonpea require?",
+    "answer": "Pigeonpea requires approximately 40–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does pigeonpea require?",
+    "answer": "Pigeonpea requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for pigeonpea?",
+    "answer": "The ideal relative humidity for growing pigeonpea is 60–75%."
+  },
+  {
+    "question": "Which states in India are best for growing pigeonpea?",
+    "answer": "The best Indian states for growing pigeonpea include Maharashtra, Uttar Pradesh, Madhya Pradesh, Andhra Pradesh, Karnataka."
+  },
+  {
+    "question": "What are common diseases of pigeonpea?",
+    "answer": "Common diseases and pests affecting pigeonpea include Fusarium wilt, sterility mosaic, alternaria blight, pod borer."
+  },
+  {
+    "question": "What is the water requirement for pigeonpea?",
+    "answer": "The water requirement for pigeonpea is low to moderate (deep rooted, drought tolerant)."
+  },
+  {
+    "question": "How long does pigeonpea take to harvest?",
+    "answer": "Pigeonpea takes 150–180 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow pomegranate?",
+    "answer": "The best season to grow pomegranate is Perennial (fruiting season June–February in India)."
+  },
+  {
+    "question": "What soil type is suitable for pomegranate?",
+    "answer": "Pomegranate grows best in well-drained loam or sandy loam; tolerates slight salinity soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing pomegranate?",
+    "answer": "The ideal temperature range for growing pomegranate is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does pomegranate need?",
+    "answer": "Pomegranate typically requires about 50–75 cm (supplemental irrigation needed) of rainfall."
+  },
+  {
+    "question": "What is the expected yield of pomegranate per hectare?",
+    "answer": "The expected yield of pomegranate is approximately 15–25 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does pomegranate need?",
+    "answer": "Pomegranate requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–150 kg/ha/year, P – 50–75 kg/ha/year, K – 100–150 kg/ha/year."
+  },
+  {
+    "question": "What is the ideal pH for pomegranate?",
+    "answer": "The ideal soil pH for growing pomegranate is 6.5–7.5."
+  },
+  {
+    "question": "How much nitrogen does pomegranate require?",
+    "answer": "Pomegranate requires approximately 100–150 kg/ha/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does pomegranate require?",
+    "answer": "Pomegranate requires approximately 50–75 kg/ha/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does pomegranate require?",
+    "answer": "Pomegranate requires approximately 100–150 kg/ha/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for pomegranate?",
+    "answer": "The ideal relative humidity for growing pomegranate is 40–60%."
+  },
+  {
+    "question": "Which states in India are best for growing pomegranate?",
+    "answer": "The best Indian states for growing pomegranate include Maharashtra (Solapur), Rajasthan, Gujarat, Karnataka, Andhra Pradesh."
+  },
+  {
+    "question": "What are common diseases of pomegranate?",
+    "answer": "Common diseases and pests affecting pomegranate include bacterial blight (oily spot), Alternaria fruit spot, Cercospora leaf spot."
+  },
+  {
+    "question": "What is the water requirement for pomegranate?",
+    "answer": "The water requirement for pomegranate is moderate (drip irrigation)."
+  },
+  {
+    "question": "How long does pomegranate take to harvest?",
+    "answer": "Pomegranate takes 5–7 months after flowering; commercial harvest from year 3."
+  },
+  {
+    "question": "What is the best season to grow potato?",
+    "answer": "The best season to grow potato is Rabi (October–November) and early Kharif in hills."
+  },
+  {
+    "question": "What soil type is suitable for potato?",
+    "answer": "Potato grows best in well-drained sandy loam or loam, friable soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing potato?",
+    "answer": "The ideal temperature range for growing potato is 15–22°C."
+  },
+  {
+    "question": "How much rainfall does potato need?",
+    "answer": "Potato typically requires about 50–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of potato per hectare?",
+    "answer": "The expected yield of potato is approximately 20–35 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does potato need?",
+    "answer": "Potato requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–150 kg/ha, P – 60–80 kg/ha, K – 100–120 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for potato?",
+    "answer": "The ideal soil pH for growing potato is 5.5–6.5."
+  },
+  {
+    "question": "How much nitrogen does potato require?",
+    "answer": "Potato requires approximately 100–150 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does potato require?",
+    "answer": "Potato requires approximately 60–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does potato require?",
+    "answer": "Potato requires approximately 100–120 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for potato?",
+    "answer": "The ideal relative humidity for growing potato is 65–80%."
+  },
+  {
+    "question": "Which states in India are best for growing potato?",
+    "answer": "The best Indian states for growing potato include Uttar Pradesh, West Bengal, Bihar, Punjab, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of potato?",
+    "answer": "Common diseases and pests affecting potato include late blight (Phytophthora), early blight, bacterial wilt, common scab."
+  },
+  {
+    "question": "What is the water requirement for potato?",
+    "answer": "The water requirement for potato is moderate (8–10 irrigations; waterlogging causes rot)."
+  },
+  {
+    "question": "How long does potato take to harvest?",
+    "answer": "Potato takes 75–100 days after planting."
+  },
+  {
+    "question": "What is the best season to grow radish?",
+    "answer": "The best season to grow radish is Rabi (September–January)."
+  },
+  {
+    "question": "What soil type is suitable for radish?",
+    "answer": "Radish grows best in deep, loose, well-drained sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing radish?",
+    "answer": "The ideal temperature range for growing radish is 10–20°C."
+  },
+  {
+    "question": "How much rainfall does radish need?",
+    "answer": "Radish typically requires about 50–70 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of radish per hectare?",
+    "answer": "The expected yield of radish is approximately 25–35 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does radish need?",
+    "answer": "Radish requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 80–100 kg/ha, P – 50–60 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for radish?",
+    "answer": "The ideal soil pH for growing radish is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does radish require?",
+    "answer": "Radish requires approximately 80–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does radish require?",
+    "answer": "Radish requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does radish require?",
+    "answer": "Radish requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for radish?",
+    "answer": "The ideal relative humidity for growing radish is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing radish?",
+    "answer": "The best Indian states for growing radish include Punjab, Haryana, Uttar Pradesh, Himachal Pradesh, Bihar."
+  },
+  {
+    "question": "What are common diseases of radish?",
+    "answer": "Common diseases and pests affecting radish include clubroot, downy mildew, alternaria leaf spot."
+  },
+  {
+    "question": "What is the water requirement for radish?",
+    "answer": "The water requirement for radish is moderate (light, frequent irrigation)."
+  },
+  {
+    "question": "How long does radish take to harvest?",
+    "answer": "Radish takes 25–60 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow ragi?",
+    "answer": "The best season to grow ragi is Kharif (June–July)."
+  },
+  {
+    "question": "What soil type is suitable for ragi?",
+    "answer": "Ragi grows best in well-drained sandy loam to loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing ragi?",
+    "answer": "The ideal temperature range for growing ragi is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does ragi need?",
+    "answer": "Ragi typically requires about 75–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of ragi per hectare?",
+    "answer": "The expected yield of ragi is approximately 2–3 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does ragi need?",
+    "answer": "Ragi requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 40–60 kg/ha, P – 20–30 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for ragi?",
+    "answer": "The ideal soil pH for growing ragi is 5.5–7.0."
+  },
+  {
+    "question": "How much nitrogen does ragi require?",
+    "answer": "Ragi requires approximately 40–60 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does ragi require?",
+    "answer": "Ragi requires approximately 20–30 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does ragi require?",
+    "answer": "Ragi requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for ragi?",
+    "answer": "The ideal relative humidity for growing ragi is 55–70%."
+  },
+  {
+    "question": "Which states in India are best for growing ragi?",
+    "answer": "The best Indian states for growing ragi include Karnataka, Tamil Nadu, Andhra Pradesh, Odisha, Jharkhand."
+  },
+  {
+    "question": "What are common diseases of ragi?",
+    "answer": "Common diseases and pests affecting ragi include blast (Pyricularia), smut, finger millet streak virus."
+  },
+  {
+    "question": "What is the water requirement for ragi?",
+    "answer": "The water requirement for ragi is low to moderate."
+  },
+  {
+    "question": "How long does ragi take to harvest?",
+    "answer": "Ragi takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow rice?",
+    "answer": "The best season to grow rice is Kharif (June–July transplanting)."
+  },
+  {
+    "question": "What soil type is suitable for rice?",
+    "answer": "Rice grows best in clay or clay loam with water retention capacity (Vertisols, alluvial) soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing rice?",
+    "answer": "The ideal temperature range for growing rice is 25–35°C (20–25°C at maturity)."
+  },
+  {
+    "question": "How much rainfall does rice need?",
+    "answer": "Rice typically requires about 150–300 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of rice per hectare?",
+    "answer": "The expected yield of rice is approximately 4–6 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does rice need?",
+    "answer": "Rice requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 40–50 kg/ha, K – 40–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for rice?",
+    "answer": "The ideal soil pH for growing rice is 5.5–7.0."
+  },
+  {
+    "question": "How much nitrogen does rice require?",
+    "answer": "Rice requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does rice require?",
+    "answer": "Rice requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does rice require?",
+    "answer": "Rice requires approximately 40–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for rice?",
+    "answer": "The ideal relative humidity for growing rice is 70–90%."
+  },
+  {
+    "question": "Which states in India are best for growing rice?",
+    "answer": "The best Indian states for growing rice include West Bengal, Uttar Pradesh, Andhra Pradesh, Punjab, Odisha, Tamil Nadu."
+  },
+  {
+    "question": "What are common diseases of rice?",
+    "answer": "Common diseases and pests affecting rice include blast (Pyricularia), brown planthopper, sheath blight, bacterial leaf blight."
+  },
+  {
+    "question": "What is the water requirement for rice?",
+    "answer": "The water requirement for rice is high (1200–2000 mm/season; standing water in paddy fields)."
+  },
+  {
+    "question": "How long does rice take to harvest?",
+    "answer": "Rice takes 90–150 days after transplanting depending on variety."
+  },
+  {
+    "question": "What is the best season to grow safflower?",
+    "answer": "The best season to grow safflower is Rabi (October–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for safflower?",
+    "answer": "Safflower grows best in deep well-drained loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing safflower?",
+    "answer": "The ideal temperature range for growing safflower is 15–25°C."
+  },
+  {
+    "question": "How much rainfall does safflower need?",
+    "answer": "Safflower typically requires about 40–60 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of safflower per hectare?",
+    "answer": "The expected yield of safflower is approximately 0.8–1.5 tonnes seed per hectare."
+  },
+  {
+    "question": "What nutrients does safflower need?",
+    "answer": "Safflower requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 40–60 kg/ha, P – 30–40 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for safflower?",
+    "answer": "The ideal soil pH for growing safflower is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does safflower require?",
+    "answer": "Safflower requires approximately 40–60 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does safflower require?",
+    "answer": "Safflower requires approximately 30–40 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does safflower require?",
+    "answer": "Safflower requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for safflower?",
+    "answer": "The ideal relative humidity for growing safflower is 40–65%."
+  },
+  {
+    "question": "Which states in India are best for growing safflower?",
+    "answer": "The best Indian states for growing safflower include Maharashtra, Karnataka, Andhra Pradesh, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of safflower?",
+    "answer": "Common diseases and pests affecting safflower include Alternaria leaf spot, rust, root rot."
+  },
+  {
+    "question": "What is the water requirement for safflower?",
+    "answer": "The water requirement for safflower is low to moderate (2–3 irrigations)."
+  },
+  {
+    "question": "How long does safflower take to harvest?",
+    "answer": "Safflower takes 110–130 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow sapota?",
+    "answer": "The best season to grow sapota is Perennial (two main fruiting seasons)."
+  },
+  {
+    "question": "What soil type is suitable for sapota?",
+    "answer": "Sapota grows best in deep, well-drained alluvial or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing sapota?",
+    "answer": "The ideal temperature range for growing sapota is 22–34°C."
+  },
+  {
+    "question": "How much rainfall does sapota need?",
+    "answer": "Sapota typically requires about 125–175 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of sapota per hectare?",
+    "answer": "The expected yield of sapota is approximately 20–35 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does sapota need?",
+    "answer": "Sapota requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–200 g/tree/year, P – 75–125 g/tree/year, K – 150–250 g/tree/year."
+  },
+  {
+    "question": "What is the ideal pH for sapota?",
+    "answer": "The ideal soil pH for growing sapota is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does sapota require?",
+    "answer": "Sapota requires approximately 100–200 g/tree/year of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does sapota require?",
+    "answer": "Sapota requires approximately 75–125 g/tree/year of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does sapota require?",
+    "answer": "Sapota requires approximately 150–250 g/tree/year of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for sapota?",
+    "answer": "The ideal relative humidity for growing sapota is 65–80%."
+  },
+  {
+    "question": "Which states in India are best for growing sapota?",
+    "answer": "The best Indian states for growing sapota include Gujarat, Maharashtra, Andhra Pradesh, Tamil Nadu, Karnataka."
+  },
+  {
+    "question": "What are common diseases of sapota?",
+    "answer": "Common diseases and pests affecting sapota include leaf spot, anthracnose, sapota bud borer."
+  },
+  {
+    "question": "What is the water requirement for sapota?",
+    "answer": "The water requirement for sapota is moderate."
+  },
+  {
+    "question": "How long does sapota take to harvest?",
+    "answer": "Sapota takes 6–8 years after planting for commercial yield."
+  },
+  {
+    "question": "What is the best season to grow sesame?",
+    "answer": "The best season to grow sesame is Kharif (June–July) and Rabi in some regions."
+  },
+  {
+    "question": "What soil type is suitable for sesame?",
+    "answer": "Sesame grows best in well-drained loam to sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing sesame?",
+    "answer": "The ideal temperature range for growing sesame is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does sesame need?",
+    "answer": "Sesame typically requires about 50–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of sesame per hectare?",
+    "answer": "The expected yield of sesame is approximately 0.5–1.0 tonnes seed per hectare."
+  },
+  {
+    "question": "What nutrients does sesame need?",
+    "answer": "Sesame requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 30–40 kg/ha, P – 25–35 kg/ha, K – 20–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for sesame?",
+    "answer": "The ideal soil pH for growing sesame is 5.5–8.0."
+  },
+  {
+    "question": "How much nitrogen does sesame require?",
+    "answer": "Sesame requires approximately 30–40 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does sesame require?",
+    "answer": "Sesame requires approximately 25–35 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does sesame require?",
+    "answer": "Sesame requires approximately 20–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for sesame?",
+    "answer": "The ideal relative humidity for growing sesame is 50–70%."
+  },
+  {
+    "question": "Which states in India are best for growing sesame?",
+    "answer": "The best Indian states for growing sesame include West Bengal, Uttar Pradesh, Gujarat, Rajasthan, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of sesame?",
+    "answer": "Common diseases and pests affecting sesame include phyllody (phytoplasma), alternaria leaf spot, cercospora leaf spot."
+  },
+  {
+    "question": "What is the water requirement for sesame?",
+    "answer": "The water requirement for sesame is low to moderate (drought tolerant)."
+  },
+  {
+    "question": "How long does sesame take to harvest?",
+    "answer": "Sesame takes 80–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow sorghum?",
+    "answer": "The best season to grow sorghum is Kharif (June–July) and Rabi."
+  },
+  {
+    "question": "What soil type is suitable for sorghum?",
+    "answer": "Sorghum grows best in deep loamy or black cotton soil soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing sorghum?",
+    "answer": "The ideal temperature range for growing sorghum is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does sorghum need?",
+    "answer": "Sorghum typically requires about 45–75 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of sorghum per hectare?",
+    "answer": "The expected yield of sorghum is approximately 2–4 tonnes grain per hectare."
+  },
+  {
+    "question": "What nutrients does sorghum need?",
+    "answer": "Sorghum requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 80–100 kg/ha, P – 40–50 kg/ha, K – 25–30 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for sorghum?",
+    "answer": "The ideal soil pH for growing sorghum is 6.0–8.5."
+  },
+  {
+    "question": "How much nitrogen does sorghum require?",
+    "answer": "Sorghum requires approximately 80–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does sorghum require?",
+    "answer": "Sorghum requires approximately 40–50 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does sorghum require?",
+    "answer": "Sorghum requires approximately 25–30 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for sorghum?",
+    "answer": "The ideal relative humidity for growing sorghum is 50–70%."
+  },
+  {
+    "question": "Which states in India are best for growing sorghum?",
+    "answer": "The best Indian states for growing sorghum include Maharashtra, Karnataka, Andhra Pradesh, Rajasthan, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of sorghum?",
+    "answer": "Common diseases and pests affecting sorghum include grain mould, downy mildew, anthracnose, charcoal rot."
+  },
+  {
+    "question": "What is the water requirement for sorghum?",
+    "answer": "The water requirement for sorghum is low to moderate."
+  },
+  {
+    "question": "How long does sorghum take to harvest?",
+    "answer": "Sorghum takes 90–120 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow soybean?",
+    "answer": "The best season to grow soybean is Kharif (June–July sowing)."
+  },
+  {
+    "question": "What soil type is suitable for soybean?",
+    "answer": "Soybean grows best in well-drained loam or clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing soybean?",
+    "answer": "The ideal temperature range for growing soybean is 25–30°C."
+  },
+  {
+    "question": "How much rainfall does soybean need?",
+    "answer": "Soybean typically requires about 60–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of soybean per hectare?",
+    "answer": "The expected yield of soybean is approximately 1.5–2.5 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does soybean need?",
+    "answer": "Soybean requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 20–30 kg/ha (N-fixing legume), P – 60–80 kg/ha, K – 40–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for soybean?",
+    "answer": "The ideal soil pH for growing soybean is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does soybean require?",
+    "answer": "Soybean requires approximately 20–30 kg/ha (N-fixing legume) of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does soybean require?",
+    "answer": "Soybean requires approximately 60–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does soybean require?",
+    "answer": "Soybean requires approximately 40–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for soybean?",
+    "answer": "The ideal relative humidity for growing soybean is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing soybean?",
+    "answer": "The best Indian states for growing soybean include Madhya Pradesh, Maharashtra, Rajasthan, Karnataka, Uttar Pradesh."
+  },
+  {
+    "question": "What are common diseases of soybean?",
+    "answer": "Common diseases and pests affecting soybean include rust (Phakopsora pachyrhizi), yellow mosaic virus, stem fly."
+  },
+  {
+    "question": "What is the water requirement for soybean?",
+    "answer": "The water requirement for soybean is moderate."
+  },
+  {
+    "question": "How long does soybean take to harvest?",
+    "answer": "Soybean takes 90–110 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow spinach?",
+    "answer": "The best season to grow spinach is Rabi (September–February)."
+  },
+  {
+    "question": "What soil type is suitable for spinach?",
+    "answer": "Spinach grows best in well-drained fertile loam or sandy loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing spinach?",
+    "answer": "The ideal temperature range for growing spinach is 10–20°C."
+  },
+  {
+    "question": "How much rainfall does spinach need?",
+    "answer": "Spinach typically requires about 50–70 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of spinach per hectare?",
+    "answer": "The expected yield of spinach is approximately 10–15 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does spinach need?",
+    "answer": "Spinach requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 80–120 kg/ha, P – 50–60 kg/ha, K – 50–60 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for spinach?",
+    "answer": "The ideal soil pH for growing spinach is 6.5–7.5."
+  },
+  {
+    "question": "How much nitrogen does spinach require?",
+    "answer": "Spinach requires approximately 80–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does spinach require?",
+    "answer": "Spinach requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does spinach require?",
+    "answer": "Spinach requires approximately 50–60 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for spinach?",
+    "answer": "The ideal relative humidity for growing spinach is 60–75%."
+  },
+  {
+    "question": "Which states in India are best for growing spinach?",
+    "answer": "The best Indian states for growing spinach include Uttar Pradesh, Haryana, Punjab, West Bengal, Madhya Pradesh."
+  },
+  {
+    "question": "What are common diseases of spinach?",
+    "answer": "Common diseases and pests affecting spinach include downy mildew, alternaria leaf blight, damping-off."
+  },
+  {
+    "question": "What is the water requirement for spinach?",
+    "answer": "The water requirement for spinach is moderate (light, frequent)."
+  },
+  {
+    "question": "How long does spinach take to harvest?",
+    "answer": "Spinach takes 30–45 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow sugarcane?",
+    "answer": "The best season to grow sugarcane is Planted October–November or February–March; year-long crop."
+  },
+  {
+    "question": "What soil type is suitable for sugarcane?",
+    "answer": "Sugarcane grows best in deep loamy to clay loam with good drainage soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing sugarcane?",
+    "answer": "The ideal temperature range for growing sugarcane is 20–35°C."
+  },
+  {
+    "question": "How much rainfall does sugarcane need?",
+    "answer": "Sugarcane typically requires about 100–175 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of sugarcane per hectare?",
+    "answer": "The expected yield of sugarcane is approximately 70–100 tonnes cane per hectare."
+  },
+  {
+    "question": "What nutrients does sugarcane need?",
+    "answer": "Sugarcane requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 150–200 kg/ha, P – 60–80 kg/ha, K – 60–100 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for sugarcane?",
+    "answer": "The ideal soil pH for growing sugarcane is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does sugarcane require?",
+    "answer": "Sugarcane requires approximately 150–200 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does sugarcane require?",
+    "answer": "Sugarcane requires approximately 60–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does sugarcane require?",
+    "answer": "Sugarcane requires approximately 60–100 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for sugarcane?",
+    "answer": "The ideal relative humidity for growing sugarcane is 65–80%."
+  },
+  {
+    "question": "Which states in India are best for growing sugarcane?",
+    "answer": "The best Indian states for growing sugarcane include Uttar Pradesh, Maharashtra, Karnataka, Tamil Nadu, Andhra Pradesh."
+  },
+  {
+    "question": "What are common diseases of sugarcane?",
+    "answer": "Common diseases and pests affecting sugarcane include red rot, smut, ratoon stunting, top borer."
+  },
+  {
+    "question": "What is the water requirement for sugarcane?",
+    "answer": "The water requirement for sugarcane is high (1500–2500 mm; drip irrigation increasingly used)."
+  },
+  {
+    "question": "How long does sugarcane take to harvest?",
+    "answer": "Sugarcane takes 10–12 months after planting."
+  },
+  {
+    "question": "What is the best season to grow sunflower?",
+    "answer": "The best season to grow sunflower is Kharif, Rabi, and Zaid (three seasons possible)."
+  },
+  {
+    "question": "What soil type is suitable for sunflower?",
+    "answer": "Sunflower grows best in well-drained loam to clay loam soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing sunflower?",
+    "answer": "The ideal temperature range for growing sunflower is 20–25°C."
+  },
+  {
+    "question": "How much rainfall does sunflower need?",
+    "answer": "Sunflower typically requires about 70–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of sunflower per hectare?",
+    "answer": "The expected yield of sunflower is approximately 1.5–2.5 tonnes seed per hectare."
+  },
+  {
+    "question": "What nutrients does sunflower need?",
+    "answer": "Sunflower requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–90 kg/ha, P – 50–60 kg/ha, K – 40–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for sunflower?",
+    "answer": "The ideal soil pH for growing sunflower is 6.0–7.5."
+  },
+  {
+    "question": "How much nitrogen does sunflower require?",
+    "answer": "Sunflower requires approximately 60–90 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does sunflower require?",
+    "answer": "Sunflower requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does sunflower require?",
+    "answer": "Sunflower requires approximately 40–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for sunflower?",
+    "answer": "The ideal relative humidity for growing sunflower is 55–70%."
+  },
+  {
+    "question": "Which states in India are best for growing sunflower?",
+    "answer": "The best Indian states for growing sunflower include Karnataka, Andhra Pradesh, Maharashtra, Tamil Nadu, Uttar Pradesh."
+  },
+  {
+    "question": "What are common diseases of sunflower?",
+    "answer": "Common diseases and pests affecting sunflower include downy mildew, Alternaria leaf blight, Sclerotinia head rot."
+  },
+  {
+    "question": "What is the water requirement for sunflower?",
+    "answer": "The water requirement for sunflower is moderate."
+  },
+  {
+    "question": "How long does sunflower take to harvest?",
+    "answer": "Sunflower takes 90–110 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow tobacco?",
+    "answer": "The best season to grow tobacco is Rabi (September–October sowing in nursery; transplant November–December)."
+  },
+  {
+    "question": "What soil type is suitable for tobacco?",
+    "answer": "Tobacco grows best in well-drained sandy loam to loam, slightly acidic soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing tobacco?",
+    "answer": "The ideal temperature range for growing tobacco is 20–30°C."
+  },
+  {
+    "question": "How much rainfall does tobacco need?",
+    "answer": "Tobacco typically requires about 50–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of tobacco per hectare?",
+    "answer": "The expected yield of tobacco is approximately 1.5–2.5 tonnes dry leaf per hectare."
+  },
+  {
+    "question": "What nutrients does tobacco need?",
+    "answer": "Tobacco requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 60–100 kg/ha, P – 50–80 kg/ha, K – 80–120 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for tobacco?",
+    "answer": "The ideal soil pH for growing tobacco is 5.5–6.5."
+  },
+  {
+    "question": "How much nitrogen does tobacco require?",
+    "answer": "Tobacco requires approximately 60–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does tobacco require?",
+    "answer": "Tobacco requires approximately 50–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does tobacco require?",
+    "answer": "Tobacco requires approximately 80–120 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for tobacco?",
+    "answer": "The ideal relative humidity for growing tobacco is 60–75%."
+  },
+  {
+    "question": "Which states in India are best for growing tobacco?",
+    "answer": "The best Indian states for growing tobacco include Andhra Pradesh, Gujarat, Karnataka, Bihar."
+  },
+  {
+    "question": "What are common diseases of tobacco?",
+    "answer": "Common diseases and pests affecting tobacco include mosaic virus (TMV), bacterial wilt, black shank."
+  },
+  {
+    "question": "What is the water requirement for tobacco?",
+    "answer": "The water requirement for tobacco is moderate."
+  },
+  {
+    "question": "How long does tobacco take to harvest?",
+    "answer": "Tobacco takes 60–80 days after transplanting (leaf priming)."
+  },
+  {
+    "question": "What is the best season to grow tomato?",
+    "answer": "The best season to grow tomato is Kharif (June–July), Rabi (October–November) and Zaid."
+  },
+  {
+    "question": "What soil type is suitable for tomato?",
+    "answer": "Tomato grows best in well-drained sandy loam to clay loam with organic matter soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing tomato?",
+    "answer": "The ideal temperature range for growing tomato is 20–27°C."
+  },
+  {
+    "question": "How much rainfall does tomato need?",
+    "answer": "Tomato typically requires about 60–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of tomato per hectare?",
+    "answer": "The expected yield of tomato is approximately 25–40 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does tomato need?",
+    "answer": "Tomato requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–80 kg/ha, K – 50–80 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for tomato?",
+    "answer": "The ideal soil pH for growing tomato is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does tomato require?",
+    "answer": "Tomato requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does tomato require?",
+    "answer": "Tomato requires approximately 50–80 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does tomato require?",
+    "answer": "Tomato requires approximately 50–80 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for tomato?",
+    "answer": "The ideal relative humidity for growing tomato is 65–75%."
+  },
+  {
+    "question": "Which states in India are best for growing tomato?",
+    "answer": "The best Indian states for growing tomato include Andhra Pradesh, Karnataka, Maharashtra, Odisha, Bihar."
+  },
+  {
+    "question": "What are common diseases of tomato?",
+    "answer": "Common diseases and pests affecting tomato include early blight, late blight, bacterial wilt, leaf curl virus (TLCV), Fusarium wilt."
+  },
+  {
+    "question": "What is the water requirement for tomato?",
+    "answer": "The water requirement for tomato is moderate (drip irrigation preferred)."
+  },
+  {
+    "question": "How long does tomato take to harvest?",
+    "answer": "Tomato takes 60–80 days after transplanting."
+  },
+  {
+    "question": "What is the best season to grow watermelon?",
+    "answer": "The best season to grow watermelon is Zaid/Kharif (February–May and June–October)."
+  },
+  {
+    "question": "What soil type is suitable for watermelon?",
+    "answer": "Watermelon grows best in deep, sandy loam, well-drained soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing watermelon?",
+    "answer": "The ideal temperature range for growing watermelon is 25–35°C."
+  },
+  {
+    "question": "How much rainfall does watermelon need?",
+    "answer": "Watermelon typically requires about 40–60 cm (mainly irrigated) of rainfall."
+  },
+  {
+    "question": "What is the expected yield of watermelon per hectare?",
+    "answer": "The expected yield of watermelon is approximately 25–40 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does watermelon need?",
+    "answer": "Watermelon requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 80–100 kg/ha, P – 60–70 kg/ha, K – 60–70 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for watermelon?",
+    "answer": "The ideal soil pH for growing watermelon is 6.0–7.0."
+  },
+  {
+    "question": "How much nitrogen does watermelon require?",
+    "answer": "Watermelon requires approximately 80–100 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does watermelon require?",
+    "answer": "Watermelon requires approximately 60–70 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does watermelon require?",
+    "answer": "Watermelon requires approximately 60–70 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for watermelon?",
+    "answer": "The ideal relative humidity for growing watermelon is 60–80%."
+  },
+  {
+    "question": "Which states in India are best for growing watermelon?",
+    "answer": "The best Indian states for growing watermelon include Uttar Pradesh, Andhra Pradesh, Karnataka, Rajasthan, Punjab."
+  },
+  {
+    "question": "What are common diseases of watermelon?",
+    "answer": "Common diseases and pests affecting watermelon include anthracnose, downy mildew, Fusarium wilt, watermelon mosaic virus."
+  },
+  {
+    "question": "What is the water requirement for watermelon?",
+    "answer": "The water requirement for watermelon is moderate (drip irrigation)."
+  },
+  {
+    "question": "How long does watermelon take to harvest?",
+    "answer": "Watermelon takes 75–100 days after sowing."
+  },
+  {
+    "question": "What is the best season to grow wheat?",
+    "answer": "The best season to grow wheat is Rabi (October–November sowing)."
+  },
+  {
+    "question": "What soil type is suitable for wheat?",
+    "answer": "Wheat grows best in well-drained loam to clay loam, fertile soil."
+  },
+  {
+    "question": "What is the ideal temperature for growing wheat?",
+    "answer": "The ideal temperature range for growing wheat is 20–25°C (10–15°C at tillering)."
+  },
+  {
+    "question": "How much rainfall does wheat need?",
+    "answer": "Wheat typically requires about 75–100 cm of rainfall."
+  },
+  {
+    "question": "What is the expected yield of wheat per hectare?",
+    "answer": "The expected yield of wheat is approximately 4–6 tonnes per hectare."
+  },
+  {
+    "question": "What nutrients does wheat need?",
+    "answer": "Wheat requires nitrogen (N), phosphorus (P), and potassium (K) as primary nutrients. Recommended doses: N – 100–120 kg/ha, P – 50–60 kg/ha, K – 40–50 kg/ha."
+  },
+  {
+    "question": "What is the ideal pH for wheat?",
+    "answer": "The ideal soil pH for growing wheat is 6.0–8.0."
+  },
+  {
+    "question": "How much nitrogen does wheat require?",
+    "answer": "Wheat requires approximately 100–120 kg/ha of nitrogen."
+  },
+  {
+    "question": "How much phosphorus does wheat require?",
+    "answer": "Wheat requires approximately 50–60 kg/ha of phosphorus (P2O5)."
+  },
+  {
+    "question": "How much potassium does wheat require?",
+    "answer": "Wheat requires approximately 40–50 kg/ha of potassium (K2O)."
+  },
+  {
+    "question": "What is the ideal humidity for wheat?",
+    "answer": "The ideal relative humidity for growing wheat is 60–70%."
+  },
+  {
+    "question": "Which states in India are best for growing wheat?",
+    "answer": "The best Indian states for growing wheat include Punjab, Haryana, Uttar Pradesh, Madhya Pradesh, Rajasthan, Bihar."
+  },
+  {
+    "question": "What are common diseases of wheat?",
+    "answer": "Common diseases and pests affecting wheat include rust (yellow, brown, black), loose smut, Karnal bunt, powdery mildew."
+  },
+  {
+    "question": "What is the water requirement for wheat?",
+    "answer": "The water requirement for wheat is moderate (4–6 irrigations)."
+  },
+  {
+    "question": "How long does wheat take to harvest?",
+    "answer": "Wheat takes 100–120 days after sowing."
+  },
+  {
+    "question": "Can rice and wheat be grown in the same field?",
+    "answer": "Yes — rice-wheat cropping is India's most widespread rotation system, especially in Punjab, Haryana, and Uttar Pradesh. Rice is grown in Kharif (June–November) and wheat in Rabi (November–April) on the same field, though this practice depletes soil organic matter over time."
+  },
+  {
+    "question": "What is the difference between bajra and pearl_millet?",
+    "answer": "Bajra and pearl millet are the same crop (Pennisetum glaucum). 'Bajra' is the Hindi/Indian regional name for pearl millet. Both terms refer to the same drought-tolerant cereal widely grown in Rajasthan, Haryana, and Gujarat."
+  },
+  {
+    "question": "What is the difference between ragi and finger_millet?",
+    "answer": "Ragi and finger millet are the same crop (Eleusine coracana). 'Ragi' is the Kannada/regional name used in South India, while 'finger millet' is the English name. Both refer to the same nutritious, drought-tolerant cereal."
+  },
+  {
+    "question": "What is the difference between jowar and sorghum?",
+    "answer": "Jowar and sorghum are the same crop (Sorghum bicolor). 'Jowar' is the Hindi/Indian regional name, while 'sorghum' is the international name. The crop recommendation system may list them separately, but agronomically they are identical."
+  },
+  {
+    "question": "What is the difference between sesame and sesamum?",
+    "answer": "Sesame (common name) and sesamum (scientific genus name, Sesamum indicum) refer to the same oilseed crop. Both terms are used interchangeably in agricultural contexts."
+  },
+  {
+    "question": "What is the difference between pigeonpea and pigeonpeas?",
+    "answer": "Pigeonpea and pigeonpeas refer to the same pulse crop (Cajanus cajan), also known as arhar or tur dal in India. The singular and plural forms are used interchangeably."
+  },
+  {
+    "question": "Which crop gives the highest yield per hectare?",
+    "answer": "Among the 56 crops in this system, sugarcane gives the highest yield per hectare (70–100 tonnes of cane). Among food grains, potato gives 20–35 tonnes/ha and banana gives 40–70 tonnes/ha. Rice and wheat yield 4–6 tonnes/ha of grain."
+  },
+  {
+    "question": "Which crop needs the least water?",
+    "answer": "Moth beans, date palm, and bajra (pearl millet) need the least water. Moth beans can survive on as little as 25–50 cm of rainfall, making them ideal for hyper-arid regions like Rajasthan."
+  },
+  {
+    "question": "Which crop needs the most water?",
+    "answer": "Sugarcane needs the most water (1500–2500 mm per crop cycle), followed by rice (1200–2000 mm/season), banana, and coconut. These crops are ideally grown with assured irrigation."
+  },
+  {
+    "question": "Which crop grows fastest?",
+    "answer": "Spinach (30–45 days), radish (25–60 days), and mungbean/mung (55–75 days) are among the fastest-maturing crops. Most vegetables harvest within 60–90 days, while cereals take 75–120 days."
+  },
+  {
+    "question": "Which crop is most profitable?",
+    "answer": "Profitability depends on local market prices, input costs, and scale. Generally, high-value crops like grapes, pomegranate, vegetables (tomato, onion), and flowers yield the highest returns per hectare. Sugarcane and cotton are profitable large-scale commercial crops."
+  },
+  {
+    "question": "Which crop is best for beginners?",
+    "answer": "Maize, mungbean, mustard, and vegetables like tomato or okra are good choices for beginners. They have short crop cycles, respond well to inputs, and are easy to manage compared to perennial or labour-intensive crops."
+  },
+  {
+    "question": "Which crop is best for small farms?",
+    "answer": "Vegetables (tomato, okra, brinjal, onion), pulses (mung, blackgram), and millets (bajra, ragi) are excellent for small farms. They provide quick income and can be managed without large machinery."
+  },
+  {
+    "question": "Which crop tolerates high salinity?",
+    "answer": "Date palm, barley, sugarbeet, and cotton show the highest salt tolerance among the supported crops. Date palm is particularly noted for its ability to grow in saline desert soils."
+  },
+  {
+    "question": "Which crop can grow in waterlogged soil?",
+    "answer": "Rice is the primary crop adapted to waterlogged conditions. Jute also tolerates temporary flooding. Most other crops suffer from root rot under prolonged waterlogging."
+  },
+  {
+    "question": "Which crops can be grown year-round?",
+    "answer": "Perennial crops like coconut, mango, banana, coffee, guava, papaya, and sugarcane grow year-round. Vegetables like tomato, brinjal, and okra can be grown in multiple seasons with irrigation."
+  },
+  {
+    "question": "Which crops are best for summer season?",
+    "answer": "Summer (Zaid) crops include watermelon, muskmelon, cucumber, gourd, mungbean, and some vegetables. These are typically grown from March to June under irrigation."
+  },
+  {
+    "question": "Which crops are best for winter season?",
+    "answer": "Rabi (winter) crops include wheat, barley, mustard, lentil, chickpea, pea, potato, carrot, radish, and spinach. They are sown in October–November and harvested in March–April."
+  },
+  {
+    "question": "Which crops are best for monsoon season?",
+    "answer": "Kharif (monsoon) crops include rice, maize, cotton, soybean, groundnut, bajra, jowar, ragi, sugarcane, and most vegetables and pulses. They are sown in June–July with the onset of monsoon."
+  },
+  {
+    "question": "Can I grow rice in Rabi season?",
+    "answer": "Rice is primarily a Kharif crop, but it can be grown in Rabi and Zaid seasons in states with year-round irrigation and warm temperatures, such as parts of Tamil Nadu, Andhra Pradesh, and West Bengal."
+  },
+  {
+    "question": "Can I grow wheat in Kharif season?",
+    "answer": "No. Wheat requires cool temperatures (10–25°C) for proper grain development. Growing wheat in the hot Kharif season would result in very poor yield. It is strictly a Rabi crop in India."
+  },
+  {
+    "question": "Can I grow maize in both seasons?",
+    "answer": "Yes. Maize is versatile and can be grown in Kharif (June–July), Rabi (October–November), and Zaid (February–March) seasons, making it one of the most flexible cereal crops."
+  },
+  {
+    "question": "What crops grow well after rice?",
+    "answer": "Ideal crops to follow rice in rotation include wheat, mustard, lentil, peas, and chickpea. The rice–wheat sequence is the dominant rotation in the Indo-Gangetic Plain."
+  },
+  {
+    "question": "What crops grow well after wheat?",
+    "answer": "After wheat, maize, mungbean, groundnut, sunflower, and rice are good rotational choices depending on the season and region."
+  },
+  {
+    "question": "What crops grow well after maize?",
+    "answer": "After maize, wheat, mustard, chickpea, or potato are good rotational options. Legumes (mung, blackgram) are excellent to fix nitrogen and restore soil fertility."
+  },
+  {
+    "question": "What is the best crop rotation for rice?",
+    "answer": "Rice–wheat is the most common rotation in north India. Rice–mustard, rice–chickpea, or rice–lentil are also effective for breaking disease cycles and improving nitrogen fixation."
+  },
+  {
+    "question": "What is the best crop rotation for wheat?",
+    "answer": "Wheat–rice is the dominant rotation in Punjab and Haryana. Wheat–cotton and wheat–maize are alternatives. Including a legume (chickpea, lentil) before wheat helps restore soil nitrogen."
+  },
+  {
+    "question": "What is the best crop rotation for sugarcane?",
+    "answer": "Sugarcane–wheat or sugarcane–potato are common rotations. Including a legume or green manure crop in the off-season helps restore soil fertility and reduce pest build-up."
+  },
+  {
+    "question": "What is the best crop rotation for cotton?",
+    "answer": "Cotton–wheat, cotton–chickpea, or cotton–sorghum are effective rotations. Wheat after cotton is popular in north India. Legume rotations help replenish nitrogen depleted by cotton."
+  },
+  {
+    "question": "What is the best intercrop for maize?",
+    "answer": "Common intercrops for maize include soybean, cowpea, groundnut, and pigeon pea. The legume intercrop fixes nitrogen and uses space efficiently between maize rows."
+  },
+  {
+    "question": "What is the best intercrop for sugarcane?",
+    "answer": "Short-duration crops like potato, onion, garlic, and legumes (blackgram, cowpea) are intercropped with sugarcane during its early establishment phase to maximise land use."
+  },
+  {
+    "question": "What is the best intercrop for coconut?",
+    "answer": "Banana, cocoa, pineapple, ginger, turmeric, vegetables, and legumes are successfully intercropped with coconut. Banana + coconut + cocoa is a popular tri-combination in Kerala."
+  },
+  {
+    "question": "Which crops fix nitrogen in soil?",
+    "answer": "Legume crops fix atmospheric nitrogen through root-nodule bacteria (Rhizobium). Nitrogen-fixing crops supported by this system include chickpea, pigeonpea, lentil, mungbean, blackgram, kidneybeans, groundnut, and soybean."
+  },
+  {
+    "question": "Which pulses improve soil fertility?",
+    "answer": "All pulses (chickpea, lentil, mungbean, blackgram, pigeonpea, soybean, groundnut, and kidneybeans) improve soil fertility by fixing 50–200 kg N/ha through biological nitrogen fixation."
+  },
+  {
+    "question": "Which crops deplete soil nutrients?",
+    "answer": "Heavy feeders that deplete soil nutrients include sugarcane, maize, potato, and cotton. These crops require substantial fertiliser inputs and benefit most from nutrient-replenishing crop rotations."
+  },
+  {
+    "question": "What is green manuring?",
+    "answer": "Green manuring is the practice of growing a leguminous or leafy crop (like dhaincha, sunn hemp, or cowpea) and then ploughing it into the soil while still green. It adds organic matter and nitrogen to the soil."
+  },
+  {
+    "question": "Which crops are used for green manuring?",
+    "answer": "Common green manure crops in India include dhaincha (Sesbania), sunn hemp (Crotalaria), cowpea, pillipesara, and cluster bean (guar). They are grown for 45–60 days and incorporated before the main crop."
+  },
+  {
+    "question": "What is the MSP for rice?",
+    "answer": "The Minimum Support Price (MSP) for paddy (rice) is revised annually by the Cabinet Committee on Economic Affairs (CCEA) based on the Commission for Agricultural Costs and Prices (CACP) recommendations. For the latest MSP, visit the Ministry of Agriculture website at agricoop.nic.in."
+  },
+  {
+    "question": "What is the MSP for wheat?",
+    "answer": "The MSP for wheat is revised each year by the Government of India. Historically it has been ₹1,800–2,400/quintal. For the current MSP, visit agricoop.nic.in or contact your nearest mandi or NAFED office."
+  },
+  {
+    "question": "What is the MSP for maize?",
+    "answer": "The MSP for maize is revised annually. Check the latest rates at the Ministry of Agriculture & Farmers Welfare website."
+  },
+  {
+    "question": "What is the MSP for cotton?",
+    "answer": "Cotton has two MSPs — for medium staple (F-414) and long staple (J-34 and above). These are revised annually. Check the latest cotton MSP at CCI (Cotton Corporation of India) or agricoop.nic.in."
+  },
+  {
+    "question": "What is the MSP for sugarcane?",
+    "answer": "Sugarcane's price is set as the Fair and Remunerative Price (FRP) rather than MSP, determined by the central government. Check the latest FRP at agricoop.nic.in."
+  },
+  {
+    "question": "What is the MSP for soybean?",
+    "answer": "The MSP for soybean (yellow) is revised annually. Visit agricoop.nic.in or NAFED for the current price."
+  },
+  {
+    "question": "What is the MSP for groundnut?",
+    "answer": "The MSP for groundnut is revised annually by CCEA. Check the latest rates at agricoop.nic.in."
+  },
+  {
+    "question": "What is the MSP for mustard?",
+    "answer": "The MSP for rapeseed/mustard is revised annually. Visit agricoop.nic.in for current MSP rates."
+  },
+  {
+    "question": "What government schemes support crop farming?",
+    "answer": "Key government schemes supporting Indian farmers include PM-KISAN (income support), PMFBY (crop insurance), PM Krishi Sinchai Yojana (irrigation), Soil Health Card scheme (soil testing), eNAM (digital market), Kisan Credit Card (KCC), and RKVY (agricultural development grants)."
+  },
+  {
+    "question": "What is PM-KISAN scheme?",
+    "answer": "PM-KISAN (Pradhan Mantri Kisan Samman Nidhi) provides ₹6,000 per year in three equal instalments directly to eligible farmer families as income support. Registration is done through the local patwari or at pmkisan.gov.in."
+  },
+  {
+    "question": "What is crop insurance scheme?",
+    "answer": "India's main crop insurance scheme is PMFBY (Pradhan Mantri Fasal Bima Yojana), which provides financial support to farmers whose crops are damaged by natural calamities, pests, or diseases. Farmers pay very low premiums (2% for Kharif, 1.5% for Rabi food crops)."
+  },
+  {
+    "question": "What is PMFBY?",
+    "answer": "Pradhan Mantri Fasal Bima Yojana (PMFBY) is India's flagship crop insurance scheme launched in 2016. It covers pre-sowing to post-harvest losses due to natural calamities, providing farmers with financial protection and encouraging crop diversification."
+  },
+  {
+    "question": "How do I apply for crop insurance?",
+    "answer": "Apply for PMFBY at your nearest bank (where you have a KCC or crop loan), through Common Service Centres (CSCs), or online at the PMFBY portal (pmfby.gov.in). Applications are accepted before the cut-off date (usually 2 weeks before sowing)."
+  },
+  {
+    "question": "What is the role of ICAR in agriculture?",
+    "answer": "ICAR (Indian Council of Agricultural Research) is the apex body for agricultural research and education in India. It develops improved crop varieties, agricultural technologies, and farming practices through its 100+ institutes and KVKs."
+  },
+  {
+    "question": "What is the role of KVK in farming?",
+    "answer": "Krishi Vigyan Kendras (KVKs) are district-level farm science centres under ICAR that provide technology demonstration, farmer training, soil testing, and frontline extension services. There are over 700 KVKs across India."
+  },
+  {
+    "question": "How can I get farming advice from government?",
+    "answer": "You can get free farming advice from your nearest KVK, state agricultural department offices, Kisan Call Centre (1800-180-1551, toll-free), or through the Kisan Suvidha and mKisan mobile apps."
+  },
+  {
+    "question": "What is soil health card scheme?",
+    "answer": "The Soil Health Card (SHC) scheme, launched in 2015, provides every farmer a card listing the nutrient status of their soil and recommendations for nutrient management. Free soil testing is done through government labs. Apply at your local KVK or agricultural extension office."
+  },
+  {
+    "question": "How does the recommendation change with different nitrogen levels?",
+    "answer": "Higher nitrogen values shift recommendations towards nitrogen-hungry crops like leafy vegetables, maize, rice, and sugarcane. Lower nitrogen values favour nitrogen-fixing legumes such as chickpea, lentil, and mungbean, which can draw atmospheric nitrogen."
+  },
+  {
+    "question": "How does the recommendation change with different phosphorus levels?",
+    "answer": "High phosphorus values favour fruit and root crops (potato, carrot, tomato, pomegranate) that need strong root development and reproduction. Low phosphorus may shift recommendations toward less demanding cereals or millets."
+  },
+  {
+    "question": "How does the recommendation change with different potassium levels?",
+    "answer": "High potassium values favour potassium-intensive crops like banana, potato, sugarcane, and grapes. Low potassium may favour cereals and pulses that have lower K demands."
+  },
+  {
+    "question": "How does the recommendation change with different pH levels?",
+    "answer": "Acidic pH (4–6) shifts recommendations toward pH-tolerant crops like coffee, finger millet, or groundnut. Neutral pH (6–7.5) gives the widest crop selection. Alkaline pH (7.5–9) favours barley, date palm, mustard, and wheat."
+  },
+  {
+    "question": "How does the recommendation change with different temperatures?",
+    "answer": "Low temperatures (10–20°C) recommend cool-season crops like wheat, barley, potato, spinach, and apple. High temperatures (30–40°C+) recommend heat-loving crops like cotton, bajra, sesame, date palm, and okra."
+  },
+  {
+    "question": "How does the recommendation change with different humidity levels?",
+    "answer": "High humidity (>70%) favours rice, jute, banana, coconut, and coffee. Low humidity (<40%) favours dryland crops like bajra, sesame, jowar, moth beans, and date palm."
+  },
+  {
+    "question": "How does the recommendation change with different rainfall levels?",
+    "answer": "High rainfall (>200 mm) strongly favours rice, jute, sugarcane, and banana. Low rainfall (<50 mm) favours drought-tolerant crops like moth beans, bajra, barley, sesame, and date palm."
+  },
+  {
+    "question": "What happens if I enter very high nitrogen value?",
+    "answer": "Very high nitrogen values (>100 mg/kg) will strongly favour nitrogen-loving crops like maize, sugarcane, rice, or leafy vegetables. Ensure the value you enter accurately reflects your soil test result."
+  },
+  {
+    "question": "What happens if I enter very low nitrogen value?",
+    "answer": "Very low nitrogen (<10 mg/kg) will favour nitrogen-fixing legumes (chickpea, mungbean, lentil, soybean) or crops tolerant of nutrient-poor soils like bajra and jowar."
+  },
+  {
+    "question": "What happens if I enter very high pH value?",
+    "answer": "A very high pH (>8.5) will restrict recommendations to alkaline-tolerant crops such as barley, date palm, and certain cotton varieties. Most crops cannot thrive above pH 9."
+  },
+  {
+    "question": "What happens if I enter very low pH value?",
+    "answer": "A very low pH (<5.0) will shift recommendations toward acid-tolerant crops like coffee, rice, and finger millet. Most crops will have reduced yield on strongly acidic soils."
+  },
+  {
+    "question": "What happens if I enter extreme temperature values?",
+    "answer": "Extreme temperature inputs (below 5°C or above 45°C) will limit the crop selection to very few temperature-tolerant crops. Very few crops in the system's dataset can survive outside the 10–45°C range."
+  },
+  {
+    "question": "Can the system handle missing input values?",
+    "answer": "No. All seven input fields (N, P, K, pH, temperature, humidity, rainfall) are required. The system cannot make predictions with incomplete data. Ensure all values are filled before submitting."
+  },
+  {
+    "question": "What is the default value for nitrogen?",
+    "answer": "The system does not auto-fill default values — all inputs must be entered by the user based on actual soil test results or local knowledge."
+  },
+  {
+    "question": "What is the default value for phosphorus?",
+    "answer": "There is no default phosphorus value. Users must enter their actual soil test phosphorus reading."
+  },
+  {
+    "question": "What is the default value for potassium?",
+    "answer": "There is no default potassium value. Users must enter their actual soil test potassium reading."
+  },
+  {
+    "question": "Does high rainfall always mean rice is recommended?",
+    "answer": "Not always. High rainfall combined with high temperature and low NPK will likely recommend rice, jute, or coconut. But if temperature is low or pH is very alkaline, other crops may score higher. All seven parameters are considered simultaneously."
+  },
+  {
+    "question": "Does low temperature always mean wheat is recommended?",
+    "answer": "Not always. Low temperature combined with moderate rainfall and suitable pH favours wheat, but if potassium or phosphorus is very low, or humidity is very high, the model may recommend barley, mustard, or potato instead."
+  },
+  {
+    "question": "What NPK ratio is best for cereals?",
+    "answer": "For cereals like wheat and rice, a balanced N:P:K ratio of approximately 4:2:1 to 2:1:1 is generally recommended. Nitrogen is the most critical nutrient for cereal grain yield."
+  },
+  {
+    "question": "What NPK ratio is best for pulses?",
+    "answer": "Pulses need a low-N, high-P, moderate-K ratio (approximately 1:2:1) since they fix their own nitrogen. Starter nitrogen of 20–25 kg/ha helps early growth."
+  },
+  {
+    "question": "What NPK ratio is best for fruits?",
+    "answer": "Fruit crops generally need a moderate-N, moderate-P, high-K ratio (approximately 2:1:3) as potassium is crucial for fruit development and quality."
+  },
+  {
+    "question": "What NPK ratio is best for vegetables?",
+    "answer": "Most vegetables need a balanced N:P:K ratio around 1:1:1 to 2:1:2, with higher N for leafy vegetables and higher K for fruiting vegetables like tomato and pepper."
+  },
+  {
+    "question": "What NPK ratio is best for oilseeds?",
+    "answer": "Oilseeds like mustard and sunflower typically need a 2:1:1 NPK ratio, with sulphur as an important secondary nutrient for oil quality."
+  },
+  {
+    "question": "How to increase nitrogen in soil naturally?",
+    "answer": "Natural ways to increase soil nitrogen include growing legume cover crops (dhaincha, cowpea), applying vermicompost or FYM (farmyard manure), using biofertilisers like Rhizobium and Azotobacter, and incorporating crop residues back into the soil."
+  },
+  {
+    "question": "How to increase phosphorus in soil naturally?",
+    "answer": "To increase phosphorus naturally, apply rock phosphate, compost, or bone meal. Using mycorrhizal fungi biofertilisers (VAM) helps plants access soil phosphorus more efficiently. Green manure incorporation also releases phosphorus."
+  },
+  {
+    "question": "How to increase potassium in soil naturally?",
+    "answer": "Add wood ash, banana peel compost, or green sand to increase potassium organically. Crop residues from high-K crops (banana, potato) incorporated back into the soil also restore potassium."
+  },
+  {
+    "question": "How to adjust soil pH?",
+    "answer": "To raise pH (make less acidic): apply agricultural lime (calcium carbonate) or dolomite. To lower pH (make less alkaline): apply elemental sulphur, gypsum, or acidic organic matter like peat moss."
+  },
+  {
+    "question": "How to make acidic soil more alkaline?",
+    "answer": "Apply agricultural lime (ground limestone/calcium carbonate) at 1–3 tonnes/ha depending on current pH and soil texture. Dolomitic lime also adds magnesium. Re-test soil after 3–6 months."
+  },
+  {
+    "question": "How to make alkaline soil more acidic?",
+    "answer": "Apply elemental sulphur (which oxidises to sulphuric acid in the soil) at 0.5–2 tonnes/ha. Acidic organic amendments like pine bark, peat, or well-decomposed compost also help. Gypsum (calcium sulphate) corrects sodic soils without significantly acidifying."
+  },
+  {
+    "question": "What is vermicomposting?",
+    "answer": "Vermicomposting is the process of using earthworms (typically Eisenia fetida or Lumbricus rubellus) to decompose organic waste into nutrient-rich vermicompost. Vermicompost has 5× more nitrogen, 7× more phosphorus, and 11× more potassium than ordinary soil."
+  },
+  {
+    "question": "What is the benefit of organic manure?",
+    "answer": "Organic manures (FYM, compost, vermicompost) improve soil structure, water-holding capacity, microbial activity, and long-term nutrient availability. They reduce dependence on synthetic fertilisers and improve soil health over time."
+  },
+  {
+    "question": "What is the benefit of compost?",
+    "answer": "Compost improves soil organic matter, nutrient content, water retention, and beneficial microbial populations. It buffers soil pH, reduces erosion, and promotes sustainable farming by recycling organic waste."
+  },
+  {
+    "question": "How to prepare farmyard manure?",
+    "answer": "Collect dung, urine-soaked bedding, and feed waste from cattle/animals. Pile it in a shaded pit, cover with soil, and let it decompose for 3–6 months, turning the pile periodically. Well-decomposed FYM has an NPK of approximately 0.5:0.25:0.5%."
+  },
+  {
+    "question": "What is biofertilizer?",
+    "answer": "Biofertilisers are products containing living microorganisms that promote plant growth by fixing atmospheric nitrogen (Rhizobium, Azotobacter, BGA) or solubilising phosphorus (PSB — Phosphate Solubilising Bacteria). They are eco-friendly supplements to chemical fertilisers."
+  },
+  {
+    "question": "What are the types of biofertilizers?",
+    "answer": "Common biofertilisers in India include Rhizobium (for legumes), Azotobacter (for non-legumes), Azospirillum (for cereals), Blue-Green Algae/Azolla (for rice), and Phosphate Solubilising Bacteria (PSB). VAM (Vesicular Arbuscular Mycorrhiza) improves phosphorus uptake."
+  },
+  {
+    "question": "How does mulching help crops?",
+    "answer": "Mulching (covering soil with straw, plastic, or organic material) conserves soil moisture, suppresses weeds, moderates soil temperature, reduces erosion, and improves soil organic matter as organic mulches decompose."
+  },
+  {
+    "question": "What is the benefit of crop residue management?",
+    "answer": "Incorporating crop residues into the soil adds organic carbon, improves water retention, and recycles nutrients. It also promotes earthworm activity and beneficial microorganisms, improving long-term soil health versus the harmful practice of burning residues."
+  },
+  {
+    "question": "What crops grow well in Punjab?",
+    "answer": "Major crops grown in Punjab include wheat, rice, maize, cotton, sugarcane, potato, sunflower, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Uttar Pradesh?",
+    "answer": "Major crops grown in Uttar Pradesh include sugarcane, wheat, rice, potato, mustard, lentil, mango, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Maharashtra?",
+    "answer": "Major crops grown in Maharashtra include cotton, soybean, sugarcane, jowar, groundnut, pomegranate, grapes, onion, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Karnataka?",
+    "answer": "Major crops grown in Karnataka include ragi, jowar, maize, cotton, sugarcane, sunflower, groundnut, coffee, coconut, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Tamil Nadu?",
+    "answer": "Major crops grown in Tamil Nadu include rice, sugarcane, banana, coconut, groundnut, maize, cotton, black gram, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in West Bengal?",
+    "answer": "Major crops grown in West Bengal include rice, jute, potato, wheat, mustard, vegetables, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Rajasthan?",
+    "answer": "Major crops grown in Rajasthan include bajra, jowar, maize, wheat, mustard, groundnut, moth beans, sesame, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Madhya Pradesh?",
+    "answer": "Major crops grown in Madhya Pradesh include soybean, wheat, jowar, maize, cotton, chickpea, lentil, mustard, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Gujarat?",
+    "answer": "Major crops grown in Gujarat include cotton, groundnut, wheat, bajra, sesame, castor, sugarcane, banana, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Andhra Pradesh?",
+    "answer": "Major crops grown in Andhra Pradesh include rice, groundnut, cotton, chilli, sugarcane, maize, tobacco, banana, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Kerala?",
+    "answer": "Major crops grown in Kerala include coconut, rubber, coffee, tea, pepper, cardamom, banana, rice, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Bihar?",
+    "answer": "Major crops grown in Bihar include wheat, rice, maize, lentil, mustard, potato, sugarcane, chickpea, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Assam?",
+    "answer": "Major crops grown in Assam include rice, jute, tea, mustard, sugarcane, banana, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Odisha?",
+    "answer": "Major crops grown in Odisha include rice, maize, jute, groundnut, blackgram, mungbean, sugarcane, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Haryana?",
+    "answer": "Major crops grown in Haryana include wheat, rice, sugarcane, cotton, sunflower, mustard, bajra, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Himachal Pradesh?",
+    "answer": "Major crops grown in Himachal Pradesh include apple, potato, wheat, maize, barley, tomato, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Jammu and Kashmir?",
+    "answer": "Major crops grown in Jammu and Kashmir include apple, rice, maize, wheat, saffron, barley, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Telangana?",
+    "answer": "Major crops grown in Telangana include rice, cotton, maize, jowar, groundnut, sunflower, red chilli, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Chhattisgarh?",
+    "answer": "Major crops grown in Chhattisgarh include rice, wheat, maize, kodo millet, linseed, groundnut, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "What crops grow well in Jharkhand?",
+    "answer": "Major crops grown in Jharkhand include rice, maize, wheat, ragi, linseed, mustard, potato, suited to its agro-climatic conditions."
+  },
+  {
+    "question": "Is apple only grown in cold regions?",
+    "answer": "Yes, commercial apple cultivation requires cold temperatures (10–25°C) and chilling hours below 7°C (400–1000 hours/year) for proper flower bud differentiation. In India, apple is mainly grown in Himachal Pradesh, J&K, and Uttarakhand."
+  },
+  {
+    "question": "Can banana grow in north India?",
+    "answer": "Yes, banana can be grown in parts of north India including Uttar Pradesh, Bihar, and Gujarat where summer temperatures are sufficiently warm. However, it is vulnerable to frost and does not thrive in the hilly cold regions."
+  },
+  {
+    "question": "Can coffee grow outside Karnataka?",
+    "answer": "Yes, coffee is also grown in Kerala (Wayanad), Tamil Nadu (Nilgiris and Yercaud), and Andhra Pradesh (Araku Valley). These regions share the high-altitude, high-rainfall, and humid conditions that coffee requires."
+  },
+  {
+    "question": "Can coconut grow in north India?",
+    "answer": "Coconut requires tropical, frost-free conditions (>15°C year-round) and high humidity. It is not suited to most of north India except coastal Odisha and parts of Gujarat. Its primary growing belt is the southern coastal states."
+  },
+  {
+    "question": "Why is sugarcane mainly grown in UP?",
+    "answer": "Uttar Pradesh accounts for over 40% of India's sugarcane area due to its fertile alluvial Gangetic plain soils, warm growing temperatures, and the large number of sugar mills that provide a ready market. The state's canal irrigation infrastructure also supports sugarcane's high water requirement."
+  },
+  {
+    "question": "Why is cotton called white gold?",
+    "answer": "Cotton is called 'white gold' because of its high economic value and the white fluffy appearance of its boll. It is one of India's most important commercial crops, generating significant export revenue and supporting millions of farmers and textile workers."
+  },
+  {
+    "question": "Why is jute called golden fiber?",
+    "answer": "Jute is called the 'golden fiber' because of the golden-brown colour of its fibers and its significant economic value. India is one of the world's largest producers of jute, primarily in West Bengal, and it is a biodegradable alternative to synthetic fibers."
+  },
+  {
+    "question": "What is the nutritional value of rice?",
+    "answer": "Cooked rice (100g) provides ~130 kcal, 2.7g protein, 28g carbohydrates, 0.3g fat, and is a good source of thiamine and niacin."
+  },
+  {
+    "question": "What is the nutritional value of wheat?",
+    "answer": "Whole wheat flour (100g) provides ~340 kcal, 13g protein, 72g carbohydrates, 2.5g fat, and is rich in fibre, iron, and B-vitamins."
+  },
+  {
+    "question": "What is the nutritional value of maize?",
+    "answer": "Maize/corn (100g, raw) provides ~365 kcal, 9g protein, 74g carbohydrates, 4.7g fat, and is rich in carotenoids and B-vitamins."
+  },
+  {
+    "question": "What is the nutritional value of bajra?",
+    "answer": "Pearl millet/bajra (100g) provides ~378 kcal, 11g protein, 73g carbohydrates, 5g fat, and is exceptionally high in iron, zinc, and dietary fibre."
+  },
+  {
+    "question": "What is the nutritional value of ragi?",
+    "answer": "Finger millet/ragi (100g) provides ~336 kcal, 7.3g protein, 72g carbohydrates, and is exceptionally rich in calcium (344 mg/100g), making it ideal for bone health."
+  },
+  {
+    "question": "What is the nutritional value of jowar?",
+    "answer": "Sorghum/jowar (100g) provides ~329 kcal, 10.4g protein, 67g carbohydrates, 3.5g fat, and is gluten-free with high fibre and antioxidants."
+  },
+  {
+    "question": "What is the nutritional value of chickpea?",
+    "answer": "Chickpea/gram (100g, boiled) provides ~164 kcal, 8.9g protein, 27g carbohydrates, 2.6g fat, and is an excellent source of folate, iron, and dietary fibre."
+  },
+  {
+    "question": "What is the nutritional value of soybean?",
+    "answer": "Soybean (100g, boiled) provides ~173 kcal, 16.6g protein, 9.9g carbohydrates, and is one of the few plant sources of complete protein and a good source of omega-3 fatty acids."
+  },
+  {
+    "question": "What is the nutritional value of mungbean?",
+    "answer": "Mung bean/green gram (100g, boiled) provides ~105 kcal, 7.2g protein, 19g carbohydrates, and is rich in folate, magnesium, and antioxidants."
+  },
+  {
+    "question": "What is the nutritional value of blackgram?",
+    "answer": "Black gram/urad (100g, boiled) provides ~105 kcal, 7.6g protein, 17g carbohydrates, and is rich in iron, potassium, and dietary fibre."
+  },
+  {
+    "question": "What is the nutritional value of lentil?",
+    "answer": "Lentils (100g, boiled) provide ~116 kcal, 9g protein, 20g carbohydrates, and are an excellent source of folate, iron, and slow-release carbohydrates."
+  },
+  {
+    "question": "What is the nutritional value of groundnut?",
+    "answer": "Groundnut/peanut (100g) provides ~567 kcal, 25.8g protein, 49g fat, and is rich in niacin, folate, and vitamin E."
+  },
+  {
+    "question": "What is the nutritional value of sesame?",
+    "answer": "Sesame seeds (100g) provide ~573 kcal, 17.7g protein, 50g fat, and are exceptionally rich in calcium (975 mg), iron, and antioxidants."
+  },
+  {
+    "question": "What is the nutritional value of mustard?",
+    "answer": "Mustard seeds (100g) provide ~508 kcal, 26g protein, 36g fat, and are rich in omega-3 fatty acids (alpha-linolenic acid), glucosinolates, and selenium."
+  },
+  {
+    "question": "What is the nutritional value of spinach?",
+    "answer": "Spinach (100g, raw) provides ~23 kcal, 2.9g protein, 3.6g carbohydrates, and is exceptionally rich in iron (2.7 mg), vitamin A, vitamin C, folate, and vitamin K."
+  },
+  {
+    "question": "What is the nutritional value of tomato?",
+    "answer": "Tomato (100g) provides ~18 kcal, 0.9g protein, 3.9g carbohydrates, and is an excellent source of lycopene (a cancer-protective antioxidant), vitamin C, and potassium."
+  },
+  {
+    "question": "What is the nutritional value of potato?",
+    "answer": "Potato (100g, boiled) provides ~87 kcal, 1.9g protein, 20g carbohydrates, and is a good source of vitamin C, potassium, and B6."
+  },
+  {
+    "question": "What is the nutritional value of onion?",
+    "answer": "Onion (100g) provides ~40 kcal, 1.1g protein, 9.3g carbohydrates, and contains quercetin, a powerful anti-inflammatory antioxidant."
+  },
+  {
+    "question": "What is the nutritional value of carrot?",
+    "answer": "Carrot (100g) provides ~41 kcal, 0.9g protein, 10g carbohydrates, and is exceptionally rich in beta-carotene (pro-vitamin A) — among the highest of any vegetable."
+  },
+  {
+    "question": "What is the nutritional value of banana?",
+    "answer": "Banana (100g) provides ~89 kcal, 1.1g protein, 23g carbohydrates, and is a good source of potassium, vitamin B6, and dietary fibre."
+  },
+  {
+    "question": "What is the nutritional value of mango?",
+    "answer": "Mango (100g) provides ~60 kcal, 0.8g protein, 15g carbohydrates, and is rich in vitamin C, vitamin A, folate, and a wide range of antioxidants."
+  },
+  {
+    "question": "What is the nutritional value of apple?",
+    "answer": "Apple (100g) provides ~52 kcal, 0.3g protein, 14g carbohydrates, and is a source of quercetin, catechin, chlorogenic acid, and dietary fibre (pectin)."
+  },
+  {
+    "question": "What is the nutritional value of guava?",
+    "answer": "Guava (100g) provides ~68 kcal, 2.6g protein, 14g carbohydrates, and is one of the richest sources of vitamin C (228 mg/100g) — far higher than oranges."
+  },
+  {
+    "question": "What is the nutritional value of papaya?",
+    "answer": "Papaya (100g) provides ~43 kcal, 0.5g protein, 11g carbohydrates, and is rich in vitamin C, beta-carotene, folate, and the digestive enzyme papain."
+  },
+  {
+    "question": "What is the nutritional value of pomegranate?",
+    "answer": "Pomegranate arils (100g) provide ~83 kcal, 1.7g protein, 19g carbohydrates, and are exceptionally rich in punicalagins and punicic acid — powerful antioxidants with anti-inflammatory properties."
+  },
+  {
+    "question": "What is the nutritional value of watermelon?",
+    "answer": "Watermelon (100g) provides ~30 kcal, 0.6g protein, 7.6g carbohydrates, and is 92% water. It is rich in lycopene, citrulline, and vitamin C."
+  },
+  {
+    "question": "What is the nutritional value of grapes?",
+    "answer": "Grapes (100g) provide ~69 kcal, 0.7g protein, 18g carbohydrates, and contain resveratrol, quercetin, and other polyphenols with antioxidant properties."
+  },
+  {
+    "question": "What is the nutritional value of coconut?",
+    "answer": "Coconut meat (100g) provides ~354 kcal, 3.3g protein, 15g carbohydrates, 33g fat (rich in medium-chain triglycerides/MCTs), and is a good source of manganese and copper."
+  },
+  {
+    "question": "What is the nutritional value of sapota?",
+    "answer": "Sapota/chiku (100g) provides ~83 kcal, 0.4g protein, 20g carbohydrates, and is a good source of dietary fibre, vitamin C, and iron."
+  },
+  {
+    "question": "What is the nutritional value of ber?",
+    "answer": "Ber/Indian jujube (100g) provides ~79 kcal, 1.2g protein, 20g carbohydrates, and is rich in vitamin C (76 mg/100g) and antioxidants."
+  },
+  {
+    "question": "What is the nutritional value of custard apple?",
+    "answer": "Custard apple/sitaphal (100g) provides ~94 kcal, 2.1g protein, 24g carbohydrates, and is a good source of vitamin C, riboflavin, and magnesium."
+  },
+  {
+    "question": "How many calories does rice provide per 100g?",
+    "answer": "Cooked rice provides approximately 130 kcal per 100g. Raw/dry rice provides about 365 kcal per 100g before cooking."
+  },
+  {
+    "question": "How many calories does wheat provide per 100g?",
+    "answer": "Whole wheat flour provides approximately 340 kcal per 100g. Chapati/roti (made from whole wheat) provides about 265 kcal per 100g."
+  },
+  {
+    "question": "How much protein does chickpea contain?",
+    "answer": "Chickpea (boiled, 100g) contains approximately 8.9g of protein, making it one of the richest plant-based protein sources among legumes."
+  },
+  {
+    "question": "How much protein does soybean contain?",
+    "answer": "Soybean (boiled, 100g) contains approximately 16.6g of protein — one of the highest protein contents of any plant food and a complete protein containing all essential amino acids."
+  },
+  {
+    "question": "How much protein does lentil contain?",
+    "answer": "Lentils (boiled, 100g) contain approximately 9g of protein, along with high fibre and iron content."
+  },
+  {
+    "question": "How much fiber does bajra contain?",
+    "answer": "Pearl millet/bajra contains approximately 1.3g of dietary fibre per 100g of raw grain (higher in bran-inclusive preparations), and is notable for its high micronutrient density including iron and zinc."
+  },
+  {
+    "question": "How much iron does spinach contain?",
+    "answer": "Spinach contains approximately 2.7 mg of iron per 100g (raw). While the non-haem iron is less bioavailable than meat iron, consuming it with vitamin C-rich foods enhances absorption."
+  },
+  {
+    "question": "How much vitamin C does guava contain?",
+    "answer": "Guava contains approximately 228 mg of vitamin C per 100g — nearly 2.5 times more than oranges (88 mg/100g). It is one of the best dietary sources of vitamin C."
+  },
+  {
+    "question": "How much vitamin A does carrot contain?",
+    "answer": "Carrot contains approximately 835 mcg RAE (Retinol Activity Equivalents) of vitamin A per 100g, primarily as beta-carotene. This is among the highest vitamin A content of any vegetable."
+  },
+  {
+    "question": "What is the storage life of rice?",
+    "answer": "Milled rice can be stored for 1–2 years in cool, dry conditions. Paddy (unmilled rice) stores for 3–4 years. Use airtight containers or hermetic bags to prevent insect infestation."
+  },
+  {
+    "question": "What is the storage life of wheat?",
+    "answer": "Wheat grain stores well for 2–3 years in proper cool, dry storage (moisture < 12%, temperature < 25°C). Use metal bins or hermetic storage to prevent weevil damage."
+  },
+  {
+    "question": "What is the storage life of maize?",
+    "answer": "Dried maize (moisture < 13%) stores for 1–2 years. Moisture management is critical to prevent aflatoxin contamination. Use hermetic silos or metal bins."
+  },
+  {
+    "question": "What is the storage life of potato?",
+    "answer": "Potatoes can be stored for 4–6 months in a cold store at 4–8°C with 90–95% relative humidity. Avoid light exposure to prevent greening (solanine formation)."
+  },
+  {
+    "question": "What is the storage life of onion?",
+    "answer": "Properly cured onions can be stored for 3–6 months in well-ventilated, dry storage at 25–30°C or 0–4°C in cold storage. Humidity should be kept low (65–70%)."
+  },
+  {
+    "question": "What is the storage life of tomato?",
+    "answer": "Ripe tomatoes store for 1–2 weeks at 10–13°C. They should not be stored below 10°C as this causes chilling injury. Green tomatoes last longer at lower temperatures."
+  },
+  {
+    "question": "What is the storage life of mango?",
+    "answer": "Ripe mangoes last 5–7 days at room temperature or 2 weeks at 8–13°C. Green mangoes can be stored for 3–4 weeks at 8–13°C. Ethylene treatment accelerates ripening."
+  },
+  {
+    "question": "What is the storage life of banana?",
+    "answer": "Ripe bananas last 3–7 days at room temperature. Green bananas can be stored at 13–16°C for 3–4 weeks. Do not refrigerate unripe bananas as temperatures below 12°C cause chilling injury."
+  },
+  {
+    "question": "What is the storage life of apple?",
+    "answer": "Apples store for 2–8 months in cold storage (0–4°C, 90–95% RH). Controlled atmosphere (CA) storage extends shelf life to 12 months."
+  },
+  {
+    "question": "How to store rice after harvest?",
+    "answer": "Dry paddy to below 14% moisture content, clean to remove impurities, then store in dry, airtight metal bins or hermetic bags. Fumigate with phosphine if needed for long-term storage. Avoid dampness which causes mould."
+  },
+  {
+    "question": "How to store wheat after harvest?",
+    "answer": "Dry wheat to below 12% moisture content, clean thoroughly, then store in metal bins or hermetic storage at low humidity and temperature. Treat with malathion dust or phosphine for pest prevention in large stores."
+  },
+  {
+    "question": "How to store pulses after harvest?",
+    "answer": "Dry pulses to below 10–12% moisture content and store in airtight containers with a few dried neem leaves, which act as a natural repellent. Hermetic bags are effective for longer storage (6–12 months)."
+  },
+  {
+    "question": "How to store onion after harvest?",
+    "answer": "Cure freshly harvested onions in the field or shade for 10–15 days until outer skins are dry and papery. Store in well-ventilated bamboo or wooden crates away from moisture. Cold storage at 0–4°C extends shelf life to 6 months."
+  },
+  {
+    "question": "How to store potato after harvest?",
+    "answer": "Allow seed or eating potatoes to cure at 15–18°C for 10–14 days to heal skin damage. Then store in cold storage at 4–8°C with 90–95% RH and darkness. Avoid storage with onions as ethylene causes sprouting."
+  },
+  {
+    "question": "What is post-harvest loss?",
+    "answer": "Post-harvest loss is the reduction in quantity or quality of food crops after harvest and before consumption, occurring during storage, handling, transportation, processing, or marketing. India loses approximately 15–20% of food grains and 25–30% of fruits and vegetables to post-harvest losses."
+  },
+  {
+    "question": "How to reduce post-harvest losses?",
+    "answer": "Key strategies include timely harvesting, proper field drying, use of hermetic storage bags or metal silos, cold chain infrastructure for perishables, improved packaging and transport, and farmer training on proper handling. Government schemes like PM Kisan SAMPADA provide post-harvest infrastructure support."
+  },
+  {
+    "question": "What is cold storage?",
+    "answer": "Cold storage is a facility that maintains low temperature and controlled humidity to extend the shelf life of perishable agricultural products. In India, cold storage capacity has been increased under PMKSY and the National Horticulture Mission."
+  },
+  {
+    "question": "Which crops need cold storage?",
+    "answer": "Perishable crops requiring cold storage include potato, onion, apple, grapes, mango, banana, tomato, carrot, and most vegetables and fruits. Pulses and grains do not need refrigeration but need dry, sealed storage."
+  },
+  {
+    "question": "What is the market demand for rice in India?",
+    "answer": "India is the world's largest rice exporter and has significant domestic demand. Rice consumption is highest in southern, eastern, and northeastern India. Non-basmati rice exports have been a major revenue earner, though export restrictions are periodically applied to control domestic prices."
+  },
+  {
+    "question": "What is the market demand for wheat in India?",
+    "answer": "Wheat is the second most consumed grain in India after rice, primarily in north and central India. India is one of the world's top wheat producers and consumers, with the Food Corporation of India (FCI) procuring heavily for the PDS (Public Distribution System)."
+  },
+  {
+    "question": "What is the market demand for cotton in India?",
+    "answer": "India is the world's largest cotton producer and a major exporter. Cotton demand is driven by the massive domestic textile industry. Bt cotton accounts for over 90% of India's cotton cultivation area."
+  },
+  {
+    "question": "What is the market demand for sugarcane in India?",
+    "answer": "India is the world's second-largest sugar producer. Sugarcane demand is driven by sugar mills, ethanol blending programs (under NITI Aayog targets), and jaggery/khandsari production. UP, Maharashtra, and Karnataka dominate production."
+  },
+  {
+    "question": "Which crops have export potential?",
+    "answer": "Indian crops with high export potential include basmati and non-basmati rice, cotton, spices (pepper, cardamom, chilli), marine products, coffee, tea, groundnut, sesame, pomegranate, grapes, mango (Alphonso), and banana."
+  },
+  {
+    "question": "Which crops are imported by India?",
+    "answer": "India imports significant quantities of edible oils (palm oil, soybean oil), pulses (when domestic production is insufficient), cashew nuts for processing, and spices like cardamom in some years."
+  },
+  {
+    "question": "What is the future of millets in India?",
+    "answer": "Millets (bajra, jowar, ragi, and small millets) are gaining recognition as 'Nutri-Cereals' for their high nutritional value, climate resilience, and low input requirements. India led the UN's International Year of Millets (2023) initiative, driving domestic and global demand."
+  },
+  {
+    "question": "Why are millets called superfoods?",
+    "answer": "Millets are called superfoods because they are rich in iron, calcium, zinc, dietary fibre, and antioxidants; gluten-free; drought-tolerant; and have a low glycaemic index — making them beneficial for people with diabetes, anaemia, and celiac disease."
+  },
+  {
+    "question": "What is the International Year of Millets?",
+    "answer": "The United Nations declared 2023 as the International Year of Millets (IYM 2023) on India's initiative. This global campaign promoted millet consumption, trade, and production to address food security and climate resilience challenges."
+  },
+  {
+    "question": "How is climate change affecting rice production?",
+    "answer": "Rising temperatures reduce rice grain quality and increase spikelet sterility. Erratic monsoons cause droughts and floods. Flooding-tolerant varieties (Sub1A gene) and direct-seeded rice are being promoted as adaptive strategies."
+  },
+  {
+    "question": "How is climate change affecting wheat production?",
+    "answer": "Terminal heat stress (high temperatures at grain filling stage) is increasingly affecting wheat yields in the Indo-Gangetic Plain. Heat-tolerant varieties and adjusted sowing dates are being promoted by CIMMYT and ICAR."
+  },
+  {
+    "question": "Which crops are climate resilient?",
+    "answer": "Millets (bajra, jowar, ragi), moth beans, chickpea, sesame, castor, and sorghum are among the most climate-resilient crops due to their heat and drought tolerance. These are prioritised under India's climate-smart agriculture programs."
+  },
+  {
+    "question": "What are drought tolerant crop varieties?",
+    "answer": "Examples include MACS 6222 wheat, Naveen rice, IR64 Subclade rice (flooding tolerant), DH-86 bajra, JAKI 9218 jowar, Phule G 5 groundnut, and GNV 5 moth bean. ICAR continuously releases drought-tolerant varieties for different agro-climatic zones."
+  },
+  {
+    "question": "What are flood tolerant crop varieties?",
+    "answer": "Swarna Sub1 (rice) is the most notable flood-tolerant variety, developed through marker-assisted selection and widely adopted in flood-prone areas of Odisha, Bihar, and West Bengal."
+  },
+  {
+    "question": "What are heat tolerant crop varieties?",
+    "answer": "MACS 6222 wheat (heat tolerant), HD 2781 (wheat), and various ICAR-released maize hybrids are designed for heat tolerance. Terminal heat-tolerant wheat varieties are critical for Punjab and Haryana as summer temperatures rise."
+  },
+  {
+    "question": "What is the difference between hybrid and traditional seeds?",
+    "answer": "Hybrid seeds are produced by crossing two genetically distinct parent lines, resulting in uniform, high-yielding F1 plants. Traditional/open-pollinated varieties are farmer-saved seeds passed down through generations. Hybrids generally yield more but must be repurchased each season; traditional varieties can be saved and replanted."
+  },
+  {
+    "question": "What are GM crops?",
+    "answer": "Genetically Modified (GM) crops have specific genes inserted or modified using biotechnology to give new traits like pest resistance, herbicide tolerance, or improved nutrition. GM crops undergo regulatory safety reviews before commercial release."
+  },
+  {
+    "question": "Are GM crops allowed in India?",
+    "answer": "Currently, Bt cotton is the only commercially approved GM crop in India. Other GM crops like Bt brinjal and GM mustard (Dhara Mustard Hybrid-11) have been developed but face regulatory and policy hurdles. The Genetic Engineering Appraisal Committee (GEAC) under MoEFCC oversees approvals."
+  },
+  {
+    "question": "What is Bt cotton?",
+    "answer": "Bt cotton is a GM variety containing a gene from the soil bacterium Bacillus thuringiensis (Bt) that produces proteins toxic to bollworm (Helicoverpa armigera). Introduced in India in 2002, it now covers over 90% of cotton cultivation and significantly reduced pesticide use."
+  },
+  {
+    "question": "What is the Green Revolution?",
+    "answer": "The Green Revolution (1960s–1970s) was a period of dramatic agricultural transformation in India and other developing nations, led by IRRI and CIMMYT, introducing high-yielding dwarf varieties of wheat (Norman Borlaug's semi-dwarf wheat) and rice, along with chemical fertilisers and irrigation, enabling India to achieve food self-sufficiency."
+  },
+  {
+    "question": "What is the White Revolution?",
+    "answer": "India's White Revolution (Operation Flood, 1970–1996), led by Dr. Verghese Kurien through AMUL, transformed India from a milk-deficient country into the world's largest milk producer through dairy cooperative development."
+  },
+  {
+    "question": "What is the Blue Revolution?",
+    "answer": "The Blue Revolution refers to India's push to increase fish production through aquaculture development. India is now the second-largest fish producer in the world under this initiative."
+  },
+  {
+    "question": "What is the Yellow Revolution?",
+    "answer": "India's Yellow Revolution targeted increased oilseed production to reduce edible oil imports. Launched in the 1980s–90s, it led to significant growth in mustard, sunflower, and soybean cultivation."
+  },
+  {
+    "question": "How has technology changed Indian agriculture?",
+    "answer": "Technology has transformed Indian agriculture through high-yielding seed varieties, precision irrigation (drip, sprinkler), soil testing, drone-based crop monitoring, AI-powered recommendation systems (like this one), digital markets (eNAM), and mobile-based advisory services."
+  },
+  {
+    "question": "What is vertical farming?",
+    "answer": "Vertical farming is growing crops in stacked layers in controlled indoor environments using LED lighting, hydroponics or aeroponics, and climate control. It uses up to 90% less water than traditional farming and enables year-round production, but currently has high energy costs."
+  },
+  {
+    "question": "Can the system be used for greenhouse farming?",
+    "answer": "Yes. If you can measure or estimate the soil and climate parameters inside your greenhouse (N, P, K, pH, temperature, humidity, and water supply), you can use the system to identify greenhouse-suitable crops for your conditions."
+  },
+  {
+    "question": "What is hydroponics?",
+    "answer": "Hydroponics is a method of growing plants without soil, using nutrient-enriched water solutions. Plants are supported in inert media (rock wool, perlite, coco coir). It enables year-round, high-density growing, especially for vegetables and herbs."
+  },
+  {
+    "question": "Can the system recommend crops for hydroponic farming?",
+    "answer": "The system is designed for soil-based agriculture. For hydroponics, the soil nutrient inputs (N, P, K, pH) would correspond to your nutrient solution parameters. Crops like tomato, lettuce, spinach, cucumber, and herbs are most commonly grown hydroponically."
+  },
+  {
+    "question": "What is aquaponics?",
+    "answer": "Aquaponics is an integrated system that combines fish farming (aquaculture) with plant growing (hydroponics). Fish waste provides nutrients for plants, which in turn filter the water for the fish. It is highly water-efficient and produces both fish and vegetables simultaneously."
+  },
+  {
+    "question": "What are the benefits of using a crop recommendation system?",
+    "answer": "Key benefits include data-driven crop selection that maximises yield for your specific soil and climate, reduced risk of crop failure, efficient use of soil nutrients, time savings compared to consulting multiple experts, accessible scientific guidance for small and marginal farmers, and support for sustainable agriculture decisions."
+  },
+  {
+    "question": "How does AI help in agriculture?",
+    "answer": "AI helps in agriculture through crop recommendation systems (like this one), disease and pest detection using image recognition, yield prediction, precision irrigation scheduling, market price forecasting, weather-based advisory, and supply chain optimisation."
+  },
+  {
+    "question": "What is the future of AI in farming?",
+    "answer": "The future of AI in farming includes real-time field monitoring via IoT sensors and drones, personalised crop advisory through mobile apps, AI-powered robots for precision spraying and harvesting, satellite-based soil mapping, and integration of multi-year weather and market data for holistic farm management."
+  },
+  {
+    "question": "Can machine learning predict crop failure?",
+    "answer": "Yes. ML models trained on historical weather, soil, and satellite data can predict conditions likely to cause crop failure (drought stress, pest outbreak, disease pressure). Early warning systems using such models are being developed by ICAR and various agri-tech startups."
+  },
+  {
+    "question": "How does data science help farmers?",
+    "answer": "Data science enables farmers to make evidence-based decisions by analysing soil test data, climate trends, market prices, and satellite imagery. It powers recommendation systems, insurance claim verification, yield optimisation, and supply chain management."
+  },
+  {
+    "question": "What sensors can measure soil nutrients?",
+    "answer": "IoT soil sensors like the Decagon 5TE, POGO sensor, and various NPK probes can measure soil moisture, electrical conductivity (correlated with nutrient availability), temperature, and even N, P, K levels in real time. Lab-based testing remains the gold standard for accuracy."
+  },
+  {
+    "question": "What is IoT in agriculture?",
+    "answer": "IoT (Internet of Things) in agriculture involves deploying connected sensors in fields to monitor soil moisture, temperature, humidity, nutrients, and crop health in real time. Data is transmitted to smartphones or dashboards, enabling precision farming decisions."
+  },
+  {
+    "question": "What are smart farming techniques?",
+    "answer": "Smart farming techniques include precision irrigation (drip, sensor-based), variable-rate fertiliser application, drone-based spraying and monitoring, GPS-guided machinery, crop recommendation AI, satellite crop health monitoring (NDVI), and digital market connectivity."
+  },
+  {
+    "question": "How do drones help in agriculture?",
+    "answer": "Drones are used for aerial crop scouting, NDVI-based health mapping, targeted pesticide spraying, seeding in difficult terrain, and livestock monitoring. They reduce labour costs, enable early pest and disease detection, and improve precision application of inputs."
+  },
+  {
+    "question": "What is remote sensing in agriculture?",
+    "answer": "Remote sensing uses satellite or airborne sensors to collect data on vegetation health (NDVI, EVI indices), soil moisture, crop type mapping, flood or drought assessment, and yield estimation over large areas — enabling large-scale precision agriculture and policy planning."
+  }
+]
