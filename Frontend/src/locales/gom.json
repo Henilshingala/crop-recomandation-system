@@ -198,5 +198,29 @@
     "tomato": "टमाट",
     "watermelon": "कलिंगड",
     "wheat": "गंव"
+  },
+  "chat": {
+    "title": "पीक सहाय्यक",
+    "placeholder": "पिकां, मातये, सारे विशीं विचारात...",
+    "send": "धाडात",
+    "serverError": "सर्व्हर उपलब्ध ना. उपकार करून परत यत्न करात.",
+    "emptyResponse": "कितेंगी चूक जाली. परत यत्न करात.",
+    "savedForReview": "हो प्रस्न पुनरावलोकना खातीर सांबाळ्ळा.",
+    "typing": "टायप जाता...",
+    "openChat": "चॅट उगडात",
+    "closeChat": "चॅट बंद करात"
+  },
+  "tabs": {
+    "cropRecommendation": "Crop Recommendation",
+    "governmentSchemes": "Government Schemes"
+  },
+  "schemes": {
+    "findTitle": "Find Government Schemes",
+    "keywordLabel": "Search Keyword",
+    "stateLabel": "State",
+    "searchButton": "Find Agriculture Schemes",
+    "noResults": "No schemes found",
+    "noResultsHint": "Try adjusting your filters or search keywords.",
+    "loadError": "Failed to load data. Please try again."
   }
 }
