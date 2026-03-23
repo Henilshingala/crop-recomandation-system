@@ -212,7 +212,8 @@
   },
   "tabs": {
     "cropRecommendation": "Crop Recommendation",
-    "governmentSchemes": "Government Schemes"
+    "governmentSchemes": "Government Schemes",
+    "weather": "मौसम"
   },
   "schemes": {
     "findTitle": "Find Government Schemes",
@@ -222,5 +223,27 @@
     "noResults": "No schemes found",
     "noResultsHint": "Try adjusting your filters or search keywords.",
     "loadError": "Failed to load data. Please try again."
+  },
+  "weather": {
+    "selectLocation": "अपना स्थान चुनें",
+    "state": "सूबा",
+    "city": "शहर / ग्रां",
+    "selectState": "इक राज्य चुनें...",
+    "selectCity": "कोई शहर चुनें...",
+    "today": "आज का मौसम",
+    "forecast": "7 दिन दा पूर्वानुमान",
+    "humidity": "हुम्म",
+    "rain": "बरखा होई",
+    "loading": "मौसम दा डाटा लाना...",
+    "errorTitle": "मौसम अनुपलब्ध ऐ",
+    "emptyTitle": "मौसम दी जांच करो",
+    "emptyDescription": "मौजूदा मौसम दी स्थिति ते अपने इलाके लेई 7 दिनें दा पूर्वानुमान दिक्खने लेई उपर दित्ते गेदे अपने राज्य ते शैहर गी चुनो।",
+    "locationLoadError": "लोकेशन डेटा लोड करने च असफल रेहा। कृपया ताज़ा कर दे।",
+    "missingApiKey": "जियोकोडिंग एपीआई कुंजी कॉन्फ़िगर नेईं कीती गेई ऐ। कृपा करियै अपनी .env फ़ाइल च VITE_OPENCAGE_API_KEY सेट करो.",
+    "rateLimitError": "बहुत ज्यादा रिक्वेस्ट। कृपा करियै इक पल इंतजार करो ते दुबारा कोशश करो।",
+    "geocodeError": "लोकेशन नेईं लब्भा। कृपा करियै इक होर चयन आज़माइयै दिक्खो।",
+    "locationNotFound": "लोकेशन नहीं मिली। पास दे शहर चुनने दी कोशश करो।",
+    "fetchError": "मौसम दा आंकड़ा लाने च असफल रेहा। कृपा करियै दुबारा कोशश करो।",
+    "genericError": "कुछ गड़बड़ हो गया। कृपा करियै दुबारा कोशश करो।"
   }
 }

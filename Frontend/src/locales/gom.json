@@ -212,7 +212,8 @@
   },
   "tabs": {
     "cropRecommendation": "Crop Recommendation",
-    "governmentSchemes": "Government Schemes"
+    "governmentSchemes": "Government Schemes",
+    "weather": "हवामान"
   },
   "schemes": {
     "findTitle": "Find Government Schemes",
@@ -222,5 +223,27 @@
     "noResults": "No schemes found",
     "noResultsHint": "Try adjusting your filters or search keywords.",
     "loadError": "Failed to load data. Please try again."
+  },
+  "weather": {
+    "selectLocation": "तुमचें थळ निवडात",
+    "state": "राज्य",
+    "city": "शार / गांव",
+    "selectState": "एक राज्य निवडात...",
+    "selectCity": "एक शार निवडात...",
+    "today": "आयचें हवामान",
+    "forecast": "7 दिसांचो अदमास",
+    "humidity": "आद्रताय",
+    "rain": "पावस पडटा",
+    "loading": "हवामान डेटा हाडप...",
+    "errorTitle": "हवामान उपलब्ध ना",
+    "emptyTitle": "हवामान तपासात",
+    "emptyDescription": "सद्याची हवामानाची परिस्थिती आनी तुमच्या वाठाराचो 7 दिसांचो अदमास पळोवपाक वयर तुमचें राज्य आनी शार निवडात.",
+    "locationLoadError": "थळ डेटा लोड करपाक अपेस आयलें. उपकार करून ताजें करचें.",
+    "missingApiKey": "जिओकोडींग एपीआय की संरचीत करूंक ना. उपकार करून तुमच्या .env फायलीन VITE_OPENCAGE_API_KEY सेट करात.",
+    "rateLimitError": "चड विनंती. उपकार करून एक खीण वाट पळयात आनी परतून यत्न करात.",
+    "geocodeError": "थळ मेळूंक ना. उपकार करून वेगळी निवड करून पळयात.",
+    "locationNotFound": "थळ मेळूंक ना. लागसारचें शार निवडपाचो यत्न करात.",
+    "fetchError": "हवामानाची म्हायती हाडपाक अपेस आयलें. उपकार करून परतून यत्न करात.",
+    "genericError": "कितें तरी चुकलें. उपकार करून परतून यत्न करात."
   }
 }

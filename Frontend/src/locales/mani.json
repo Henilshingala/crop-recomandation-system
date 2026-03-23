@@ -212,7 +212,8 @@
   },
   "tabs": {
     "cropRecommendation": "Crop Recommendation",
-    "governmentSchemes": "Government Schemes"
+    "governmentSchemes": "Government Schemes",
+    "weather": "ꯑꯏꯪ ꯑꯁꯥ"
   },
   "schemes": {
     "findTitle": "Find Government Schemes",
@@ -222,5 +223,27 @@
     "noResults": "No schemes found",
     "noResultsHint": "Try adjusting your filters or search keywords.",
     "loadError": "Failed to load data. Please try again."
+  },
+  "weather": {
+    "selectLocation": "ꯅꯍꯥꯛꯀꯤ ꯂꯣꯀꯦꯁꯟ ꯑꯗꯨ ꯈꯜꯂꯨ꯫",
+    "state": "ꯑꯣꯏꯔꯤꯕ ꯐꯤꯚꯝ",
+    "city": "ꯁꯍꯔ / ꯈꯨꯉ꯭ꯒꯪ꯫",
+    "selectState": "ꯔꯥꯖ꯭ꯌ ꯑꯃꯥ ꯈꯅꯕꯤꯌꯨ...",
+    "selectCity": "ꯁꯍꯔ ꯑꯃꯥ ꯈꯅꯕꯤꯌꯨ...",
+    "today": "ꯉꯁꯤꯒꯤ ꯅꯣꯡꯖꯨ ꯅꯨꯡꯁꯥ꯫",
+    "forecast": "ꯅꯨꯃꯤꯠ ꯷ꯅꯤꯒꯤ ꯐꯣꯔꯀꯥꯁ꯭ꯠ꯫",
+    "humidity": "ꯆꯅꯞꯅꯕꯒꯤ ꯆꯥꯡ",
+    "rain": "ꯅꯣꯡ ꯆꯨꯕꯥ꯫",
+    "loading": "ꯋꯦꯗꯔ ꯗꯦꯇꯥ ꯂꯧꯕꯥ...",
+    "errorTitle": "ꯋꯦꯗꯔ ꯑꯅꯑꯦꯕꯦꯂꯦꯕꯜ ꯑꯣꯏꯕꯥ꯫",
+    "emptyTitle": "ꯋꯦꯗꯔ ꯑꯗꯨ ꯆꯦꯛ ꯇꯧꯕꯤꯌꯨ꯫",
+    "emptyDescription": "ꯍꯧꯖꯤꯛ ꯂꯩꯔꯤꯕꯥ ꯋꯦꯗꯔ ꯀꯟꯗꯤꯁꯅꯁꯤꯡ ꯑꯃꯁꯨꯡ ꯅꯍꯥꯛꯀꯤ ꯑꯦꯔꯤꯌꯥꯒꯤ ꯅꯨꯃꯤꯠ 7ꯅꯤꯒꯤ ꯐꯣꯔꯀꯥꯁ꯭ꯠ ꯑꯃꯥ ꯌꯦꯡꯅꯕꯒꯤꯗꯃꯛ ꯃꯊꯛꯇꯥ ꯂꯩꯕꯥ ꯅꯍꯥꯛꯀꯤ ꯁ꯭ꯇꯦꯠ ꯑꯃꯁꯨꯡ ꯁꯤꯇꯤ ꯑꯗꯨ ꯈꯜꯂꯨ꯫",
+    "locationLoadError": "ꯂꯣꯀꯦꯁꯟ ꯗꯦꯇꯥ ꯂꯣꯗ ꯇꯧꯕꯥ ꯉꯃꯗꯦ꯫ ꯆꯥꯅꯕꯤꯗꯨꯅꯥ ꯔꯤꯐ꯭ꯔꯦꯁ ꯇꯧꯕꯤꯌꯨ꯫",
+    "missingApiKey": "ꯖꯤꯑꯣꯀꯣꯗꯤꯡ API ꯀꯤ ꯀꯅꯐꯤꯒꯔ ꯇꯧꯗꯦ꯫ ꯆꯥꯅꯕꯤꯗꯨꯅꯥ ꯅꯍꯥꯛꯀꯤ .env ꯐꯥꯏꯂꯗꯥ VITE_OPENCAGE_API_KEY ꯁꯦꯠ ꯇꯧꯔꯣ.",
+    "rateLimitError": "ꯔꯤꯀꯣꯔꯗ ꯀꯌꯥ ꯑꯃꯥ꯫ ꯆꯥꯅꯕꯤꯗꯨꯅꯥ ꯃꯤꯀꯨꯞ ꯑꯃꯥ ꯉꯥꯏꯕꯤꯌꯨ ꯑꯃꯁꯨꯡ ꯑꯃꯨꯛ ꯍꯟꯅꯥ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
+    "geocodeError": "ꯃꯐꯝ ꯑꯗꯨ ꯊꯤꯕꯥ ꯉꯃꯈꯤꯗꯦ꯫ ꯆꯥꯅꯕꯤꯗꯨꯅꯥ ꯇꯣꯉꯥꯅꯕꯥ ꯈꯅꯕꯒꯤ ꯃꯑꯣꯡ ꯑꯃꯥ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
+    "locationNotFound": "ꯂꯣꯀꯦꯁꯟ ꯐꯪꯗ꯭ꯔꯤ꯫ ꯃꯅꯥꯛ ꯅꯀꯄꯥ ꯁꯍꯔ ꯑꯃꯥ ꯈꯅꯕꯗꯥ ꯍꯣꯠꯅꯧ꯫",
+    "fetchError": "ꯋꯦꯗꯔ ꯗꯦꯇꯥ ꯂꯧꯕꯥ ꯉꯃꯈꯤꯗꯦ꯫ ꯆꯥꯅꯕꯤꯗꯨꯅꯥ ꯑꯃꯨꯛ ꯍꯟꯅꯥ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
+    "genericError": "ꯀꯔꯤꯒꯨꯝꯕꯥ ꯈꯔꯥ ꯑꯁꯣꯌꯕꯥ ꯑꯃꯥ ꯊꯣꯀꯈꯤ꯫ ꯆꯥꯅꯕꯤꯗꯨꯅꯥ ꯑꯃꯨꯛ ꯍꯟꯅꯥ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
   }
 }

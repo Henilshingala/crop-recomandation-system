@@ -212,7 +212,8 @@
   },
   "tabs": {
     "cropRecommendation": "Crop Recommendation",
-    "governmentSchemes": "Government Schemes"
+    "governmentSchemes": "Government Schemes",
+    "weather": "Weather"
   },
   "schemes": {
     "findTitle": "Find Government Schemes",
@@ -222,5 +223,27 @@
     "noResults": "No schemes found",
     "noResultsHint": "Try adjusting your filters or search keywords.",
     "loadError": "Failed to load data. Please try again."
+  },
+  "weather": {
+    "selectLocation": "Select Your Location",
+    "state": "State",
+    "city": "City / Village",
+    "selectState": "Choose a state...",
+    "selectCity": "Choose a city...",
+    "today": "Today's Weather",
+    "forecast": "7-Day Forecast",
+    "humidity": "Humidity",
+    "rain": "Rainfall",
+    "loading": "Fetching weather data...",
+    "errorTitle": "Weather Unavailable",
+    "emptyTitle": "Check the Weather",
+    "emptyDescription": "Select your state and city above to see current weather conditions and a 7-day forecast for your area.",
+    "locationLoadError": "Failed to load location data. Please refresh.",
+    "missingApiKey": "Geocoding API key is not configured. Please set VITE_OPENCAGE_API_KEY in your .env file.",
+    "rateLimitError": "Too many requests. Please wait a moment and try again.",
+    "geocodeError": "Could not find the location. Please try a different selection.",
+    "locationNotFound": "Location not found. Try selecting a nearby city.",
+    "fetchError": "Failed to fetch weather data. Please try again.",
+    "genericError": "Something went wrong. Please try again."
   }
 }

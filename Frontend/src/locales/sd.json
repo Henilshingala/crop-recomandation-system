@@ -201,7 +201,8 @@
   },
   "tabs": {
     "cropRecommendation": "Crop Recommendation",
-    "governmentSchemes": "Government Schemes"
+    "governmentSchemes": "Government Schemes",
+    "weather": "موسم"
   },
   "schemes": {
     "findTitle": "Find Government Schemes",
@@ -211,5 +212,27 @@
     "noResults": "No schemes found",
     "noResultsHint": "Try adjusting your filters or search keywords.",
     "loadError": "Failed to load data. Please try again."
+  },
+  "weather": {
+    "selectLocation": "پنھنجي جڳھ کي چونڊيو",
+    "state": "رياست",
+    "city": "شهر/ ڳوٺ",
+    "selectState": "رياست چونڊيو...",
+    "selectCity": "هڪ شهر چونڊيو ...",
+    "today": "اڄ جي موسم",
+    "forecast": "7-ڏينهن جي اڳڪٿي",
+    "humidity": "نمي",
+    "rain": "برسات",
+    "loading": "موسم جي ڊيٽا حاصل ڪري رهيو آهي...",
+    "errorTitle": "موسم دستياب ناهي",
+    "emptyTitle": "موسم چيڪ ڪريو",
+    "emptyDescription": "موجوده موسمي حالتون ۽ توهان جي علائقي لاءِ 7 ڏينهن جي اڳڪٿي ڏسڻ لاءِ مٿي پنهنجي رياست ۽ شهر کي چونڊيو.",
+    "locationLoadError": "جڳھ ڊيٽا لوڊ ڪرڻ ۾ ناڪام. مھرباني ڪري ريفريش ڪريو.",
+    "missingApiKey": "جيوڪوڊنگ API ڪيئي ترتيب نه ڏني وئي آهي. مھرباني ڪري پنھنجي .env فائل ۾ VITE_OPENCAGE_API_KEY سيٽ ڪريو.",
+    "rateLimitError": "تمام گهڻيون درخواستون. مھرباني ڪري ھڪ لمحو انتظار ڪريو ۽ وري ڪوشش ڪريو.",
+    "geocodeError": "جڳھ ڳولي نه سگھيو. مهرباني ڪري هڪ مختلف چونڊ جي ڪوشش ڪريو.",
+    "locationNotFound": "جڳھ نه ملي. ڪوشش ڪريو ويجھو شهر چونڊيو.",
+    "fetchError": "موسم جي ڊيٽا حاصل ڪرڻ ۾ ناڪام. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
+    "genericError": "ڪجهه غلط ٿيو. مهرباني ڪري ٻيهر ڪوشش ڪريو."
   }
 }

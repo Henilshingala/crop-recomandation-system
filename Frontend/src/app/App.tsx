@@ -4,8 +4,9 @@ import DOMPurify from "dompurify";
 import { InputForm } from "@/app/components/InputForm";
 import { ResultsSection } from "@/app/components/ResultsSection";
 import { SchemesRecommendation } from "@/app/components/SchemesRecommendation";
+import { WeatherDashboard } from "@/app/components/WeatherDashboard";
 import ChatWidget from "@/app/components/ChatWidget";
-import { Sprout, Wheat, ShieldAlert, Globe } from "lucide-react";
+import { Sprout, Wheat, ShieldAlert, Globe, CloudSun } from "lucide-react";
 import { getPrediction, type PredictionResponse, type PredictionInput } from "@/app/services/api";
 
 const LANGUAGES = [
@@ -36,7 +37,7 @@ const LANGUAGES = [
 
 export default function App() {
   const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'crop' | 'schemes'>('crop');
+  const [activeTab, setActiveTab] = useState<'crop' | 'schemes' | 'weather'>('crop');
   const [results, setResults] = useState<PredictionResponse | null>(null);
   const [lastInput, setLastInput] = useState<PredictionInput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -148,6 +149,17 @@ export default function App() {
               <Wheat className="w-4 h-4" />
               {t("tabs.governmentSchemes")}
             </button>
+            <button
+               onClick={() => setActiveTab('weather')}
+               className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 ${
+                 activeTab === 'weather' 
+                 ? 'bg-emerald-600 text-white shadow-md transform scale-[1.02]' 
+                 : 'text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 active:scale-95'
+               }`}
+            >
+              <CloudSun className="w-4 h-4" />
+              {t("tabs.weather")}
+            </button>
           </div>
         </div>
 
@@ -200,8 +212,10 @@ export default function App() {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'schemes' ? (
           <SchemesRecommendation />
+        ) : (
+          <WeatherDashboard />
         )}
       </main>
 

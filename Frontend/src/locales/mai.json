@@ -212,7 +212,8 @@
   },
   "tabs": {
     "cropRecommendation": "Crop Recommendation",
-    "governmentSchemes": "Government Schemes"
+    "governmentSchemes": "Government Schemes",
+    "weather": "मौसम"
   },
   "schemes": {
     "findTitle": "Find Government Schemes",
@@ -222,5 +223,27 @@
     "noResults": "No schemes found",
     "noResultsHint": "Try adjusting your filters or search keywords.",
     "loadError": "Failed to load data. Please try again."
+  },
+  "weather": {
+    "selectLocation": "अपन स्थान चुनू",
+    "state": "राज्य",
+    "city": "शहर / गाम",
+    "selectState": "कोनो राज्य चुनू...",
+    "selectCity": "कोनो शहर चुनू...",
+    "today": "आजुक मौसम",
+    "forecast": "7 दिन के पूर्वानुमान",
+    "humidity": "उमस",
+    "rain": "बरखा",
+    "loading": "मौसम के डाटा लाना...",
+    "errorTitle": "मौसम अनुपलब्ध",
+    "emptyTitle": "मौसम के जाँच करू",
+    "emptyDescription": "वर्तमान मौसम के स्थिति आ अपन इलाका के 7 दिन के पूर्वानुमान देखय लेल ऊपर अपन राज्य आ शहर चुनू.",
+    "locationLoadError": "स्थान डाटा लोड करबा मे विफल. कृपया रिफ्रेश करू।",
+    "missingApiKey": "जियोकोडिंग एपीआई कुंजी कॉन्फ़िगर नहि कएल गेल अछि. कृपा क' अपन .env फाइल मे VITE_OPENCAGE_API_KEY सेट करू.",
+    "rateLimitError": "बहुत बेसी आग्रह। कृपया कनेक काल प्रतीक्षा करू आ फेर प्रयास करू।",
+    "geocodeError": "स्थान नहि भेटल। कृपया एकटा अलग चयन आज़माउ।",
+    "locationNotFound": "स्थान नहि भेटल। नजदीकक शहर चुनबाक प्रयास करू।",
+    "fetchError": "मौसमक आंकड़ा आनबा मे असफल। कृपया पुनः प्रयास करू।",
+    "genericError": "किछु गड़बड़ भ’ गेलै। कृपया पुनः प्रयास करू।"
   }
 }
