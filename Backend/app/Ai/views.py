@@ -2,12 +2,10 @@ import json
 import logging
 import os
 import pickle
-import numpy as np
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from sklearn.metrics.pairwise import cosine_similarity
 from .nlp_utils import tokenize_and_clean, detect_language
 from .models import MissingQuestion
 
@@ -33,6 +31,9 @@ def get_model():
 @permission_classes([AllowAny])
 def chat(request):
     try:
+        import numpy as np
+        from sklearn.metrics.pairwise import cosine_similarity
+
         user_question = request.data.get('question', '').strip()
         requested_lang = request.data.get('language', 'en')
         if not user_question:
