@@ -478,7 +478,21 @@ def get_schemes(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def get_scheme_options(request):
-    """GET /api/schemes/options/ Returns available states and categories."""
-    options = get_filter_options()
-    return Response(options)
+def nutrition_debug(request):
+    """GET /api/debug/nutrition/?crop=mustard — diagnostic endpoint."""
+    crop = request.query_params.get("crop", "rice")
+    from .nutrition import get_nutrition_data, load_nutrition_cache, _path
+    
+    path = _path()
+    exists = os.path.exists(path)
+    cache = load_nutrition_cache()
+    data = get_nutrition_data(crop)
+    
+    return Response({
+        "crop": crop,
+        "path": path,
+        "exists": exists,
+        "cache_size": len(cache),
+        "data": data,
+        "base_dir": settings.BASE_DIR,
+    })

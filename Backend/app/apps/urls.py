@@ -18,6 +18,7 @@ from .views import (
     assistant_chat,
     get_schemes,
     get_scheme_options,
+    nutrition_debug,
 )
 
 # DRF Router for ViewSets
@@ -35,6 +36,9 @@ urlpatterns = [
     
     # Available crops from ML model (GET)
     path('crops/available/', available_crops, name='available-crops'),
+
+    # Nutrition debug (GET)
+    path('debug/nutrition/', nutrition_debug, name='nutrition-debug'),
     
     # Feature validation ranges (GET) — single source of truth
     path('model/limits/', model_limits, name='model-limits'),
