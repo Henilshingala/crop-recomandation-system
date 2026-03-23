@@ -51,16 +51,16 @@ def load_nutrition_cache() -> dict[str, dict]:
                 if food:
                     try:
                         cache[food] = {
-                            "protein_g_per_kg": float(row.get("protein_g_per_kg", 0)),
-                            "fat_g_per_kg": float(row.get("fat_g_per_kg", 0)),
-                            "carbs_g_per_kg": float(row.get("carbs_g_per_kg", 0)),
-                            "fiber_g_per_kg": float(row.get("fiber_g_per_kg", 0)),
-                            "iron_mg_per_kg": float(row.get("iron_mg_per_kg", 0)),
-                            "calcium_mg_per_kg": float(row.get("calcium_mg_per_kg", 0)),
-                            "vitamin_a_mcg_per_kg": float(row.get("vitamin_a_mcg_per_kg", 0)),
-                            "vitamin_c_mg_per_kg": float(row.get("vitamin_c_mg_per_kg", 0)),
-                            "energy_kcal_per_kg": float(row.get("energy_kcal_per_kg", 0)),
-                            "water_g_per_kg": float(row.get("water_g_per_kg", 0)),
+                            "protein_g": float(row.get("protein_g_per_kg", 0)),
+                            "fat_g": float(row.get("fat_g_per_kg", 0)),
+                            "carbs_g": float(row.get("carbs_g_per_kg", 0)),
+                            "fiber_g": float(row.get("fiber_g_per_kg", 0)),
+                            "iron_mg": float(row.get("iron_mg_per_kg", 0)),
+                            "calcium_mg": float(row.get("calcium_mg_per_kg", 0)),
+                            "vitamin_a_mcg": float(row.get("vitamin_a_mcg_per_kg", 0)),
+                            "vitamin_c_mg": float(row.get("vitamin_c_mg_per_kg", 0)),
+                            "energy_kcal": float(row.get("energy_kcal_per_kg", 0)),
+                            "water_g": float(row.get("water_g_per_kg", 0)),
                         }
                     except ValueError:
                         continue

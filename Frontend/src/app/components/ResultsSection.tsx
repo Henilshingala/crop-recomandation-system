@@ -93,6 +93,31 @@ function ConfidenceBar({ value, size = "md" }: { value: number; size?: "sm" | "m
   );
 }
 
+/* ── Animated Nutrition progress bar ──────────────────────────────── */
+
+function NutritionProgressBar({ label, value, max, unit, colorClass }: { label: string; value: number; max: number; unit: string; colorClass: string }) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => setWidth(Math.min((value / max) * 100, 100)), 300);
+    return () => clearTimeout(timer);
+  }, [value, max]);
+
+  return (
+    <div className="mb-3">
+      <div className="flex justify-between text-[11px] mb-1">
+        <span className="text-gray-600 font-medium">{label}</span>
+        <span className="text-gray-900 font-bold">{value} <span className="text-[9px] text-gray-400 font-normal uppercase">{unit}</span></span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-200/50 rounded-full overflow-hidden">
+        <div
+          className={`${colorClass} h-full rounded-full transition-all duration-1000 ease-out shadow-sm`}
+          style={{ width: `${width}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ── Advisory tier badge ──────────────────────────────────────────── */
 
 function AdvisoryBadge({ tier }: { tier?: string }) {
@@ -437,38 +462,84 @@ export function ResultsSection({ data, userInput }: ResultsSectionProps) {
 
             {/* Nutrition */}
             {selected.nutrition && (
-              <div className="bg-emerald-50 backdrop-blur-sm rounded-xl p-4 border border-emerald-200/60">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-emerald-100 shadow-sm">
+                <h3 className="font-bold text-emerald-900 mb-5 flex items-center gap-2 text-lg">
+                  <div className="p-1.5 rounded-lg bg-emerald-100">
+                    <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  </div>
                   {t("results.nutritionTitle")}
                 </h3>
-                <div className="space-y-1.5 text-sm">
-                  {([
-                    [t("results.energy"), selected.nutrition.energy_kcal, "kcal"],
-                    [t("results.protein"), selected.nutrition.protein_g, "g"],
-                    [t("results.carbs"), selected.nutrition.carbs_g, "g"],
-                    [t("results.fat"), selected.nutrition.fat_g, "g"],
-                    [t("results.fiber"), selected.nutrition.fiber_g, "g"],
-                  ] as const).map(([k, v, u]) => (
-                    <div key={k} className="flex justify-between">
-                      <span className="text-gray-600">{k}:</span>
-                      <span className="font-medium text-gray-900">{v} {u}</span>
-                    </div>
-                  ))}
-                  <div className="h-px bg-emerald-200 my-1.5" />
-                  {([
-                    [t("results.iron"), selected.nutrition.iron_mg, "mg"],
-                    [t("results.calcium"), selected.nutrition.calcium_mg, "mg"],
-                    [t("results.water"), selected.nutrition.water_g, "g"],
-                  ] as const).map(([k, v, u]) => (
-                    <div key={k} className="flex justify-between">
-                      <span className="text-gray-600">{k}:</span>
-                      <span className="font-medium text-gray-900">{v} {u}</span>
-                    </div>
-                  ))}
+                
+                <div className="grid grid-cols-1 gap-x-6">
+                  <NutritionProgressBar 
+                    label={t("results.energy")} 
+                    value={selected.nutrition.energy_kcal} 
+                    max={6000} 
+                    unit="kcal" 
+                    colorClass="bg-gradient-to-r from-amber-400 to-orange-500" 
+                  />
+                  <div className="grid grid-cols-2 gap-x-4">
+                    <NutritionProgressBar 
+                      label={t("results.protein")} 
+                      value={selected.nutrition.protein_g} 
+                      max={400} 
+                      unit="g" 
+                      colorClass="bg-gradient-to-r from-emerald-400 to-teal-500" 
+                    />
+                    <NutritionProgressBar 
+                      label={t("results.carbs")} 
+                      value={selected.nutrition.carbs_g} 
+                      max={1000} 
+                      unit="g" 
+                      colorClass="bg-gradient-to-r from-blue-400 to-indigo-500" 
+                    />
+                    <NutritionProgressBar 
+                      label={t("results.fat")} 
+                      value={selected.nutrition.fat_g} 
+                      max={500} 
+                      unit="g" 
+                      colorClass="bg-gradient-to-r from-rose-400 to-pink-500" 
+                    />
+                    <NutritionProgressBar 
+                      label={t("results.fiber")} 
+                      value={selected.nutrition.fiber_g} 
+                      max={500} 
+                      unit="g" 
+                      colorClass="bg-gradient-to-r from-lime-400 to-emerald-500" 
+                    />
+                  </div>
+                  
+                  <div className="h-px bg-gray-100 my-4" />
+                  
+                  <div className="grid grid-cols-2 gap-x-4">
+                    <NutritionProgressBar 
+                      label={t("results.iron")} 
+                      value={selected.nutrition.iron_mg} 
+                      max={200} 
+                      unit="mg" 
+                      colorClass="bg-gradient-to-r from-slate-400 to-slate-600" 
+                    />
+                    <NutritionProgressBar 
+                      label={t("results.calcium")} 
+                      value={selected.nutrition.calcium_mg} 
+                      max={10000} 
+                      unit="mg" 
+                      colorClass="bg-gradient-to-r from-sky-400 to-blue-500" 
+                    />
+                  </div>
+                  
+                  <NutritionProgressBar 
+                    label={t("results.water")} 
+                    value={selected.nutrition.water_g} 
+                    max={1000} 
+                    unit="g" 
+                    colorClass="bg-gradient-to-r from-cyan-300 to-blue-400" 
+                  />
                 </div>
+                
+                <p className="mt-4 text-[10px] text-gray-400 italic text-center">
+                  * All values are per 1 kg of {tc(selected.crop)}
+                </p>
               </div>
             )}
 
