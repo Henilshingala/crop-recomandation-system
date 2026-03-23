@@ -1,6 +1,7 @@
 // ============================================================
 // WeatherDashboard.tsx — Location-based weather for Indian farmers
-// Uses OpenCage for geocoding, Open-Meteo for weather data
+// Uses cascading dropdowns: State → District → Sub-district → Village/City
+// Uses OpenCage (via backend proxy) for geocoding, Open-Meteo for weather
 // ============================================================
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -17,17 +18,21 @@ import {
   ChevronDown,
   Search,
   X,
+  Building2,
+  Map,
+  Home,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { API_BASE_URL } from "../services/api";
+import {
+  API_BASE_URL,
+  getLocationStates,
+  getLocationDistricts,
+  getLocationSubDistricts,
+  getLocationVillages,
+  type StateItem,
+} from "../services/api";
 
 // ── Types ──────────────────────────────────────────────────────
-interface IndiaData {
-  [country: string]: {
-    [state: string]: string[];
-  };
-}
-
 interface DayWeather {
   date: string;
   label: string;
@@ -45,11 +50,6 @@ interface GeoResult {
 }
 
 // ── Helpers ────────────────────────────────────────────────────
-
-/** Strip state abbreviation: "Gujarat (GJ)" → "Gujarat" */
-function cleanStateName(raw: string): string {
-  return raw.replace(/\s*\([^)]+\)\s*$/, "").trim();
-}
 
 /** Format ISO date string to readable day label */
 function formatDayLabel(dateStr: string, isToday: boolean, isPast: boolean): string {
@@ -94,6 +94,7 @@ interface SearchableDropdownProps {
   placeholder: string;
   disabled?: boolean;
   icon?: React.ReactNode;
+  loading?: boolean;
 }
 
 function SearchableDropdown({
@@ -103,6 +104,7 @@ function SearchableDropdown({
   placeholder,
   disabled = false,
   icon,
+  loading = false,
 }: SearchableDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -135,26 +137,30 @@ function SearchableDropdown({
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        disabled={disabled}
+        disabled={disabled || loading}
         onClick={() => {
-          if (!disabled) {
+          if (!disabled && !loading) {
             setIsOpen(!isOpen);
             setTimeout(() => inputRef.current?.focus(), 50);
           }
         }}
         className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl border transition-all text-left
-          ${disabled
+          ${disabled || loading
             ? "bg-gray-100/50 border-gray-200 text-gray-400 cursor-not-allowed"
             : "bg-white/60 backdrop-blur-sm border-gray-200 hover:border-emerald-300 text-gray-700 cursor-pointer shadow-sm"
           }
           ${isOpen ? "ring-2 ring-emerald-500/30 border-emerald-400" : ""}
         `}
       >
-        {icon && <span className="text-emerald-500/70 flex-shrink-0">{icon}</span>}
+        {loading ? (
+          <Loader2 className="w-4 h-4 text-emerald-500/70 animate-spin flex-shrink-0" />
+        ) : (
+          icon && <span className="text-emerald-500/70 flex-shrink-0">{icon}</span>
+        )}
         <span className={`flex-1 truncate ${!value ? "text-gray-400" : "text-gray-800 font-medium"}`}>
-          {value || placeholder}
+          {loading ? "Loading..." : (value || placeholder)}
         </span>
-        {value && !disabled && (
+        {value && !disabled && !loading && (
           <X
             className="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
             onClick={(e) => {
@@ -167,7 +173,7 @@ function SearchableDropdown({
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
-      {isOpen && !disabled && (
+      {isOpen && !disabled && !loading && (
         <div className="absolute z-50 mt-2 w-full bg-white/95 backdrop-blur-xl border border-gray-200 rounded-xl shadow-2xl shadow-black/10 overflow-hidden animate-fade-in">
           {/* Search input */}
           <div className="p-2 border-b border-gray-100">
@@ -213,14 +219,24 @@ function SearchableDropdown({
 export function WeatherDashboard() {
   const { t } = useTranslation();
 
-  // Location data
-  const [indiaData, setIndiaData] = useState<IndiaData | null>(null);
+  // Location data (fetched from backend)
   const [states, setStates] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
+  const [subDistricts, setSubDistricts] = useState<string[]>([]);
+  const [villages, setVillages] = useState<string[]>([]);
 
   // Selections
   const [selectedState, setSelectedState] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedSubDistrict, setSelectedSubDistrict] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+
+  // Loading states for each dropdown
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingSubDistricts, setLoadingSubDistricts] = useState(false);
+  const [loadingVillages, setLoadingVillages] = useState(false);
 
   // Weather data
   const [weatherData, setWeatherData] = useState<DayWeather[] | null>(null);
@@ -234,51 +250,94 @@ export function WeatherDashboard() {
   const geoCache = useRef<Map<string, GeoResult>>(new Map());
   const abortRef = useRef<AbortController | null>(null);
 
-  // Debounced city for triggering weather fetch
-  const debouncedCity = useDebounce(selectedCity, 300);
+  // Debounced location for triggering weather fetch
+  const debouncedLocation = useDebounce(selectedLocation, 300);
 
-  // ── Load india.json ──
+  // ── Load states on mount ──
   useEffect(() => {
-    fetch("/india.json")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load location data");
-        return res.json();
+    setLoadingStates(true);
+    getLocationStates()
+      .then((data) => {
+        setStates(data.map((s) => s.state).sort());
       })
-      .then((data: IndiaData) => {
-        setIndiaData(data);
-        const country = Object.keys(data)[0]; // "India (IND)"
-        if (country && data[country]) {
-          const stateNames = Object.keys(data[country]).map(cleanStateName).sort();
-          setStates(stateNames);
-        }
-      })
-      .catch(() => setError(t("weather.locationLoadError")));
+      .catch(() => setError(t("weather.locationLoadError")))
+      .finally(() => setLoadingStates(false));
   }, []);
 
-  // ── Populate cities when state changes ──
+  // ── Load districts + cities when state changes ──
   useEffect(() => {
-    if (!indiaData || !selectedState) {
-      setCities([]);
-      return;
-    }
-    const country = Object.keys(indiaData)[0];
-    const stateData = indiaData[country];
-    // Find the raw key matching our clean name
-    const rawKey = Object.keys(stateData).find(
-      (k) => cleanStateName(k) === selectedState
-    );
-    if (rawKey) {
-      setCities([...stateData[rawKey]].sort());
-    } else {
-      setCities([]);
-    }
-    setSelectedCity("");
+    setDistricts([]);
+    setCities([]);
+    setSubDistricts([]);
+    setVillages([]);
+    setSelectedDistrict("");
+    setSelectedSubDistrict("");
+    setSelectedLocation("");
     setWeatherData(null);
-  }, [selectedState, indiaData]);
 
-  // ── Geocode + fetch weather on city selection ──
+    if (!selectedState) return;
+
+    setLoadingDistricts(true);
+    getLocationDistricts(selectedState)
+      .then((data) => {
+        setDistricts(data.districts);
+        setCities(data.cities);
+      })
+      .catch(() => setError("Failed to load districts"))
+      .finally(() => setLoadingDistricts(false));
+  }, [selectedState]);
+
+  // ── Load sub-districts when district changes ──
   useEffect(() => {
-    if (!debouncedCity || !selectedState) return;
+    setSubDistricts([]);
+    setVillages([]);
+    setSelectedSubDistrict("");
+    setSelectedLocation("");
+    setWeatherData(null);
+
+    if (!selectedState || !selectedDistrict) return;
+
+    setLoadingSubDistricts(true);
+    getLocationSubDistricts(selectedState, selectedDistrict)
+      .then((data) => {
+        setSubDistricts(data);
+      })
+      .catch(() => setError("Failed to load sub-districts"))
+      .finally(() => setLoadingSubDistricts(false));
+  }, [selectedState, selectedDistrict]);
+
+  // ── Load villages when sub-district changes ──
+  useEffect(() => {
+    setVillages([]);
+    setSelectedLocation("");
+    setWeatherData(null);
+
+    if (!selectedState || !selectedDistrict || !selectedSubDistrict) return;
+
+    setLoadingVillages(true);
+    getLocationVillages(selectedState, selectedDistrict, selectedSubDistrict)
+      .then((data) => {
+        setVillages(data);
+      })
+      .catch(() => setError("Failed to load villages"))
+      .finally(() => setLoadingVillages(false));
+  }, [selectedState, selectedDistrict, selectedSubDistrict]);
+
+  // ── Combined location options for final dropdown ──
+  // Show villages from selected sub-district + cities from the state
+  const locationOptions = React.useMemo(() => {
+    const combined = new Set<string>();
+    villages.forEach((v) => combined.add(v));
+    // Only show cities if no sub-district selected (as a fallback)
+    if (!selectedSubDistrict) {
+      cities.forEach((c) => combined.add(c));
+    }
+    return [...combined].sort();
+  }, [villages, cities, selectedSubDistrict]);
+
+  // ── Geocode + fetch weather on location selection ──
+  useEffect(() => {
+    if (!debouncedLocation || !selectedState) return;
 
     const fetchWeather = async () => {
       // Cancel previous in-flight request
@@ -290,8 +349,12 @@ export function WeatherDashboard() {
       setError(null);
 
       try {
-        // 1. Geocode
-        const locationStr = `${debouncedCity}, ${selectedState}, India`;
+        // Build location string for geocoding (most specific first)
+        const parts = [debouncedLocation];
+        if (selectedSubDistrict) parts.push(selectedSubDistrict);
+        if (selectedDistrict) parts.push(selectedDistrict);
+        parts.push(selectedState, "India");
+        const locationStr = parts.join(", ");
         setLocationLabel(locationStr);
 
         let geo = geoCache.current.get(locationStr);
@@ -312,19 +375,27 @@ export function WeatherDashboard() {
 
           const geoData = await geoRes.json();
           if (!geoData.results || geoData.results.length === 0) {
-            // Fallback: try state-level geocoding
-            const fallbackUrl = `${API_BASE_URL}/geocode/?q=${encodeURIComponent(`${selectedState}, India`)}`;
-            const fbRes = await fetch(fallbackUrl, { signal: controller.signal });
-            const fbData = await fbRes.json();
-            if (!fbData.results || fbData.results.length === 0) {
-              throw new Error(t("weather.locationNotFound"));
+            // Fallback: try district-level, then state-level
+            const fallbacks = [
+              selectedDistrict ? `${selectedDistrict}, ${selectedState}, India` : null,
+              `${selectedState}, India`,
+            ].filter(Boolean) as string[];
+
+            for (const fb of fallbacks) {
+              const fbRes = await fetch(`${API_BASE_URL}/geocode/?q=${encodeURIComponent(fb)}`, {
+                signal: controller.signal,
+              });
+              const fbData = await fbRes.json();
+              if (fbData.results && fbData.results.length > 0) {
+                geo = fbData.results[0].geometry as GeoResult;
+                break;
+              }
             }
-            geo = fbData.results[0].geometry as GeoResult;
+            if (!geo) throw new Error(t("weather.locationNotFound"));
           } else {
             geo = geoData.results[0].geometry as GeoResult;
           }
 
-          // Cache the result
           geoCache.current.set(locationStr, geo!);
         }
 
@@ -394,7 +465,7 @@ export function WeatherDashboard() {
     return () => {
       if (abortRef.current) abortRef.current.abort();
     };
-  }, [debouncedCity, selectedState, t]);
+  }, [debouncedLocation, selectedState, selectedDistrict, selectedSubDistrict, t]);
 
   const todayData = weatherData?.find((d) => d.isToday);
   const forecastDays = weatherData?.filter((d) => !d.isToday) || [];
@@ -416,8 +487,10 @@ export function WeatherDashboard() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+          {/* State */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-600">
+            <label className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-emerald-500" />
               {t("weather.state")}
             </label>
             <SearchableDropdown
@@ -426,20 +499,58 @@ export function WeatherDashboard() {
               onChange={(v) => setSelectedState(v)}
               placeholder={t("weather.selectState")}
               icon={<MapPin className="w-4 h-4" />}
+              loading={loadingStates}
             />
           </div>
 
+          {/* District */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-600">
-              {t("weather.city")}
+            <label className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-emerald-500" />
+              {t("weather.district") || "District"}
             </label>
             <SearchableDropdown
-              options={cities}
-              value={selectedCity}
-              onChange={(v) => setSelectedCity(v)}
-              placeholder={t("weather.selectCity")}
+              options={districts}
+              value={selectedDistrict}
+              onChange={(v) => setSelectedDistrict(v)}
+              placeholder={t("weather.selectDistrict") || "Select District"}
               disabled={!selectedState}
-              icon={<MapPin className="w-4 h-4" />}
+              icon={<Building2 className="w-4 h-4" />}
+              loading={loadingDistricts}
+            />
+          </div>
+
+          {/* Sub-district */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
+              <Map className="w-3.5 h-3.5 text-emerald-500" />
+              {t("weather.subDistrict") || "Sub-district / Taluka"}
+            </label>
+            <SearchableDropdown
+              options={subDistricts}
+              value={selectedSubDistrict}
+              onChange={(v) => setSelectedSubDistrict(v)}
+              placeholder={t("weather.selectSubDistrict") || "Select Sub-district"}
+              disabled={!selectedDistrict}
+              icon={<Map className="w-4 h-4" />}
+              loading={loadingSubDistricts}
+            />
+          </div>
+
+          {/* Village / City / Town */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
+              <Home className="w-3.5 h-3.5 text-emerald-500" />
+              {t("weather.village") || "Village / City / Town"}
+            </label>
+            <SearchableDropdown
+              options={locationOptions}
+              value={selectedLocation}
+              onChange={(v) => setSelectedLocation(v)}
+              placeholder={t("weather.selectVillage") || "Select Village / City / Town"}
+              disabled={!selectedSubDistrict}
+              icon={<Home className="w-4 h-4" />}
+              loading={loadingVillages}
             />
           </div>
         </div>

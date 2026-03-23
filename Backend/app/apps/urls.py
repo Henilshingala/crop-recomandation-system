@@ -21,6 +21,12 @@ from .views import (
     nutrition_debug,
     geocode_location,
 )
+from .location_views import (
+    location_states,
+    location_districts,
+    location_subdistricts,
+    location_villages,
+)
 
 # DRF Router for ViewSets
 router = DefaultRouter()
@@ -59,6 +65,12 @@ urlpatterns = [
     
     # Geocoding proxy
     path('geocode/', geocode_location, name='geocode-location'),
+
+    # Location data (cascading dropdowns)
+    path('locations/states/', location_states, name='location-states'),
+    path('locations/districts/', location_districts, name='location-districts'),
+    path('locations/subdistricts/', location_subdistricts, name='location-subdistricts'),
+    path('locations/villages/', location_villages, name='location-villages'),
 ]
 
 """

@@ -181,3 +181,37 @@ export async function getModelLimits(): Promise<ModelLimitsResponse> {
   if (!response.ok) throw new Error('Failed to fetch model limits');
   return response.json();
 }
+
+/* ── Location API (cascading dropdowns) ──────────────────────── */
+
+export interface StateItem {
+  state: string;
+  stateCode: string;
+}
+
+export async function getLocationStates(): Promise<StateItem[]> {
+  const response = await fetch(`${API_BASE_URL}/locations/states/`);
+  if (!response.ok) throw new Error('Failed to fetch states');
+  const data = await response.json();
+  return data.states;
+}
+
+export async function getLocationDistricts(state: string): Promise<{ districts: string[]; cities: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/locations/districts/?state=${encodeURIComponent(state)}`);
+  if (!response.ok) throw new Error('Failed to fetch districts');
+  return response.json();
+}
+
+export async function getLocationSubDistricts(state: string, district: string): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/locations/subdistricts/?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}`);
+  if (!response.ok) throw new Error('Failed to fetch sub-districts');
+  const data = await response.json();
+  return data.subDistricts;
+}
+
+export async function getLocationVillages(state: string, district: string, subDistrict: string): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/locations/villages/?state=${encodeURIComponent(state)}&district=${encodeURIComponent(district)}&subdistrict=${encodeURIComponent(subDistrict)}`);
+  if (!response.ok) throw new Error('Failed to fetch villages');
+  const data = await response.json();
+  return data.villages;
+}
