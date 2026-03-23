@@ -309,8 +309,10 @@ def health_check(request):
 
     # ML crop counts (static lists — no network call)
     try:
+        from .nutrition import load_nutrition_cache
         info["soil_crops"] = len(get_available_crops("soil"))
         info["extended_crops"] = len(get_available_crops("extended"))
+        info["nutrition_cache_size"] = len(load_nutrition_cache())
     except Exception:
         info["ml_model"] = "error"
         info["status"] = "unhealthy"

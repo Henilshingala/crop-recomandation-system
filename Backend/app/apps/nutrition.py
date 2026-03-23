@@ -11,24 +11,39 @@ _CACHE: dict[str, dict] | None = None
 
 
 def _path() -> str:
-    """Robust path discovery for Nutrient.csv."""
-    possible_paths = [
-        # Local & Render relative structure
-        os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv"),
-        os.path.join(settings.BASE_DIR, "..", "Aiml", "Nutrient.csv"),
-        # Absolute Render path
+    """Robust path discovery for Nutrient.csv (upward search)."""
+    # 1. Check environment variable first
+    env_path = os.environ.get("AI_ML_DIR")
+    if env_path:
+        p = os.path.join(env_path, "Nutrient.csv")
+        if os.path.exists(p): return p
+
+    # 2. Aggressive upward search from BASE_DIR
+    # This handles both root-based and Backend/app-based execution
+    curr = settings.BASE_DIR
+    for _ in range(4):
+        # Check in Aiml/ sibling or child
+        p1 = os.path.join(curr, "Aiml", "Nutrient.csv")
+        if os.path.exists(p1): return p1
+        
+        # Check in current dir directly
+        p2 = os.path.join(curr, "Nutrient.csv")
+        if os.path.exists(p2): return p2
+        
+        # Go up one level
+        parent = os.path.dirname(curr)
+        if parent == curr: break
+        curr = parent
+
+    # 3. Last resort hardcoded paths
+    hardcoded = [
         "/opt/render/project/src/Aiml/Nutrient.csv",
+        os.path.abspath(os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv")),
     ]
-    
-    for p in possible_paths:
-        if p and os.path.exists(p):
-            logger.info(f"Found Nutrient.csv at: {p}")
-            return p
+    for h in hardcoded:
+        if os.path.exists(h): return h
             
-    # Default fallback to parent of parent
-    fallback = os.path.abspath(os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv"))
-    logger.warning(f"Nutrient.csv not found, falling back to: {fallback}")
-    return fallback
+    return hardcoded[-1]
 
 
 def load_nutrition_cache() -> dict[str, dict]:
