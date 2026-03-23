@@ -478,6 +478,15 @@ def get_schemes(request):
     )
     return Response(results)
 
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_scheme_options(request):
+    """GET /api/schemes/options/ — returns available states and categories for filters."""
+    options = get_filter_options()
+    return Response(options)
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def nutrition_debug(request):
