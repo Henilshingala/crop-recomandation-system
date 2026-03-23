@@ -525,7 +525,7 @@ def geocode_location(request):
     if not query:
         return Response({"error": "Missing 'q' parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
-    api_key = os.environ.get("OPENCAGE_API_KEY")
+    api_key = os.environ.get("OPENCAGE_API_KEY") or os.environ.get("VITE_OPENCAGE_API_KEY")
     if not api_key:
         return Response({"error": "Geocoding API key not configured on server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
