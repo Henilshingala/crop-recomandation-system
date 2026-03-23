@@ -19,7 +19,7 @@ import {
   Search,
   X,
   Building2,
-  Map,
+  Map as MapIcon,
   Home,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -523,7 +523,7 @@ export function WeatherDashboard() {
           {/* Sub-district */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-600 flex items-center gap-1.5">
-              <Map className="w-3.5 h-3.5 text-emerald-500" />
+              <MapIcon className="w-3.5 h-3.5 text-emerald-500" />
               {t("weather.subDistrict") || "Sub-district / Taluka"}
             </label>
             <SearchableDropdown
@@ -532,7 +532,7 @@ export function WeatherDashboard() {
               onChange={(v) => setSelectedSubDistrict(v)}
               placeholder={t("weather.selectSubDistrict") || "Select Sub-district"}
               disabled={!selectedDistrict}
-              icon={<Map className="w-4 h-4" />}
+              icon={<MapIcon className="w-4 h-4" />}
               loading={loadingSubDistricts}
             />
           </div>
