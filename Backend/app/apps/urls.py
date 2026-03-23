@@ -19,6 +19,7 @@ from .views import (
     get_schemes,
     get_scheme_options,
     nutrition_debug,
+    geocode_location,
 )
 
 # DRF Router for ViewSets
@@ -55,6 +56,9 @@ urlpatterns = [
     # Schemes Recommendations
     path('schemes/', get_schemes, name='get-schemes'),
     path('schemes/options/', get_scheme_options, name='get-scheme-options'),
+    
+    # Geocoding proxy
+    path('geocode/', geocode_location, name='geocode-location'),
 ]
 
 """

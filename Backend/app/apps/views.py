@@ -10,6 +10,7 @@ V7 Unified Advisory:
 import csv
 import logging
 import os
+import requests
 
 from django.conf import settings
 from django.db import transaction
@@ -507,3 +508,42 @@ def nutrition_debug(request):
         "data": data,
         "base_dir": settings.BASE_DIR,
     })
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# Geocoding Proxy (Weather Feature)
+# ═════════════════════════════════════════════════════════════════════════
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def geocode_location(request):
+    """
+    GET /api/geocode/?q=Mumbai,+Maharashtra,+India
+    Proxies OpenCage API so the API key remains securely on the backend (Render).
+    """
+    query = request.query_params.get("q", "").strip()
+    if not query:
+        return Response({"error": "Missing 'q' parameter"}, status=status.HTTP_400_BAD_REQUEST)
+
+    api_key = os.environ.get("OPENCAGE_API_KEY")
+    if not api_key:
+        return Response({"error": "Geocoding API key not configured on server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    url = "https://api.opencagedata.com/geocode/v1/json"
+    params = {
+        "q": query,
+        "key": api_key,
+        "limit": 1,
+        "countrycode": "in",
+    }
+    
+    try:
+        res = requests.get(url, params=params, timeout=10)
+        if res.status_code == 402 or res.status_code == 429:
+            return Response({"error": "Rate limit exceeded on Geocoding API"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        res.raise_for_status()
+        return Response(res.json())
+    except requests.RequestException as e:
+        logger.error("Geocoding failed: %s", e)
+        return Response({"error": "Failed to fetch geocoding data"}, status=status.HTTP_502_BAD_GATEWAY)
+

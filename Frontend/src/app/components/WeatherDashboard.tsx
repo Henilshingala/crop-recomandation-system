@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "../services/api";
 
 // ── Types ──────────────────────────────────────────────────────
 interface IndiaData {
@@ -296,16 +297,15 @@ export function WeatherDashboard() {
         let geo = geoCache.current.get(locationStr);
 
         if (!geo) {
-          const apiKey = import.meta.env.VITE_OPENCAGE_API_KEY;
-          if (!apiKey || apiKey === "YOUR_OPENCAGE_API_KEY") {
-            throw new Error(t("weather.missingApiKey"));
-          }
-          const geoUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(locationStr)}&key=${apiKey}&limit=1&countrycode=in`;
+          const geoUrl = `${API_BASE_URL}/geocode/?q=${encodeURIComponent(locationStr)}`;
           const geoRes = await fetch(geoUrl, { signal: controller.signal });
 
           if (!geoRes.ok) {
             if (geoRes.status === 402 || geoRes.status === 429) {
               throw new Error(t("weather.rateLimitError"));
+            }
+            if (geoRes.status === 500) {
+              throw new Error("Backend API key missing");
             }
             throw new Error(t("weather.geocodeError"));
           }
@@ -313,7 +313,7 @@ export function WeatherDashboard() {
           const geoData = await geoRes.json();
           if (!geoData.results || geoData.results.length === 0) {
             // Fallback: try state-level geocoding
-            const fallbackUrl = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(`${selectedState}, India`)}&key=${apiKey}&limit=1&countrycode=in`;
+            const fallbackUrl = `${API_BASE_URL}/geocode/?q=${encodeURIComponent(`${selectedState}, India`)}`;
             const fbRes = await fetch(fallbackUrl, { signal: controller.signal });
             const fbData = await fbRes.json();
             if (!fbData.results || fbData.results.length === 0) {
@@ -403,10 +403,12 @@ export function WeatherDashboard() {
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       {/* ── Location Selection ── */}
-      <div className="glass-card p-6 md:p-8 relative overflow-hidden">
+      <div className="glass-card p-6 md:p-8 relative z-20">
         {/* Decorative blur */}
-        <div className="absolute -top-20 -right-20 w-56 h-56 bg-sky-400/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-emerald-400/10 rounded-full blur-2xl" />
+        <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-56 h-56 bg-sky-400/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-emerald-400/10 rounded-full blur-2xl" />
+        </div>
 
         <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 relative z-10">
           <MapPin className="w-5 h-5 text-emerald-600" />
