@@ -170,7 +170,11 @@ class CropPredictionView(APIView):
             rec.setdefault("expected_yield", None)
             rec.setdefault("season", None)
 
-        rec.setdefault("nutrition", get_nutrition_data(crop_name))
+        # Prioritize local nutrition data if the API result is empty/null
+        local_nutrition = get_nutrition_data(crop_name)
+        if local_nutrition and not rec.get("nutrition"):
+            rec["nutrition"] = local_nutrition
+            
         return rec
 
     @staticmethod

@@ -74,21 +74,46 @@ def load_nutrition_cache() -> dict[str, dict]:
 
 
 def get_nutrition_data(crop_name: str) -> dict | None:
-    """Lookup nutrition from cache."""
+    """Lookup nutrition from cache with robust fuzzy matching."""
     cache = load_nutrition_cache()
     if not cache:
         return None
         
     search = crop_name.lower().strip()
     
-    # Simple normalization for common crop naming variations
+    # 1. Exact match
     if search in cache:
         return cache[search]
         
-    # Partial matching for names like "rice (white)"
+    # 2. Match without parentheses (e.g. "mustard (sarson)" -> "mustard")
+    def clean(s: str) -> str:
+        # Remove anything in (...) and [...]
+        import re
+        s = re.sub(r'\(.*?\)', '', s)
+        s = re.sub(r'\[.*?\]', '', s)
+        return s.strip().lower()
+
+    clean_search = clean(search)
+    if not clean_search:
+        return None
+
+    # Try exact match on cleaned name
+    if clean_search in cache:
+        return cache[clean_search]
+
+    # 3. Partial matching on cleaned names
     for food, data in cache.items():
-        if food in search or search in food:
+        clean_food = clean(food)
+        if clean_food == clean_search or clean_food in clean_search or clean_search in clean_food:
             return data
             
+    # 4. First-word match (e.g. "mustard" matches "mustard (seed)")
+    search_parts = clean_search.split()
+    if search_parts:
+        first_word = search_parts[0]
+        for food, data in cache.items():
+            if clean(food).startswith(first_word):
+                return data
+                
     return None
 
