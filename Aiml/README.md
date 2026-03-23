@@ -1,661 +1,404 @@
-# 🤖 AI/ML Model - Crop Recommendation System
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="Scikit-learn" />
+  <img src="https://img.shields.io/badge/XGBoost-EC4E20?style=for-the-badge" alt="XGBoost" />
+  <img src="https://img.shields.io/badge/LightGBM-9ACD32?style=for-the-badge" alt="LightGBM" />
+  <img src="https://img.shields.io/badge/docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+</p>
 
-![Python](https://img.shields.io/badge/Python-3.11-3776ab)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.6-f7931e)
-![Gradio](https://img.shields.io/badge/Gradio-5.12-ff7c00)
-![HuggingFace](https://img.shields.io/badge/HuggingFace-Spaces-ff9d00)
+<h1 align="center">🤖 CRS ML Engine</h1>
 
-Intelligent Random Forest-based machine learning model for predicting suitable crop recommendations based on soil and climate parameters.
-
----
-
-## 🌐 Live Deployment
-
-**HuggingFace Space**: https://huggingface.co/spaces/shingala/CRS
-
-**API Endpoint**: https://shingala-crs.hf.space/predict
+<p align="center">
+  <strong>Stacked ensemble ML inference engine — 51 Indian crops, V9 NCS+EMS decision system, deployed on HuggingFace Spaces.</strong>
+</p>
 
 ---
 
-## 📋 Table of Contents
+## 📖 Overview
 
-- [Overview](#-overview)
-- [Model Architecture](#-model-architecture)
-- [Dataset](#-dataset)
-- [Features & Targets](#-features--targets)
-- [Training Pipeline](#-training-pipeline)
-- [Model Performance](#-model-performance)
-- [API Usage](#-api-usage)
-- [Local Development](#-local-development)
-- [Deployment](#-deployment)
-- [Model Insights](#-model-insights)
-- [Practical Considerations](#-practical-considerations)
+The CRS ML Engine is a FastAPI-based inference server that powers the crop recommendation system. It uses a **stacked ensemble model** (BalancedRandomForest + XGBoost + LightGBM) trained on 22,300 samples to recommend the top-3 most suitable crops based on soil and climate conditions.
+
+🔗 **Live:** [huggingface.co/spaces/shingala/CRS](https://huggingface.co/spaces/shingala/CRS)
 
 ---
 
-## 🎯 Overview
+## 🧠 Model details
 
-This ML component provides intelligent crop recommendations using a **Random Forest Classifier** trained on agricultural parameters. The model analyzes soil composition (N, P, K), climate conditions (temperature, humidity, rainfall), and soil pH to suggest the top-3 most suitable crops with confidence scores.
+### Architecture — Stacked Ensemble v6
 
-### Purpose
+```mermaid
+flowchart TB
+    Input["7 Input Features<br/>N, P, K, temperature,<br/>humidity, pH, rainfall"]
 
-- **Predict suitable crops** based on environmental conditions
-- **Provide confidence scores** to help users make informed decisions
-- **Support 22 crop types** common in agricultural practices
-- **Fast inference** for real-time recommendations
+    subgraph Base["Base Models (5-fold CV)"]
+        RF["Balanced<br/>RandomForest<br/>(200 estimators)"]
+        XGB["XGBoost<br/>(200 estimators)"]
+        LGBM["LightGBM<br/>(200 estimators)"]
+    end
 
-### Key Capabilities
+    Meta["Meta-Learner<br/>Logistic Regression<br/>(multinomial, isotonic calibrated)"]
 
-- ✅ **Multi-class classification**: 22 crop output classes
-- ✅ **Top-3 predictions**: Provides alternatives, not just best match
-- ✅ **Confidence scores**: Probability-based decision support
-- ✅ **Fast inference**: Sub-second predictions (after warm-up)
-- ✅ **RESTful API**: Easy integration via HTTP endpoints
-- ✅ **Gradio UI**: Interactive web interface for testing
+    subgraph Post["V9 Post-Processing"]
+        Feasibility["Hard Feasibility Gate<br/>±5°C temp, ±0.5 pH, <30% rain"]
+        Stress["Gradual Stress Penalty<br/>Per-crop deviation scoring"]
+        NCS["Normalized Confidence Score<br/>Fixes softmax dilution"]
+        EMS["Environmental Match Score<br/>Per-crop Z-score from training stats"]
+        Matrix["3×3 Decision Matrix<br/>NCS × EMS → Advisory Tier"]
+    end
 
----
+    Output["Top-3 Crops<br/>+ Confidence + Advisory Tier<br/>+ Agronomic Explanation"]
 
-## 🏗️ Model Architecture
-
-### Algorithm: Random Forest Classifier
-
-```python
-from sklearn.ensemble import RandomForestClassifier
-
-model = RandomForestClassifier(
-    n_estimators=100,      # 100 decision trees
-    max_depth=20,          # Maximum tree depth
-    min_samples_split=5,   # Minimum samples to split node
-    min_samples_leaf=2,    # Minimum samples in leaf node
-    random_state=42,       # Reproducibility
-    n_jobs=-1             # Parallel processing
-)
+    Input --> Base
+    RF --> Meta
+    XGB --> Meta
+    LGBM --> Meta
+    Meta --> Post
+    Feasibility --> Stress --> NCS
+    NCS --> Matrix
+    EMS --> Matrix
+    Post --> Output
 ```
 
-### Why Random Forest?
+### V9 NCS+EMS decision system
 
-| Advantage | Explanation |
-|-----------|-------------|
-| **High Accuracy** | Ensemble of trees reduces overfitting |
-| **Feature Importance** | Identifies which parameters matter most |
-| **Robust to Outliers** | Less sensitive to extreme values |
-| **No Feature Scaling** | Works well with raw parameter values |
-| **Handles Non-linearity** | Captures complex crop-soil relationships |
-| **Fast Inference** | Quick predictions for real-time use |
+The V9 advisory engine replaces old hard confidence thresholds with two composable metrics:
 
-### Model Pipeline
+| Component | Purpose |
+|-----------|---------|
+| **NCS (Normalized Confidence Score)** | Measures probability above the 1/51 uniform baseline. Fixes softmax dilution where 4% raw probability is actually 2× the expected baseline |
+| **EMS (Environmental Match Score)** | Per-crop Z-score from training data statistics (`crop_stats.json`). Measures how well input conditions match the crop's typical growing conditions |
+| **Decision Matrix** | 3×3 grid combining NCS confidence level × EMS match level → advisory tier |
 
-```
-Input Features (7 parameters)
-    ↓
-Feature Validation & Preprocessing
-    ↓
-Random Forest Classifier (100 trees)
-    ↓
-Soft Voting (Probability aggregation)
-    ↓
-Top-3 Crops with Confidence Scores
-    ↓
-Enrichment with Crop Metadata
-    ↓
-JSON Response
-```
+#### Decision matrix
 
----
+| Confidence ↓ \ Environment → | Strong | Acceptable | Weak |
+|-------------------------------|--------|------------|------|
+| **Strong** | Strongly Recommended | Recommended | Conditional |
+| **Moderate** | Recommended | Conditional | Not Recommended |
+| **Weak** | Conditional | Not Recommended | Not Recommended |
 
-## 📊 Dataset
+### Post-processing pipeline
 
-### Dataset Overview
-
-- **Source**: Synthetic agricultural dataset based on research literature
-- **Total Samples**: 7,000+ data points
-- **Crops**: 22 different crop types
-- **Features**: 7 input parameters per sample
-- **Quality**: Scientifically validated ranges
-
-### Crops Supported (22 Total)
-
-| Category | Crops |
-|----------|-------|
-| **Cereals** | Rice, Maize, Wheat (via similar crops) |
-| **Pulses** | Chickpea, Lentil, Kidney Beans, Pigeon Peas, Moth Beans, Mung Bean, Black Gram |
-| **Cash Crops** | Cotton, Jute, Coffee |
-| **Fruits** | Banana, Mango, Grapes, Watermelon, Muskmelon, Apple, Orange, Papaya, Pomegranate, Coconut |
-
-### Dataset Generation Methodology
-
-**Scientific Approach**:
-1. **Literature Review**: Agricultural research papers and government guidelines
-2. **Range Validation**: Verified optimal ranges for each crop
-3. **Statistical Sampling**: Gaussian/uniform distributions around optimal values
-4. **Data Augmentation**: Slight variations to increase diversity
-5. **Validation**: Cross-checked against real-world agricultural data
-
-**Sample Distribution**:
-- **Balanced classes**: ~300-350 samples per crop
-- **Realistic ranges**: Based on actual soil and climate conditions
-- **Noise injection**: 5-10% noise to simulate real-world variability
+1. **Hard feasibility gate** — Biologically impossible crops excluded (temp ±5°C, pH ±0.5, rainfall <30% min)
+2. **Fallback selection** — If all crops excluded, the least-violating crop is selected (capped at 35% confidence)
+3. **Gradual stress penalty** — Weighted per-crop deviation scoring across temperature, pH, rainfall, and nutrients
+4. **Salinity stress override** — Salt-sensitive crops penalized when pH ≥ 8.8 and rainfall ≥ 2500mm
+5. **Confidence caps** — Stress: 75%, Chaos (≥2 severe): 60%, Hard max: 85%
+6. **NCS + EMS scoring** — Normalized confidence and environmental match computed
+7. **Decision matrix** — Final advisory tier assigned
+8. **Limiting factor identification** — The most deviated input feature is flagged
+9. **Explanation generation** — Data-driven agronomic explanation for each crop
 
 ---
 
-## 🔧 Features & Targets
+## 🌾 Supported crops (51)
 
-### Input Features (7 Parameters)
-
-| Feature | Unit | Range | Description |
-|---------|------|-------|-------------|
-| **N** (Nitrogen) | Ratio | 0-140 | Nitrogen content in soil |
-| **P** (Phosphorus) | Ratio | 5-145 | Phosphorus content in soil |
-| **K** (Potassium) | Ratio | 5-205 | Potassium content in soil |
-| **Temperature** | °C | 0-50 | Average temperature |
-| **Humidity** | % | 0-100 | Relative humidity |
-| **pH** | pH scale | 3.5-10 | Soil pH level |
-| **Rainfall** | mm | 20-300 | Average rainfall |
-
-### Target Variable
-
-- **Crop Label**: One of 22 crop names (e.g., "rice", "cotton", "chickpea")
-
-### Feature Importance (Top 5)
-
-Based on Random Forest feature importance scores:
-
-1. **Rainfall** (0.28) - Most influential factor
-2. **pH** (0.22) - Strong determinant of crop suitability
-3. **Temperature** (0.18) - Critical for crop selection
-4. **Humidity** (0.14) - Affects many crops
-5. **N (Nitrogen)** (0.10) - Important for nutrient-hungry crops
+| | | | | |
+|---|---|---|---|---|
+| Apple | Bajra | Banana | Barley | Ber |
+| Blackgram | Brinjal | Carrot | Castor | Chickpea |
+| Citrus | Coconut | Coffee | Cole Crop | Cotton |
+| Cucumber | Custard Apple | Date Palm | Gourd | Grapes |
+| Green Chilli | Groundnut | Guava | Jowar | Jute |
+| Kidney Beans | Lentil | Maize | Mango | Mothbeans |
+| Mungbean | Muskmelon | Mustard | Okra | Onion |
+| Papaya | Pigeonpeas | Pomegranate | Potato | Radish |
+| Ragi | Rice | Sapota | Sesame | Soybean |
+| Spinach | Sugarcane | Tobacco | Tomato | Watermelon |
+| Wheat | | | | |
 
 ---
 
-## 🔬 Training Pipeline
+### Input features
 
-### Data Pipeline (`01_dataset_generation.py`)
+| Feature | Unit | Training Range | Description |
+|---------|------|----------------|-------------|
+| `N` | kg/ha | 0 – 140 | Nitrogen content in soil |
+| `P` | kg/ha | 5 – 145 | Phosphorus content in soil |
+| `K` | kg/ha | 5 – 205 | Potassium content in soil |
+| `temperature` | °C | 8 – 44 | Average temperature |
+| `humidity` | % | 14 – 100 | Relative humidity |
+| `ph` | — | 3.5 – 10 | Soil pH level |
+| `rainfall` | mm | 20 – 300 | Annual rainfall |
 
-```python
-# Generate synthetic data
-def generate_crop_data(crop_name, n_samples=320):
-    # Define optimal ranges for this crop
-    param_ranges = CROP_PARAMETERS[crop_name]
-    
-    # Generate samples with Gaussian distribution
-    samples = generate_samples(param_ranges, n_samples)
-    
-    # Add realistic noise
-    samples = add_noise(samples, noise_level=0.05)
-    
-    return samples
+### Output
+
+For each prediction request, the engine returns **top-3 crops** with:
+
+- **Crop name** and **confidence score** (%)
+- **Advisory tier** — Strongly Recommended / Recommended / Conditional / Not Recommended
+- **Match strength** — Strong Match / Moderate Match / Weak Match
+- **Risk level** — low / medium / high
+- **Agronomic explanation** — Data-driven reasoning for the recommendation
+- **Nutritional data** — Protein, fat, carbs, fiber, iron, calcium, vitamins, energy per kg
+- **Limiting factor** — The input feature most constraining the recommendation
+
+---
+
+## 🛠️ Tech stack
+
+| Component | Technology |
+|-----------|-----------|
+| **API Framework** | FastAPI 0.110+ |
+| **ML Models** | Scikit-learn (BalancedRandomForest) · XGBoost · LightGBM |
+| **Meta-Learner** | Logistic Regression (multinomial, isotonic calibrated) |
+| **Calibration** | Temperature scaling (T=0.9) |
+| **Data Processing** | NumPy · Pandas |
+| **Serialization** | Joblib |
+| **Server** | Uvicorn |
+| **Container** | Docker (Python 3.11-slim) |
+
+---
+
+## 📁 Folder structure
+
 ```
-
-### Model Training (`02_baseline_model.py` + `04_data_augmentation.py`)
-
-```python
-# 1. Load and preprocess data
-df = pd.read_csv('crop_recommendation_synthetic_v1.csv')
-X = df.drop('label', axis=1)
-y = df['label']
-
-# 2. Train-test split
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
-
-# 3. Train Random Forest
-rf_model = RandomForestClassifier(n_estimators=100, ...)
-rf_model.fit(X_train, y_train)
-
-# 4. Evaluate
-accuracy = rf_model.score(X_test, y_test)
-print(f"Accuracy: {accuracy:.4f}")
-```
-
-### Cross-Validation (`03_crossvalidation_eval.py`)
-
-```python
-from sklearn.model_selection import cross_val_score
-
-# 5-fold cross-validation
-cv_scores = cross_val_score(
-    rf_model, X, y, cv=5, scoring='accuracy'
-)
-
-print(f"Mean CV Accuracy: {cv_scores.mean():.4f}")
-print(f"Std Dev: {cv_scores.std():.4f}")
-```
-
-### Model Persistence
-
-```python
-import joblib
-
-# Save trained model
-joblib.dump(rf_model, 'model_rf.joblib')
-
-# Save label encoder
-joblib.dump(label_encoder, 'label_encoder.joblib')
-
-# Save training metadata
-metadata = {
-    'accuracy': accuracy,
-    'cv_scores': cv_scores.tolist(),
-    'feature_importance': feature_importance.tolist(),
-    'training_date': datetime.now().isoformat()
-}
-json.dump(metadata, open('training_metadata.json', 'w'))
+Aiml/
+├── app.py                              # FastAPI server — V9 NCS+EMS engine (2100+ lines)
+├── predict.py                          # Prediction utilities
+├── config.py                           # Configuration constants
+├── final_stacked_model.py              # Model training script (Ensemble v6)
+├── hybrid_model.py                     # Alternative hybrid model script
+│
+├── stacked_ensemble_v6.joblib          # Trained stacked ensemble (~254 MB)
+├── label_encoder_v6.joblib             # Label encoder for 51 crops
+├── stacked_v6_config.joblib            # Model configuration
+│
+├── Nutrient.csv                        # Nutritional data for 51 crops
+├── crop_stats.json                     # Per-crop training statistics (mean, std per feature)
+├── feature_ranges.json                 # Feature validation ranges
+├── feature_ranges_v6.json              # V6-specific feature ranges
+├── calibration_config.json             # Bayesian calibration parameters
+├── class_weights.json                  # Class weight configuration
+├── drift_report.json                   # Data drift analysis report
+├── model_registry.json                 # Model version registry
+│
+├── training_metadata_v6.json           # V6 training metadata & performance
+├── training_metadata.json              # Legacy training metadata
+├── metrics_table.json                  # Per-class F1 scores & robustness
+├── reliability_metrics.json            # Reliability analysis
+├── robustness_report.json              # Noise robustness test results
+├── real_world_validation_report.json   # Real-world validation results
+│
+├── Crop_recommendation.csv             # Original training dataset (ref)
+├── Crop_recommendation_synthetic_AplusB.csv  # Augmented dataset (ref)
+├── ICRISAT-District_Level_Data.csv     # District-level data reference
+├── data_core.csv                       # Core cleaned dataset
+│
+├── Dockerfile                          # HuggingFace Spaces container
+├── requirements.txt                    # Python dependencies
+└── logging_config.py                   # Structured logging configuration
 ```
 
 ---
 
-## 📈 Model Performance
-
-### Overall Metrics
-
-| Metric | Score |
-|--------|-------|
-| **Training Accuracy** | 99.2% |
-| **Test Accuracy** | 85.7% |
-| **Cross-Validation Accuracy** | 84.3% ± 2.1% |
-| **F1-Score (Macro Avg)** | 0.84 |
-| **Precision (Macro Avg)** | 0.86 |
-| **Recall (Macro Avg)** | 0.83 |
-
-### Per-Class Performance (Sample)
-
-| Crop | Precision | Recall | F1-Score |
-|------|-----------|--------|----------|
-| Rice | 0.92 | 0.91 | 0.92 |
-| Cotton | 0.87 | 0.85 | 0.86 |
-| Chickpea | 0.84 | 0.86 | 0.85 |
-| Coffee | 0.81 | 0.79 | 0.80 |
-
-### Confusion Matrix Insights
-
-- **High accuracy** for crops with distinct parameter profiles (rice, cotton)
-- **Minor confusion** between crops with similar requirements (lentil vs chickpea)
-- **Overall strong separation** across all 22 classes
-
----
-
-## 🌐 API Usage
-
-### Endpoint
-
-```
-POST https://shingala-crs.hf.space/predict
-Content-Type: application/json
-```
-
-### Request Format
-
-```json
-{
-  "N": 90,
-  "P": 42,
-  "K": 43,
-  "temperature": 20.87,
-  "humidity": 82.00,
-  "ph": 6.50,
-  "rainfall": 202.93,
-  "top_n": 3
-}
-```
-
-### Response Format
-
-```json
-{
-  "predictions": [
-    {
-      "crop": "rice",
-      "confidence": 0.952,
-      "nutrition": {
-        "N": "High",
-        "P": "Medium",
-        "K": "Medium"
-      }
-    },
-    {
-      "crop": "chickpea",
-      "confidence": 0.785,
-      "nutrition": {
-        "N": "Medium",
-        "P": "High",
-        "K": "Medium"
-      }
-    },
-    {
-      "crop": "kidneybeans",
-      "confidence": 0.653,
-      "nutrition": {
-        "N": "High",
-        "P": "High",
-        "K": "High"
-      }
-    }
-  ]
-}
-```
-
-### Python Example
-
-```python
-import requests
-
-# Prepare input
-data = {
-    "N": 90, "P": 42, "K": 43,
-    "temperature": 20.87,
-    "humidity": 82.00,
-    "ph": 6.50,
-    "rainfall": 202.93,
-    "top_n": 3
-}
-
-# Call API
-response = requests.post(
-    "https://shingala-crs.hf.space/predict",
-    json=data
-)
-
-# Parse result
-predictions = response.json()["predictions"]
-print(f"Top crop: {predictions[0]['crop']} ({predictions[0]['confidence']:.1%})")
-```
-
-### JavaScript/Fetch Example
-
-```javascript
-const data = {
-  N: 90, P: 42, K: 43,
-  temperature: 20.87,
-  humidity: 82.00,
-  ph: 6.50,
-  rainfall: 202.93,
-  top_n: 3
-};
-
-fetch('https://shingala-crs.hf.space/predict', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(data)
-})
-.then(res => res.json())
-.then(data => console.log('Top crop:', data.predictions[0].crop));
-```
-
----
-
-## 💻 Local Development
+## 🚀 Installation and setup
 
 ### Prerequisites
 
-- Python 3.11+
-- pip
-- Virtual environment (recommended)
+- **Python** ≥ 3.11
+- ~**300 MB** disk space for the model file
 
-### Installation
+### 1. Install dependencies
 
 ```bash
 cd Aiml
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Training the Model
+### 2. Start the inference server
 
 ```bash
-# 1. Generate dataset (if not exists)
-python 01_dataset_generation.py
-
-# 2. Train baseline model
-python 02_baseline_model.py
-
-# 3. Run cross-validation
-python 03_crossvalidation_eval.py
-
-# 4. Apply data augmentation
-python 04_data_augmentation.py
-
-# 5. Final evaluation
-python 05_trained_model_eval.py
-
-# 6. Stress test
-python 06_stress_test.py
+uvicorn app:app --host 0.0.0.0 --port 7860
 ```
 
-### Running the API Locally
+The API will be available at [http://localhost:7860](http://localhost:7860).
+
+---
+
+## 🔌 API endpoint documentation
+
+### `GET /recommend`
+
+Get crop recommendations for given soil and climate parameters.
+
+**Query parameters:**
+
+| Parameter | Type | Required | Example |
+|-----------|------|----------|---------|
+| `N` | float | ✅ | `90` |
+| `P` | float | ✅ | `42` |
+| `K` | float | ✅ | `43` |
+| `temperature` | float | ✅ | `24.5` |
+| `humidity` | float | ✅ | `68` |
+| `ph` | float | ✅ | `6.7` |
+| `rainfall` | float | ✅ | `120` |
+| `mode` | string | ❌ | `soil` (default) / `extended` / `both` |
+
+**Example request:**
 
 ```bash
-# Launch Gradio app
-python app.py
+curl "http://localhost:7860/recommend?N=90&P=42&K=43&temperature=24.5&humidity=68&ph=6.7&rainfall=120"
 ```
 
-Access at: `http://localhost:7860`
+**Response (200):**
 
-### Testing Predictions
+```json
+{
+  "top_3": [
+    {
+      "crop": "rice",
+      "confidence": 78.6,
+      "advisory_tier": "Strongly Recommended",
+      "match_strength": "Strong Match",
+      "risk_level": "low",
+      "explanation": "Temperature (24.5C) is within the suitable range...",
+      "nutrition": { "protein_g_per_kg": 70, "..." : "..." },
+      "ncs": { "ncs": 82.3, "dominance": 3.41, "confidence_level": "strong" },
+      "ems": { "ems": 0.723, "match_level": "strong" }
+    }
+  ],
+  "model_info": { "type": "stacked-ensemble-v6", "version": "9.0", "coverage": 51 },
+  "diagnostics": { "limiting_factor": "rainfall", "ood_warnings": [], "..." : "..." }
+}
+```
+
+### `GET /available-crops`
+
+Returns the list of all 51 supported crop names.
+
+### `GET /health`
+
+Returns server health status and model metadata.
+
+---
+
+## 📈 Model performance metrics
+
+### V6 stacked ensemble (current production model)
+
+| Metric | Score |
+|--------|-------|
+| **Top-1 Accuracy** | 91.46% |
+| **Top-3 Accuracy** | 98.86% |
+| **Macro F1** | 0.908 |
+| **Weighted F1** | 0.914 |
+| **ECE (Calibration Error)** | 0.016 → 0.009 (after temperature scaling) |
+| **Log Loss** | 0.326 |
+
+### Cross-validation scores (5-fold)
+
+| Base Model | Mean Accuracy | Std Dev |
+|------------|--------------|---------|
+| BalancedRandomForest | 89.36% | ±0.42% |
+| XGBoost | 90.07% | ±0.33% |
+| LightGBM | 89.97% | ±0.08% |
+
+### Feature importance
+
+| Feature | Importance |
+|---------|-----------|
+| K (Potassium) | 17.41% |
+| N (Nitrogen) | 16.94% |
+| P (Phosphorus) | 13.36% |
+| Rainfall | 12.52% |
+| Humidity | 10.39% |
+| Temperature | 8.63% |
+| pH | 8.54% |
+| Season | 7.40% |
+| Soil Type | 3.06% |
+| Irrigation | 1.76% |
+
+### Training details
+
+| Item | Value |
+|------|-------|
+| **Dataset** | 22,300 samples across 51 crops |
+| **Core features** | N, P, K, temperature, humidity, pH, rainfall |
+| **Context features** | Season, soil type, irrigation |
+| **Folds** | 5-fold stratified cross-validation |
+| **Estimators per base** | 200 |
+| **Calibration** | Temperature scaling (T=0.9) |
+
+---
+
+## 🧪 Model training guide
+
+### 1. Prepare dataset
+
+Ensure `Crop_recommendation_v2.csv` is present with columns:
+`N, P, K, temperature, humidity, ph, rainfall, season, soil_type, irrigation, label`
+
+### 2. Run training
 
 ```bash
-# Single prediction test
-python 07_single_inference.py
-
-# Top-3 predictions test
-python 08_top3_recommendations.py
+python final_stacked_model.py
 ```
 
----
+This will:
+- Train 3 base models (BalancedRF, XGBoost, LightGBM) with 5-fold CV
+- Fit a Logistic Regression meta-learner on out-of-fold predictions
+- Apply isotonic calibration + temperature scaling
+- Save `stacked_ensemble_v6.joblib`, `label_encoder_v6.joblib`, and metadata
 
-## 🚀 Deployment
-
-### HuggingFace Spaces Deployment
-
-**Automatic Deployment**:
-1. Push code to HuggingFace Space repository
-2. HuggingFace auto-builds Docker container
-3. App deploys automatically
-4. API becomes available at `https://<space-name>.hf.space`
-
-**Files Required**:
-- `app.py` - Gradio application
-- `predict.py` - Inference logic
-- `requirements.txt` - Python dependencies
-- `model_rf.joblib` - Trained model
-- `label_encoder.joblib` - Label encoder
-- `Crop_recommendation_synthetic_AplusB.csv` - Dataset
-
-### Environment Configuration
-
-**No environment variables needed** - model files are bundled in the Space.
-
-Optional:
-- `HF_TOKEN` - For private spaces (set in backend, not in this repo)
-
----
-
-## 🧠 Model Insights
-
-### Feature Importance Analysis
-
-```python
-# Top features by importance
-1. Rainfall (0.28)  - Strongest predictor
-2. pH (0.22)        - Critical for soil suitability
-3. Temperature (0.18) - Climate dependency
-4. Humidity (0.14)  - Moisture requirements
-5. N (0.10)         - Nitrogen needs
-6. K (0.05)         - Potassium requirements
-7. P (0.03)         - Phosphorus requirements
-```
-
-**Insight**: Rainfall and pH are the most discriminative features, suggesting that climate and soil acidity are primary determinants of crop suitability.
-
-### Decision Boundary Visualization
-
-The Random Forest creates complex, non-linear decision boundaries that successfully separate crops like:
-- **Rice** (high rainfall, slightly acidic pH)
-- **Cotton** (moderate rainfall, neutral pH)
-- **Coffee** (high rainfall, acidic pH)
-- **Chickpea** (low rainfall, alkaline pH)
-
----
-
-## 🔍 Practical Considerations
-
-### Data Source: Synthetic vs Real-World
-
-**Current Approach**:
-- **Synthetic dataset** generated from agricultural research guidelines
-- Based on **peer-reviewed literature** and government recommendations
-- Validated against known crop-soil-climate relationships
-
-**What This Means**:
-
-✅ **Strengths**:
-- **Scientifically sound**: Ranges based on real agricultural principles
-- **Consistent quality**: No data collection errors or missing values
-- **Balanced distribution**: Equal representation of all crops
-- **Immediate availability**: No dependency on external data sources
-- **~80-85% alignment** with real-world agricultural recommendations
-
-⚠️ **Considerations**:
-- May not capture **region-specific varieties** or **microclimates**
-- Lacks **temporal dynamics** (seasonal variations, year-over-year changes)
-- Does not account for **farmer practices** or **local soil variations**
-- **Should be supplemented** with local expertise for critical farm decisions
-
-**Practical Impact**:
-- ✅ Excellent for **education**, **planning**, and **decision support**
-- ✅ Provides **science-backed guidance** as a starting point
-- ✅ Helps farmers **narrow down options** before field testing
-- ⚠️ Best used alongside **local agricultural extension services**
-- ⚠️ Not a replacement for **soil testing** or **local market analysis**
-
-### Performance Characteristics
-
-**Accuracy**:
-- **~85% test accuracy** consistently across cross-validation
-- **Higher accuracy** (90%+) for crops with distinct profiles (rice, coffee)
-- **Good generalization** to unseen data
-
-**Speed**:
-- **Cold start**: 15-30 seconds (HuggingFace Space warm-up)
-- **Warm inference**: <100ms per prediction
-- **Batch processing**: Can handle many requests per second
-
-**Scalability**:
-- **Lightweight model**: ~50MB total (model + encoder)
-- **CPU-friendly**: No GPU required
-- **Stateless API**:Easy to scale horizontally
-
-### When to Retrain
-
-**Recommended Retraining Schedule**:
-- **Every 6-12 months** as new agricultural research emerges
-- **When adding new crops** to the system
-- **If validation accuracy drops** below 80%
-- **When integrating real-world data** from farms
-
-### Future Enhancements
-
-**Data Improvements**:
-- [ ] Integrate real farm data from government databases
-- [ ] Add seasonal parameters (sowing season, harvest season)
-- [ ] Include market price predictions
-- [ ] Incorporate soil type classification
-
-**Model Improvements**:
-- [ ] Ensemble with Gradient Boosting (XGBoost/LightGBM)
-- [ ] Add uncertainty quantification
-- [ ] Region-specific model fine-tuning
-- [ ] Multi-output prediction (crop + sowing time + expected yield)
-
-**API Enhancements**:
-- [ ] Batch prediction endpoint
-- [ ] Model explanation API (SHAP values)
-- [ ] A/B testing framework for model versions
-
----
-
-## 📚 File Descriptions
-
-| File | Purpose |
-|------|---------|
-| `app.py` | Gradio web application |
-| `predict.py` | Prediction logic and API handlers |
-| `00_config.py` | Configuration and constants |
-| `01_dataset_generation.py` | Synthetic data generation |
-| `02_baseline_model.py` | Initial model training |
-| `03_crossvalidation_eval.py` | Cross-validation evaluation |
-| `04_data_augmentation.py` | Data augmentation techniques |
-| `05_trained_model_eval.py` | Final model evaluation |
-| `06_stress_test.py` | Load and edge case testing |
-| `07_single_inference.py` | Single prediction test |
-| `08_top3_recommendations.py` | Top-3 prediction test |
-| `model_rf.joblib` | Trained Random Forest model |
-| `label_encoder.joblib` | Sklearn label encoder |
-| `training_metadata.json` | Model training metrics |
-| `requirements.txt` | Python dependencies |
-
----
-
-## 🧪 Testing & Validation
-
-### Manual Testing
+### 3. Validate
 
 ```bash
-# Test with sample data (should predict rice)
-python 07_single_inference.py
+python -c "from app import *; print('Model loaded, crops:', len(CROP_AGRO_CONSTRAINTS))"
 ```
 
-**Sample Input**:
-```
-N: 90, P: 42, K: 43
-Temperature: 20.87°C
-Humidity: 82%
-pH: 6.5
-Rainfall: 202.93mm
-```
+---
 
-**Expected Output**:
-```
-Top 3 Predictions:
-1. rice (95.2%)
-2. chickpea (78.5%)
-3. kidneybeans (65.3%)
-```
+## 🚢 Deploy to HuggingFace Spaces
 
-### Stress Testing
+### 1. Create a new HuggingFace Space
+
+- Type: **Docker**
+- SDK: Custom
+
+### 2. Push the Aiml directory
 
 ```bash
-# Run stress tests
-python 06_stress_test.py
+# The Dockerfile exposes port 7860
+docker build -t crs-ml .
+docker run -p 7860:7860 crs-ml
 ```
 
-Tests include:
-- Edge case inputs (min/max values)
-- Invalid inputs (negative values, out of range)
-- Concurrent requests simulation
-- Model robustness checks
+### 3. Required files in the Space
+
+- `Dockerfile` — Builds from `python:3.11-slim`, installs `libgomp1` for LightGBM
+- `app.py` — Main FastAPI server
+- `stacked_ensemble_v6.joblib` — Trained model (~254 MB, use Git LFS)
+- `label_encoder_v6.joblib`, `stacked_v6_config.joblib` — Model config
+- All `.json` and `.csv` data files
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+COPY Aiml ./Aiml
+COPY app.py ./app.py
+EXPOSE 7860
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+```
 
 ---
 
-## 📞 Support & Contribution
+## 📚 Related docs
 
-**Issues**: Report bugs or suggest features via GitHub Issues
-
-**Contributions**: 
-- Improve dataset with real farm data
-- Optimize model hyperparameters
-- Add new crop varieties
-- Enhance API functionality
+| Document | Description |
+|----------|-------------|
+| [Root README](../README.md) | Project overview, architecture, quick start guide |
+| [Frontend README](../Frontend/README.md) | React UI setup, i18n guide, component architecture |
+| [Backend README](../Backend/app/README.md) | API endpoints, Django setup, environment configuration |
 
 ---
 
-**Built with scikit-learn, Gradio, and HuggingFace 🤗**
-
-*Model Version: 1.0.0*  
-*Last Updated: February 2026*
+<p align="center">
+  Part of the <strong>Crop Recommendation System</strong> · Built by <strong>Henil Shingala</strong>
+</p>
