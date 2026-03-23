@@ -3,7 +3,6 @@
 import csv
 import logging
 import os
-
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -12,30 +11,24 @@ _CACHE: dict[str, dict] | None = None
 
 
 def _path() -> str:
-    env = os.environ.get("AI_ML_DIR")
-    if env:
-        return os.path.join(env, "Nutrient.csv")
-    
-    # Render or Local structure: [repo]/Backend/app/ (where manage.py is)
-    # Aiml is at [repo]/Aiml/
+    """Robust path discovery for Nutrient.csv."""
     possible_paths = [
-        os.path.join(settings.BASE_DIR.parent.parent, "Aiml", "Nutrient.csv"),  # Production structure
-        os.path.join(settings.BASE_DIR.parent, "Aiml", "Nutrient.csv"),         # Alt production structure
-        os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv"),   # Relative from Backend/app
-        os.environ.get("RENDER_SRC_ROOT", ""), # Render source root
+        # Local & Render relative structure
+        os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv"),
+        os.path.join(settings.BASE_DIR, "..", "Aiml", "Nutrient.csv"),
+        # Absolute Render path
+        "/opt/render/project/src/Aiml/Nutrient.csv",
     ]
     
-    # Add absolute path if we know the Render project structure
-    render_src = "/opt/render/project/src"
-    if os.path.exists(render_src):
-        possible_paths.append(os.path.join(render_src, "Aiml", "Nutrient.csv"))
-
     for p in possible_paths:
         if p and os.path.exists(p):
+            logger.info(f"Found Nutrient.csv at: {p}")
             return p
             
-    # Default fallback
-    return os.path.join(settings.BASE_DIR.parent.parent, "Aiml", "Nutrient.csv")
+    # Default fallback to parent of parent
+    fallback = os.path.abspath(os.path.join(settings.BASE_DIR, "..", "..", "Aiml", "Nutrient.csv"))
+    logger.warning(f"Nutrient.csv not found, falling back to: {fallback}")
+    return fallback
 
 
 def load_nutrition_cache() -> dict[str, dict]:
@@ -43,42 +36,59 @@ def load_nutrition_cache() -> dict[str, dict]:
     global _CACHE
     if _CACHE is not None:
         return _CACHE
+    
     cache = {}
     try:
         path = _path()
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as fh:
-                for row in csv.DictReader(fh):
-                    food = row.get("food_name", "").lower().strip()
-                    if food:
+        if not os.path.exists(path):
+            logger.error(f"Cannot load nutrition: {path} does not exist.")
+            return {}
+
+        with open(path, "r", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh)
+            for row in reader:
+                food = row.get("food_name", "").lower().strip()
+                if food:
+                    try:
                         cache[food] = {
-                            "protein_g": float(row.get("protein_g_per_kg", 0)),
-                            "fat_g": float(row.get("fat_g_per_kg", 0)),
-                            "carbs_g": float(row.get("carbs_g_per_kg", 0)),
-                            "fiber_g": float(row.get("fiber_g_per_kg", 0)),
-                            "iron_mg": float(row.get("iron_mg_per_kg", 0)),
-                            "calcium_mg": float(row.get("calcium_mg_per_kg", 0)),
-                            "vitamin_a_mcg": float(row.get("vitamin_a_mcg_per_kg", 0)),
-                            "vitamin_c_mg": float(row.get("vitamin_c_mg_per_kg", 0)),
-                            "energy_kcal": float(row.get("energy_kcal_per_kg", 0)),
-                            "water_g": float(row.get("water_g_per_kg", 0)),
+                            "protein_g_per_kg": float(row.get("protein_g_per_kg", 0)),
+                            "fat_g_per_kg": float(row.get("fat_g_per_kg", 0)),
+                            "carbs_g_per_kg": float(row.get("carbs_g_per_kg", 0)),
+                            "fiber_g_per_kg": float(row.get("fiber_g_per_kg", 0)),
+                            "iron_mg_per_kg": float(row.get("iron_mg_per_kg", 0)),
+                            "calcium_mg_per_kg": float(row.get("calcium_mg_per_kg", 0)),
+                            "vitamin_a_mcg_per_kg": float(row.get("vitamin_a_mcg_per_kg", 0)),
+                            "vitamin_c_mg_per_kg": float(row.get("vitamin_c_mg_per_kg", 0)),
+                            "energy_kcal_per_kg": float(row.get("energy_kcal_per_kg", 0)),
+                            "water_g_per_kg": float(row.get("water_g_per_kg", 0)),
                         }
-            _CACHE = cache
-            logger.info("Loaded %d nutrition entries at startup", len(cache))
-        else:
-            logger.warning("Nutrient.csv not found at %s", path)
+                    except ValueError:
+                        continue
+                        
+        _CACHE = cache
+        logger.info("Loaded %d nutrition entries from %s", len(cache), path)
     except Exception as e:
-        logger.warning("Nutrition CSV load failed: %s", e)
+        logger.exception("Nutrition CSV load failed")
+        
     return _CACHE or {}
 
 
 def get_nutrition_data(crop_name: str) -> dict | None:
-    """Lookup nutrition from cache (loaded at startup)."""
+    """Lookup nutrition from cache."""
     cache = load_nutrition_cache()
+    if not cache:
+        return None
+        
     search = crop_name.lower().strip()
+    
+    # Simple normalization for common crop naming variations
     if search in cache:
         return cache[search]
+        
+    # Partial matching for names like "rice (white)"
     for food, data in cache.items():
         if food in search or search in food:
             return data
+            
     return None
+
