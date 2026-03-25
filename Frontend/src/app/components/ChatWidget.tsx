@@ -87,8 +87,7 @@ export default function ChatWidget() {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error("Failed to send message:", error);
+    } catch {
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: t("chat.serverError"),

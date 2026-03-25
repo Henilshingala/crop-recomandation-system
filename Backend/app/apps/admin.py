@@ -8,7 +8,7 @@ from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Crop, PredictionLog
+from .models import Crop
 
 
 class CropForm(forms.ModelForm):
@@ -211,104 +211,7 @@ class CropAdmin(admin.ModelAdmin):
         return "Save the crop first to see preview"
     image_3_preview_large.short_description = 'Current Image 3 Preview'
 
-
-@admin.register(PredictionLog)
-class PredictionLogAdmin(admin.ModelAdmin):
-    """
-    Admin interface for PredictionLog model.
-    
-    Read-only view for analytics and debugging.
-    """
-    
-    # List display columns
-    list_display = [
-        'id',
-        'created_at',
-        'top_prediction',
-        'input_summary',
-        'ip_address'
-    ]
-    
-    # Search fields
-    search_fields = ['ip_address']
-    
-    # Filter sidebar
-    list_filter = ['created_at']
-    
-    # Ordering (newest first)
-    ordering = ['-created_at']
-    
-    # All fields read-only
-    readonly_fields = [
-        'nitrogen', 'phosphorus', 'potassium',
-        'temperature', 'humidity', 'ph', 'rainfall',
-        'predictions', 'created_at', 'ip_address',
-        'formatted_predictions'
-    ]
-    
-    # Fieldsets for edit view
-    fieldsets = (
-        ('Input Parameters', {
-            'fields': (
-                ('nitrogen', 'phosphorus', 'potassium'),
-                ('temperature', 'humidity'),
-                ('ph', 'rainfall')
-            )
-        }),
-        ('Predictions', {
-            'fields': ('formatted_predictions',)
-        }),
-        ('Metadata', {
-            'fields': ('ip_address', 'created_at')
-        }),
-    )
-    
-    # Items per page
-    list_per_page = 50
-    
-    # Disable add/delete in admin
-    def has_add_permission(self, request):
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return False
-    
-    def top_prediction(self, obj):
-        """Show the top predicted crop."""
-        if obj.predictions and len(obj.predictions) > 0:
-            top = obj.predictions[0]
-            return f"{top.get('crop', 'N/A')} ({top.get('confidence', 0):.1f}%)"
-        return "N/A"
-    top_prediction.short_description = 'Top Prediction'
-    
-    def input_summary(self, obj):
-        """Show a brief summary of input parameters."""
-        return f"N:{obj.nitrogen:.0f} P:{obj.phosphorus:.0f} K:{obj.potassium:.0f} | T:{obj.temperature:.1f}°C"
-    input_summary.short_description = 'Inputs'
-    
-    def formatted_predictions(self, obj):
-        """Show formatted predictions in edit view."""
-        if not obj.predictions:
-            return "No predictions"
-        
-        html = '<table style="border-collapse: collapse;">'
-        html += '<tr><th style="padding: 5px; border: 1px solid #ddd;">Rank</th>'
-        html += '<th style="padding: 5px; border: 1px solid #ddd;">Crop</th>'
-        html += '<th style="padding: 5px; border: 1px solid #ddd;">Confidence</th></tr>'
-        
-        for i, pred in enumerate(obj.predictions, 1):
-            html += f'<tr>'
-            html += f'<td style="padding: 5px; border: 1px solid #ddd;">{i}</td>'
-            html += f'<td style="padding: 5px; border: 1px solid #ddd;">{pred.get("crop", "N/A")}</td>'
-            html += f'<td style="padding: 5px; border: 1px solid #ddd;">{pred.get("confidence", 0):.2f}%</td>'
-            html += f'</tr>'
-        
-        html += '</table>'
-        return mark_safe(html)
-    formatted_predictions.short_description = 'Prediction Results'
-
-
 # Customize admin site header
 admin.site.site_header = "Crop Recommendation System - Admin"
 admin.site.site_title = "CRS Admin"
-admin.site.index_title = "Manage Crops & View Predictions"
+admin.site.index_title = "Manage Crops"

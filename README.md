@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-active-brightgreen?style=for-the-badge" alt="Status" />
-  <img src="https://img.shields.io/badge/version-9.0-blue?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-10.0-blue?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License" />
   <img src="https://img.shields.io/badge/python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/react-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
@@ -66,7 +66,7 @@ flowchart TB
 - **51 crop coverage** — from staples (rice, wheat) to cash crops (cotton, sugarcane) and fruits (mango, apple)
 - **7 soil & climate inputs** — N, P, K, temperature, humidity, pH, rainfall
 - **Top-3 ranked results** with confidence scores, advisory tiers, and agronomic explanations
-- **V9 NCS+EMS decision matrix** — Normalized Confidence Score + Environmental Match Score for accurate advisories
+- **V10 NCS+EMS decision matrix** — Normalized Confidence Score + Environmental Match Score for accurate advisories
 - **Hard feasibility gates** — biologically impossible crops are excluded before ranking
 - **Nutritional data** — per-crop protein, fat, carbs, fiber, iron, calcium, and vitamin content
 
@@ -93,9 +93,30 @@ All UI text, scheme descriptions, and chatbot responses are available in:
 - Crop-specific Q&A knowledge base
 - Automatic response translation via NLLB model
 
+### ⛅ Weather dashboard
+- Cascading dropdowns: **State → District → Sub-district → Village/City**
+- Geocoding via backend proxy (OpenCage API key stays server-side — never exposed to client)
+- 7-day weather forecast via Open-Meteo (free, no key required)
+
 ### 📊 Multilingual FAQ system
 - Tokenization, stopword removal, and fuzzy matching
 - Unmatched questions logged for future training
+
+---
+
+## 🛡️ Security & quality
+
+| Category | Details |
+|----------|---------|
+| **No API key leaks** | OpenCage key stored only in Render env vars — proxied via `/api/geocode/` |
+| **Input validation** | All prediction inputs validated server-side with strict range checks |
+| **Rate limiting** | Per-IP rate limiting via Django middleware (20 req/min on `/api/predict/`) |
+| **CORS** | Strict allowlist — `CORS_ALLOW_ALL_ORIGINS = False` |
+| **HSTS** | 1-year HSTS with subdomains + preload in production |
+| **XSS** | DOMPurify on all HTML-injected strings in the frontend |
+| **SQL injection** | Django ORM used exclusively — no raw queries |
+| **Secret key** | `DJANGO_SECRET_KEY` must be set as env var — raises error if missing |
+| **TypeScript** | Zero `any` types — strict mode enabled |
 
 ---
 
@@ -103,7 +124,7 @@ All UI text, scheme descriptions, and chatbot responses are available in:
 
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | React 18.3 · TypeScript · Vite 6.3 · Tailwind CSS 4.1 · i18next · Radix UI · Recharts · Motion · Lucide Icons |
+| **Frontend** | React 18.3 · TypeScript · Vite 6.3 · Tailwind CSS 4.1 · i18next · Radix UI · Recharts · Motion · Lucide Icons · DOMPurify |
 | **Backend** | Django 5.x · Django REST Framework · SQLite · Redis (optional) · WhiteNoise · Gunicorn |
 | **ML Engine** | Python 3.11 · FastAPI · Scikit-learn · XGBoost · LightGBM · NumPy · Pandas · Joblib |
 | **DevOps** | Docker · Render (Backend) · Vercel (Frontend) · HuggingFace Spaces (ML) · GitHub Actions |
@@ -114,15 +135,16 @@ All UI text, scheme descriptions, and chatbot responses are available in:
 
 ```
 CRS/
-├── Frontend/                   # React + TypeScript SPA
+├── Frontend/                   # React + TypeScript SPA (v10.0.0)
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── components/     # ChatWidget, InputForm, ResultsSection, SchemesRecommendation
+│   │   │   ├── components/     # ChatWidget, InputForm, ResultsSection, SchemesRecommendation, WeatherDashboard
 │   │   │   ├── hooks/          # Custom React hooks
-│   │   │   ├── services/       # API integration layer
+│   │   │   ├── services/       # API integration layer (api.ts, assistant.ts, schemeApi.ts)
 │   │   │   └── utils/          # Utility functions
 │   │   ├── locales/            # 22 language JSON files
 │   │   ├── styles/             # Global stylesheets
+│   │   ├── version.ts          # App version constant (10.0.0)
 │   │   └── i18n.ts             # i18next configuration
 │   ├── package.json
 │   ├── vite.config.ts
@@ -140,28 +162,25 @@ CRS/
 │       │   ├── urls.py         # API route definitions
 │       │   ├── serializers.py  # DRF serializers
 │       │   ├── validators.py   # Input validation
+│       │   ├── middleware.py   # Rate limiting
 │       │   ├── ml_inference.py # HuggingFace gateway client
 │       │   ├── nutrition.py    # Nutritional data lookup
+│       │   ├── version.py      # Backend version constant (10.0.0)
 │       │   └── services/       # FAQ search, HF service, OpenRouter, Translator, Scheme service
 │       ├── Ai/                 # AI chatbot data (Ai.json)
 │       └── manage.py
 │
 ├── Aiml/                       # ML inference engine
-│   ├── app.py                  # FastAPI server (2100+ lines, V9 engine)
-│   ├── predict.py              # Prediction utilities
-│   ├── final_stacked_model.py  # Model training script
+│   ├── app.py                  # FastAPI server (V10 engine)
 │   ├── stacked_ensemble_v6.joblib  # Trained model (~254 MB)
 │   ├── Nutrient.csv            # Nutritional data for 51 crops
 │   ├── crop_stats.json         # Per-crop training statistics
 │   ├── feature_ranges.json     # Feature validation ranges
-│   ├── calibration_config.json # Bayesian calibration parameters
-│   ├── Dockerfile              # HuggingFace Spaces container
 │   └── requirements.txt
 │
 ├── agriculture_schemes_multilingual.json  # 831 schemes in 22 languages (~31 MB)
 ├── Dockerfile                  # Root Docker config
 ├── render.yaml                 # Render deployment blueprint
-├── app.py                      # Root FastAPI proxy
 └── requirements.txt
 ```
 
@@ -212,9 +231,40 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 📸 Screenshots
+## 🔄 Changelog
 
-> _Screenshots coming soon — visit the [live demo](https://crop-recomandation-system.vercel.app/) to explore the application._
+### V10.0.0 — 2026-03-25 (Current)
+
+#### 🛡️ Security fixes
+- **API key protection** — OpenCage geocoding key moved to backend-only; frontend never touches it
+- Removed `console.error` from production chat handler (prevents stack trace exposure in browser DevTools)
+- Removed redundant bare imports inside function body (`views.py`) — module-level imports are always used
+
+#### 🐛 Bug / lint fixes
+- Fixed TypeScript `any` type in `WeatherDashboard` catch block → `unknown` with proper type guard
+- Fixed variable shadowing: `forEach((t, i)` arrow param renamed to `ts` to avoid shadowing `useTranslation`'s `t`
+- Fixed Python `logger.warning(f"…")` f-string → `%s` lazy-formatting to prevent evaluation when logging is disabled
+- Fixed `package.json` — moved `react`/`react-dom` from `peerDependencies` to `dependencies` (correct for a deployable SPA)
+- Removed Windows-incompatible `postinstall` chmod script from `package.json`
+- Added `type-check` npm script (`tsc --noEmit`) for CI validation
+
+#### 📦 Version
+- `Frontend/package.json` → `10.0.0`
+- `Frontend/src/version.ts` → single source of truth for frontend version
+- `Backend/app/apps/version.py` → single source of truth for backend version
+- Health check endpoint now returns `"version": "10.0.0"`
+
+### V9.0.0
+- NCS + EMS decision matrix for improved advisory accuracy
+- Geocoding moved to backend proxy for security
+
+### V8.0.0
+- Weather dashboard with cascading location dropdowns
+- 22 language support complete
+
+### V7.0.0
+- Unified advisory mode (single `/api/predict/` endpoint)
+- HuggingFace gateway integration
 
 ---
 
@@ -234,6 +284,7 @@ Contributions are welcome! Here is how you can help:
 - Write descriptive commit messages
 - Update documentation for any API changes
 - Test all changes locally before submitting a PR
+- Run `npm run type-check` before committing frontend changes
 
 ---
 
@@ -248,8 +299,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 | Document | Description |
 |----------|-------------|
 | [Frontend README](Frontend/README.md) | React UI setup, i18n guide, component architecture |
-| [Backend README](Backend/app/README.md) | Django API endpoints, environment config, deployment |
-| [ML Engine README](Aiml/README.md) | Model architecture, training guide, performance metrics |
+| [Backend README](Backend/README.md) | Django API endpoints, environment config, deployment |
 
 ---
 

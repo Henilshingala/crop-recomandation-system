@@ -226,7 +226,7 @@ class SecurePredictionSerializer(serializers.Serializer):
         # Detect suspicious patterns
         warnings = PredictionInputValidator.detect_suspicious_patterns(attrs)
         if warnings:
-            logger.warning(f"Suspicious input detected: {warnings}")
+            logger.warning("Suspicious input detected: %s", warnings)
             # Add warnings to response but don't block
             self._warnings = warnings
         

@@ -3,7 +3,7 @@ Crop Recommendation System - API Views
 ======================================
 REST API endpoints for crop prediction and management.
 
-V7 Unified Advisory:
+V10 Unified Advisory:
   POST /api/predict/  → calls HF /recommend (no mode exposed)
 """
 
@@ -29,6 +29,7 @@ from .serializers import CropSerializer, PredictionLogSerializer
 from .validators import SecurePredictionSerializer, FEATURE_RANGES, SAFE_RANGES
 from .nutrition import get_nutrition_data
 from .services.scheme_service import get_filtered_schemes, get_filter_options
+from .version import VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -241,14 +242,12 @@ def media_crops_list(request):
 
 def media_crops_redirect(request, filename):
     """
-    Smart proxy for crop images. 
+    Smart proxy for crop images.
     1. If a crop has an external URL, redirect to it.
     2. If it's a local file, serve it directly from the media folder.
     This prevents infinite redirect loops caused by the cache-busting v= query param.
     """
-    import os
-    from django.conf import settings
-    from django.http import FileResponse, Http404
+    from django.http import FileResponse
 
     # 1. Try to serve locally first (most common for repo-based images)
     local_path = os.path.join(settings.MEDIA_ROOT, 'crops', filename)
@@ -296,6 +295,7 @@ def health_check(request):
         "database": "ok",
         "ml_model": "ok",
         "modes": ["soil", "extended", "both"],
+        "version": VERSION,
     }
 
     # Simple DB check - avoid heavy queries

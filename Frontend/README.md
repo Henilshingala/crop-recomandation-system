@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="https://img.shields.io/badge/version-10.0-blue?style=for-the-badge" alt="Version" />
   <img src="https://img.shields.io/badge/react-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/typescript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/vite-6.3-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
@@ -21,6 +22,7 @@ The CRS Frontend is a modern web application that provides farmers and agricultu
 - Enter soil and climate parameters for **AI-powered crop recommendations**
 - Browse **831 government agriculture schemes** with multilingual search
 - Interact with **Krishi Mitra**, an AI chatbot assistant for farming queries
+- View **7-day weather forecasts** for any Indian village, district or city
 - Switch between **22 Indian languages** seamlessly
 
 🔗 **Live:** [crop-recomandation-system.vercel.app](https://crop-recomandation-system.vercel.app/)
@@ -170,6 +172,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173).
 |--------|---------|-------------|
 | **Dev** | `npm run dev` | Start Vite dev server with HMR |
 | **Build** | `npm run build` | Create optimized production build in `dist/` |
+| **Type Check** | `npm run type-check` | Run TypeScript compiler without emitting (for CI) |
 
 ---
 
@@ -271,8 +274,21 @@ The project includes a `vercel.json` configuration:
 | Document | Description |
 |----------|-------------|
 | [Root README](../README.md) | Project overview, architecture, quick start guide |
-| [Backend README](../Backend/app/README.md) | API endpoints, Django setup, environment configuration |
-| [ML Engine README](../Aiml/README.md) | Model details, training guide, performance metrics |
+| [Backend README](../Backend/README.md) | API endpoints, Django setup, environment configuration |
+
+---
+
+## 🔄 Changelog
+
+### V10.0.0 — 2026-03-25 (Current)
+- Fixed TypeScript `any` in `WeatherDashboard` catch block → `unknown` with type guard
+- Fixed variable shadowing inside `hourlyTimes.forEach` (renamed `t` → `ts`)
+- Removed `console.error` from chat error handler (no stack trace leakage in prod)
+- Moved `react`/`react-dom` from `peerDependencies` to `dependencies`
+- Removed Windows-incompatible `postinstall` chmod script
+- Added `npm run type-check` script
+- Added `src/version.ts` as single source of truth for version string
+- Renamed package from `@figma/my-make-file` → `crop-recommendation-system`
 
 ---
 

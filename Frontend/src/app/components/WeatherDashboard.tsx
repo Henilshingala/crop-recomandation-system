@@ -262,7 +262,7 @@ export function WeatherDashboard() {
       })
       .catch(() => setError(t("weather.locationLoadError")))
       .finally(() => setLoadingStates(false));
-  }, []);
+  }, [t]);
 
   // ── Load districts + cities when state changes ──
   useEffect(() => {
@@ -418,8 +418,8 @@ export function WeatherDashboard() {
 
         // Average hourly humidity per day
         const humidityByDay = new Map<string, number[]>();
-        hourlyTimes.forEach((t, i) => {
-          const day = t.split("T")[0];
+        hourlyTimes.forEach((ts, i) => {
+          const day = ts.split("T")[0];
           if (!humidityByDay.has(day)) humidityByDay.set(day, []);
           humidityByDay.get(day)!.push(hourlyHumidity[i]);
         });
@@ -449,9 +449,11 @@ export function WeatherDashboard() {
         if (!controller.signal.aborted) {
           setWeatherData(days);
         }
-      } catch (err: any) {
-        if (err.name === "AbortError") return;
-        setError(err.message || t("weather.genericError"));
+      } catch (err: unknown) {
+        if ((err as { name?: string }).name === "AbortError") return;
+        setError(
+          err instanceof Error ? err.message : t("weather.genericError")
+        );
         setWeatherData(null);
       } finally {
         if (!controller.signal.aborted) {

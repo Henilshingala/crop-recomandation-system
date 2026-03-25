@@ -1,15 +1,11 @@
-# 🔧 Backend API - Crop Recommendation System
+# 🔧 CRS Backend — V10
 
-![Django](https://img.shields.io/badge/Django-5.1.7-092e20)
-![DRF](https://img.shields.io/badge/Django_REST_Framework-3.15.2-a30000)
+![Django](https://img.shields.io/badge/Django-5.x-092e20)
+![DRF](https://img.shields.io/badge/Django_REST_Framework-3.15-a30000)
 ![Python](https://img.shields.io/badge/Python-3.11-3776ab)
-![SQLite](https://img.shields.io/badge/SQLite-3-003b57)
+![Version](https://img.shields.io/badge/version-10.0-blue)
 
-Robust Django REST API backend serving as the orchestration layer between the frontend and ML model.
-
----
-
-## 🌐 Live Deployment
+Django REST Framework backend serving as the orchestration layer between the React frontend and the HuggingFace ML engine.
 
 **Production URL**: https://crop-recomandation-system.onrender.com/
 
@@ -19,703 +15,295 @@ Robust Django REST API backend serving as the orchestration layer between the fr
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Technology Stack](#-technology-stack)
-- [Project Structure](#-project-structure)
-- [Installation & Setup](#-installation--setup)
-- [Environment Configuration](#-environment-configuration)
-- [API Endpoints](#-api-endpoints)
-- [Database Schema](#-database-schema)
-- [ML Integration](#-ml-integration)
-- [Security & CORS](#-security--cors)
-- [Deployment](#-deployment)
-- [Practical Considerations](#-practical-considerations)
+- [Tech stack](#-tech-stack)
+- [Project structure](#-project-structure)
+- [Installation](#-installation)
+- [Environment variables](#-environment-variables)
+- [API endpoints](#-api-endpoints)
+- [Security](#-security)
+- [Deployment on Render](#-deployment-on-render)
+- [Troubleshooting](#-troubleshooting)
+- [Changelog](#-changelog)
 
 ---
 
 ## 🎯 Overview
 
-The backend is a Django REST Framework API that acts as the middleware between the React frontend and the HuggingFace ML model. It provides:
+The backend is a Django REST Framework API that acts as the secure middleware between the React frontend and the HuggingFace ML model. Responsibilities:
 
-- **RESTful API** endpoints for crop recommendations
-- **Crop database** with detailed information for 22 crops
-- **ML model orchestration** via HTTP calls to HuggingFace Spaces
-- **Static file serving** for crop images
-- **CORS management** for secure cross-origin requests
-- **Request validation** and error handling
+- **Input validation** — strict range checks via `SecurePredictionSerializer`
+- **ML gateway** — proxies prediction requests to the HuggingFace FastAPI Space
+- **Data enrichment** — attaches crop images, yield, season, and nutrition to ML results
+- **AI chatbot** — Hybrid FAQ + OpenRouter LLM assistant with NLLB translation
+- **Geocoding proxy** — keeps OpenCage API key server-side (never exposed to frontend)
+- **Government schemes** — serves 831 multilingual agriculture schemes
+- **Rate limiting** — per-IP middleware (20 req/min for `/api/predict/`)
 
 ---
 
 ## ⚡ Features
 
-### 1. **Crop Recommendation API**
-- Accepts 7 input parameters (N, P, K, temperature, humidity, pH, rainfall)
-- Calls HuggingFace ML API for predictions
-- Enriches predictions with crop details from database
-- Returns top-3 recommendations with confidence scores
-
-### 2. **Crop Database Management**
-- **22 crops** with comprehensive information
-- Cultivation tips, nutritional requirements, climate preferences
-- High-quality crop images
-- RESTful CRUD operations (currently Read-only)
-
-### 3. **Static File Management**
-- **WhiteNoise** for production static file serving
-- Efficient compression and caching
-- CDN-friendly headers
-- Media file support for crop images
-
-### 4. **Security & CORS**
-- **Restricted CORS** policy (only Vercel frontend + localhost)
-- **HTTPS enforcement** in production
-- **Secure cookie** settings
-- **HSTS headers** for browsers
-- **XSS protection**
-
-### 5. **Error Handling**
-- Comprehensive error responses
-- User-friendly error messages
-- Detailed logging for debugging
-- Graceful fallbacks
+| Feature | Details |
+|---------|---------|
+| Crop prediction | 51 crops, V10 NCS+EMS decision matrix |
+| Data enrichment | Images, yield, season, nutrition per crop |
+| AI assistant | FAQ fuzzy-match + OpenRouter LLM fallback |
+| Government schemes | 831 schemes, 22 languages, full filter set |
+| Weather geocoding | Secure proxy endpoint for OpenCage |
+| Rate limiting | Per-IP sliding window middleware |
+| Caching | Redis (production) / LocMem (dev) |
+| Security | HSTS, secure cookies, CORS allowlist, no wildcards |
 
 ---
 
-## 🛠️ Technology Stack
-
-### Core Framework
+## 🛠️ Tech stack
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Django** | 5.1.7 | Web framework |
-| **Django REST Framework** | 3.15.2 | API framework |
-| **Python** | 3.11+ | Programming language |
+| **Django** | 5.x | Web framework |
+| **Django REST Framework** | 3.15 | API framework |
+| **Python** | 3.11+ | Runtime |
 | **SQLite** | 3.x | Database |
-
-### Additional Libraries
-
-- **django-cors-headers** (4.7.0): CORS middleware
-- **WhiteNoise** (6.8.2): Static file serving
-- **Requests** (2.32.3): HTTP client for ML API
-- **Pillow** (11.0.0): Image processing
+| **WhiteNoise** | 6.x | Static file serving |
+| **django-cors-headers** | 4.x | CORS middleware |
+| **Requests** | 2.x | HTTP client for ML gateway |
+| **Gunicorn** | latest | WSGI server |
 
 ---
 
-## 📁 Project Structure
+## 📁 Project structure
 
 ```
 Backend/app/
 ├── app/                        # Django project settings
-│   ├── __init__.py
-│   ├── settings.py            # Main configuration
-│   ├── urls.py                # Root URL configuration
-│   └── wsgi.py                # WSGI entry point
+│   ├── settings.py             # Production-ready configuration
+│   ├── urls.py                 # Root URL routing
+│   └── wsgi.py                 # WSGI entry point
 │
-├── apps/                       # Main application
-│   ├── models.py              # Crop model (database schema)
-│   ├── views.py               # API views
-│   ├── serializers.py         # DRF serializers
-│   ├── urls.py                # App URLs
-│   ├── ml_inference.py        # ML API client
-│   └── management/
-│       └── commands/
-│           └── seed_crops.py  # Data seeding command
+├── apps/                       # Main Django application
+│   ├── models.py               # Crop, PredictionLog models
+│   ├── views.py                # All API endpoint handlers
+│   ├── urls.py                 # API route definitions
+│   ├── serializers.py          # DRF serializers
+│   ├── validators.py           # Input validation + SecurePredictionSerializer
+│   ├── middleware.py           # Per-IP rate limiting
+│   ├── ml_inference.py         # HuggingFace gateway client
+│   ├── nutrition.py            # Nutritional data lookup (Nutrient.csv)
+│   ├── version.py              # Version constant "10.0.0"
+│   └── services/
+│       ├── faq_search.py       # Fuzzy FAQ matching
+│       ├── openrouter_client.py # LLM fallback client
+│       ├── translator.py       # NLLB translation service
+│       ├── scheme_service.py   # Government schemes data service
+│       ├── hf_service.py       # HuggingFace ML service
+│       └── crop_sync.py        # Crop data synchronisation
 │
-├── media/                      # User uploads & crop images
-│   └── crops/                 # Crop images
-│
+├── Ai/                         # FAQ data (Ai.json)
+├── media/crops/                # Crop images
 ├── staticfiles/                # Collected static files (production)
-├── db.sqlite3                 # SQLite database
-├── manage.py                  # Django management script
-├── requirements.txt           # Python dependencies
-├── Procfile                   # Render deployment config
-└── README.md                  # This file
+├── db.sqlite3                  # SQLite database
+├── manage.py
+└── requirements.txt
 ```
 
 ---
 
-## 🚀 Installation & Setup
+## 🚀 Installation
 
 ### Prerequisites
 
-- **Python**: 3.11 or higher
-- **pip**: Latest version
-- **virtualenv**: For isolated Python environment
+- Python 3.11+
+- pip
 
-### Step-by-Step Installation
+### Steps
 
-#### 1. Navigate to Backend Directory
 ```bash
 cd Backend/app
-```
 
-#### 2. Create Virtual Environment
-```bash
-# On Windows
+# Create and activate virtualenv
 python -m venv venv
+# Windows:
 venv\Scripts\activate
-
-# On macOS/Linux
-python3 -m venv venv
+# macOS/Linux:
 source venv/bin/activate
-```
 
-#### 3. Install Dependencies
-```bash
 pip install -r requirements.txt
-```
 
-#### 4. Set Up Environment Variables
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
+cp .env.example .env   # then edit .env
 
-#### 5. Run Database Migrations
-```bash
 python manage.py migrate
-```
-
-#### 6. Seed Crop Data (Optional - already migrated)
-```bash
 python manage.py seed_crops
-```
-
-#### 7. Collect Static Files
-```bash
 python manage.py collectstatic --noinput
-```
-
-#### 8. Start Development Server
-```bash
 python manage.py runserver
 ```
 
-Server runs at: `http://localhost:8000`
+Server runs at `http://localhost:8000`.
 
 ---
 
-## ⚙️ Environment Configuration
+## ⚙️ Environment variables
 
-### Environment Variables
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DJANGO_SECRET_KEY` | ✅ | Django secret key — raises `ValueError` if missing |
+| `DJANGO_DEBUG` | ❌ | `True` / `False` (default `False`) |
+| `DJANGO_ALLOWED_HOSTS` | ❌ | Comma-separated hosts (no protocol) |
+| `CORS_ALLOWED_ORIGINS` | ❌ | Comma-separated origins (with protocol) |
+| `HF_MODEL_URL` | ❌ | HuggingFace Space URL (default: `https://shingala-crs.hf.space`) |
+| `HF_TOKEN` | ❌ | HF token for private spaces |
+| `OPENCAGE_API_KEY` | ❌ | OpenCage geocoding key (kept server-side) |
+| `OPENROUTER_API_KEY` | ❌ | OpenRouter LLM fallback key |
+| `REDIS_URL` | ❌ | Redis cache URL (falls back to LocMemCache) |
+| `SECURE_SSL_REDIRECT` | ❌ | `True` / `False` (default `True` in production) |
 
-Create a `.env` file in `Backend/app/`:
+### Example `.env` (development)
 
 ```env
-# Django Settings
-DJANGO_SECRET_KEY=your-super-secret-key-change-in-production
-DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=your-domain.com,localhost,127.0.0.1
-
-# CORS Settings (NO wildcard - specific URLs only)
-CORS_ALLOWED_ORIGINS=https://crop-recomandation-system.vercel.app,http://localhost:5173
-
-# Security Settings
-SECURE_SSL_REDIRECT=True
-
-# HuggingFace ML API
-HF_API_URL=https://shingala-crs.hf.space/
-# HF_TOKEN=your-token-if-space-is-private  # Optional
-```
-
-### Important Notes
-
-| Variable | Format | Example |
-|----------|--------|---------|
-| `DJANGO_ALLOWED_HOSTS` | Domain only (no protocol) | `example.com,localhost` |
-| `CORS_ALLOWED_ORIGINS` | Full URL with protocol | `https://example.com,http://localhost:5173` |
-| `HF_API_URL` | Full URL | `https://space.hf.space/` |
-
-### Production vs Development
-
-**Development (`.env`)**:
-```env
+DJANGO_SECRET_KEY=change-me-use-a-long-random-string
 DJANGO_DEBUG=True
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 CORS_ALLOWED_ORIGINS=http://localhost:5173
 SECURE_SSL_REDIRECT=False
-```
-
-**Production (Render Dashboard)**:
-```env
-DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=crop-recomandation-system.onrender.com
-CORS_ALLOWED_ORIGINS=https://crop-recomandation-system.vercel.app,http://localhost:5173
-SECURE_SSL_REDIRECT=True
-HF_API_URL=https://shingala-crs.hf.space/
+HF_MODEL_URL=https://shingala-crs.hf.space
 ```
 
 ---
 
-## 🌐 API Endpoints
+## 🌐 API endpoints
 
 ### Base URL
 ```
-Development: http://localhost:8000/api/
-Production:  https://crop-recomandation-system.onrender.com/api/
+Development:  http://localhost:8000/api/
+Production:   https://crop-recomandation-system.onrender.com/api/
 ```
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health/` | Health check (returns version + status) |
+| `POST` | `/api/predict/` | Crop prediction (7 soil/climate inputs) |
+| `GET` | `/api/crops/` | List all crops in DB |
+| `GET` | `/api/crops/available/` | ML model's supported crops |
+| `GET` | `/api/model/limits/` | Feature validation ranges |
+| `GET` | `/api/schemes/` | Government schemes (filterable) |
+| `GET` | `/api/schemes/options/` | Available filter values |
+| `POST` | `/api/assistant/chat/` | AI chatbot (Krishi Mitra) |
+| `GET` | `/api/geocode/` | Geocoding proxy (OpenCage, key stays backend) |
+| `GET` | `/api/locations/states/` | Indian states list |
+| `GET` | `/api/locations/districts/` | Districts for a state |
+| `GET` | `/api/locations/subdistricts/` | Sub-districts for a district |
+| `GET` | `/api/locations/villages/` | Villages for a sub-district |
 
-### 1. **Get Crop Recommendation** (Primary Endpoint)
+### POST `/api/predict/` — example
 
-```http
-POST /api/recommend/
-Content-Type: application/json
-```
-
-**Request Body**:
+**Request:**
 ```json
 {
-  "N": 90,           // Nitrogen content (0-140)
-  "P": 42,           // Phosphorus content (5-145)
-  "K": 43,           // Potassium content (5-205)
-  "temperature": 20.87,  // Temperature in Celsius (0-50)
-  "humidity": 82.00,     // Humidity percentage (0-100)
-  "ph": 6.50,            // pH value (3.5-10)
-  "rainfall": 202.93     // Rainfall in mm (20-300)
+  "N": 90, "P": 42, "K": 43,
+  "temperature": 24.5, "humidity": 68,
+  "ph": 6.7, "rainfall": 120
 }
 ```
 
-**Response (Success - 200 OK)**:
+**Response:**
 ```json
 {
-  "recommendations": [
-    {
-      "crop": "rice",
-      "confidence": 95.2,
-      "description": "Rice is a staple cereal grain...",
-      "cultivation_tips": "Plant rice in flooded fields...",
-      "nutritional_requirements": {
-        "nitrogen": "High",
-        "phosphorus": "Medium",
-        "potassium": "Medium"
-      },
-      "climate_preferences": {
-        "temperature": "20-30°C",
-        "humidity": "High",
-        "rainfall": "Heavy"
-      },
-      "image_url": "/media/crops/rice.jpg"
-    },
-    {
-      "crop": "chickpea",
-      "confidence": 78.5,
-      ...
-    },
-    {
-      "crop": "kidneybeans",
-      "confidence": 65.3,
-      ...
-    }
-  ]
+  "top_1": { "crop": "rice", "confidence": 96.4, "risk_level": "low", ... },
+  "top_3": [ ... ],
+  "model_info": { "coverage": 51, "type": "stacked-ensemble-v10", "version": "10.0.0" },
+  "version": "10.0.0"
 }
 ```
 
-**Error Responses**:
+### GET `/api/health/` — example
 
-```json
-// 400 Bad Request - Invalid input
-{
-  "error": "Invalid input parameters",
-  "details": {
-    "N": ["This field is required"],
-    "temperature": ["Temperature must be between 0 and 50"]
-  }
-}
-
-// 503 Service Unavailable - ML model warming up
-{
-  "error": "ML Model is warming up",
-  "message": "Please retry in 30 seconds"
-}
-
-// 500 Internal Server Error
-{
-  "error": "Internal server error",
-  "message": "An unexpected error occurred"
-}
-```
-
----
-
-### 2. **List All Crops**
-
-```http
-GET /api/crops/
-```
-
-**Response (200 OK)**:
-```json
-{
-  "count": 22,
-  "results": [
-    {
-      "id": 1,
-      "name": "rice",
-      "display_name": "Rice",
-      "description": "Rice is a staple cereal grain...",
-      "cultivation_tips": "...",
-      "image": "/media/crops/rice.jpg",
-      "created_at": "2024-01-01T00:00:00Z"
-    },
-    ...
-  ]
-}
-```
-
-**Query Parameters**:
-- `?page=1` - Pagination (20 crops per page)
-- `?search=rice` - Search by crop name (future)
-
----
-
-### 3. **Get Crop Details**
-
-```http
-GET /api/crops/{crop_name}/
-```
-
-**Example**:
-```http
-GET /api/crops/rice/
-```
-
-**Response (200 OK)**:
-```json
-{
-  "id": 1,
-  "name": "rice",
-  "display_name": "Rice",
-  "description": "Detailed description...",
-  "cultivation_tips": "Step-by-step cultivation guide...",
-  "nutritional_requirements": {
-    "nitrogen": "High",
-    "phosphorus": "Medium",
-    "potassium": "Medium"
-  },
-  "climate_preferences": {
-    "temperature": "20-30°C",
-    "humidity": "80-90%",
-    "rainfall": "200-300mm",
-    "soil_ph": "5.5-7.0"
-  },
-  "image": "/media/crops/rice.jpg",
-  "created_at": "2024-01-01T00:00:00Z"
-}
-```
-
-**Error (404 Not Found)**:
-```json
-{
-  "error": "Crop not found",
-  "message": "No crop with name 'xyz' exists"
-}
-```
-
----
-
-### 4. **Health Check**
-
-```http
-GET /api/health/
-```
-
-**Response (200 OK)**:
 ```json
 {
   "status": "healthy",
-  "version": "1.0.0",
-  "timestamp": "2024-02-17T08:00:00Z"
+  "database": "ok",
+  "ml_model": "ok",
+  "version": "10.0.0",
+  "soil_crops": 22,
+  "extended_crops": 51
 }
 ```
 
 ---
 
-## 💾 Database Schema
+## 🔒 Security
 
-### Crop Model
-
-```python
-class Crop(models.Model):
-    """
-    Stores comprehensive information about each crop.
-    """
-    name = models.CharField(max_length=100, unique=True)
-    display_name = models.CharField(max_length=100)
-    description = models.TextField()
-    cultivation_tips = models.TextField()
-    image = models.ImageField(upload_to='crops/')
-    
-    # Nutritional requirements (JSON)
-    nutritional_requirements = models.JSONField()
-    
-    # Climate preferences (JSON)
-    climate_preferences = models.JSONField()
-    
-    # Metadata
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-```
-
-**Supported Crops**: Rice, Maize, Chickpea, Kidneybeans, Pigeonpeas, Mothbeans, Mungbean, Blackgram, Lentil, Pomegranate, Banana, Mango, Grapes, Watermelon, Muskmelon, Apple, Orange, Papaya, Coconut, Cotton, Jute, Coffee
+| Control | Implementation |
+|---------|---------------|
+| **No wildcard CORS** | `CORS_ALLOW_ALL_ORIGINS = False` |
+| **HSTS** | 1-year, subdomains, preload |
+| **Secure cookies** | `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE` |
+| **SSL redirect** | `SECURE_SSL_REDIRECT = True` in production |
+| **API key protection** | OpenCage key stored only in Render env vars; `/api/geocode/` proxies it |
+| **Input validation** | `SecurePredictionSerializer` — strict float ranges, suspicious pattern detection |
+| **Rate limiting** | 20 req/min on `/api/predict/` per IP via `RateLimitMiddleware` |
+| **No debug in production** | `DJANGO_DEBUG=False` enforced |
+| **No wildcard hosts** | `*` in `ALLOWED_HOSTS` raises `ValueError` at startup |
+| **Logger safety** | `logger.warning("msg: %s", data)` — no f-strings in log calls |
 
 ---
 
-## 🤖 ML Integration
+## 🚢 Deployment on Render
 
-### HuggingFace API Client (`ml_inference.py`)
+### render.yaml key fields
 
-The backend calls the HuggingFace Space via HTTP:
-
-```python
-class CropPredictor:
-    """
-    Singleton class for ML model inference via HuggingFace API.
-    """
-    
-    def __init__(self):
-        self._api_url = os.environ.get(
-            "HF_API_URL", 
-            "https://shingala-crs.hf.space/"
-        )
-        self._token = os.environ.get("HF_TOKEN")  # Optional
-    
-    def predict_top_crops(self, n, p, k, temperature, 
-                          humidity, ph, rainfall, top_n=3):
-        """
-        Calls HuggingFace API for predictions.
-        """
-        payload = {
-            'N': n, 'P': p, 'K': k,
-            'temperature': temperature,
-            'humidity': humidity,
-            'ph': ph,
-            'rainfall': rainfall,
-            'top_n': top_n
-        }
-        
-        response = requests.post(
-            f"{self._api_url}/predict",
-            json=payload,
-            headers={"Authorization": f"Bearer {self._token}"}
-            if self._token else {},
-            timeout=15
-        )
-        
-        response.raise_for_status()
-        return response.json()
+```yaml
+services:
+  - type: web
+    name: crop-recomandation-system
+    env: python
+    rootDir: Backend/app
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn app.wsgi:application --workers 1 --timeout 120 --bind 0.0.0.0:$PORT
 ```
 
-### Error Handling
+### Required env vars on Render
 
-```python
-try:
-    predictions = predictor.predict_top_crops(...)
-except requests.Timeout:
-    return Response(
-        {"error": "ML model timeout"},
-        status=503
-    )
-except requests.HTTPError as e:
-    if e.response.status_code == 503:
-        return Response(
-            {"error": "Model warming up, retry in 30s"},
-            status=503
-        )
 ```
-
----
-
-## 🔒 Security & CORS
-
-### CORS Configuration (`settings.py`)
-
-```python
-# STRICT CORS - Only specific origins allowed
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,https://crop-recomandation-system.vercel.app"
-).split(",")
-
-# NO wildcard allowed
-CORS_ALLOW_ALL_ORIGINS = False
-
-CORS_ALLOW_CREDENTIALS = True
-```
-
-### Allowed Hosts
-
-```python
-# Domain-only (no https://)
-ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS",
-    "localhost,127.0.0.1,crop-recomandation-system.onrender.com"
-).split(",")
-```
-
-### HTTPS Enforcement
-
-```python
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-```
-
----
-
-## 🚀 Deployment
-
-### Deploying to Render
-
-#### 1. **Create Web Service**
-- Go to Render Dashboard
-- New → Web Service
-- Connect GitHub repository
-
-#### 2. **Configure Service**
-```
-Name: crop-recommendation-backend
-Region: Oregon (US West)
-Branch: main
-Root Directory: Backend/app
-Runtime: Python 3
-Build Command: pip install -r requirements.txt
-Start Command: gunicorn app.wsgi:application
-```
-
-#### 3. **Environment Variables**
-Set in Render Dashboard:
-```
-DJANGO_SECRET_KEY=<generate-secret-key>
+DJANGO_SECRET_KEY   # generate with: python -c "import secrets; print(secrets.token_hex(50))"
 DJANGO_DEBUG=False
-DJANGO_ALLOWED_HOSTS=crop-recomandation-system.onrender.com
 CORS_ALLOWED_ORIGINS=https://crop-recomandation-system.vercel.app,http://localhost:5173
-SECURE_SSL_REDIRECT=True
-HF_API_URL=https://shingala-crs.hf.space/
+HF_MODEL_URL=https://shingala-crs.hf.space
+OPENCAGE_API_KEY=<your-key>
+OPENROUTER_API_KEY=<your-key>
 ```
-
-#### 4. **Auto-Deploy**
-- Push to `main` branch triggers auto-deploy
-- Build logs available in Render dashboard
-
----
-
-## 🔍 Practical Considerations
-
-### Cold Start Time
-
-**Current Behavior**:
-- Render's free tier **sleeps after 15 minutes** of inactivity
-- First request after sleep takes **~20-40 seconds** to wake up
-- Subsequent requests are instant
-
-**Practical Impact**:
-- ✅ Fine for **planning tools** (not real-time systems)
-- ✅ **Loading indicators** inform users during cold start
-- ✅ **Auto-scaling** prevents downtime during high traffic
-
-**Future Enhancement**:
-- Paid tier for **always-on** instances
-- **Keep-alive pings** to prevent sleeping (if on paid plan)
-
-### Database Choice: SQLite
-
-**Current Setup**:
-- **SQLite database** (file-based, no separate server)
-- **Read-heavy** workload (crop database is mostly static)
-- **No complex joins** or concurrent writes
-
-**Why SQLite?**:
-- ✅ **Perfect for our use case**: Static crop data rarely changes
-- ✅ **Zero configuration**: No database server to manage
-- ✅ **Fast reads**: Excellent for lookup operations
-- ✅ **File-based**: Easy backup and version control
-
-**Practical Considerations**:
-- ✅ Handles **hundreds of requests/second** for read operations
-- ✅ Crop data changes infrequently (manual updates only)
-- ⚠️ Not ideal for **high-concurrency writes** (not our use case)
-- ⚠️ Limited to **single server** (fine for our scale)
-
-**When to Migrate to PostgreSQL?**:
-- If user-generated content is added (reviews, ratings)
-- If concurrent write operations increase significantly
-- If we need advanced features (full-text search, geospatial queries)
-
-**Current Status**: SQLite is **perfectly suitable** and **production-ready** for this application
-
----
-
-## 🧪 Testing (Manual Testing Guide)
-
-### Test Recommendation Endpoint
-
-```bash
-curl -X POST https://crop-recomandation-system.onrender.com/api/recommend/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "N": 90,
-    "P": 42,
-    "K": 43,
-    "temperature": 20.87,
-    "humidity": 82.00,
-    "ph": 6.50,
-    "rainfall": 202.93
-  }'
-```
-
-**Expected Output**: Top-3 crop recommendations
-
-### Test Crops List
-
-```bash
-curl https://crop-recomandation-system.onrender.com/api/crops/
-```
-
-**Expected Output**: List of 22 crops
-
-### Test Specific Crop
-
-```bash
-curl https://crop-recomandation-system.onrender.com/api/crops/rice/
-```
-
-**Expected Output**: Detailed rice information
-
----
-
-## 📚 Additional Resources
-
-- [Django Documentation](https://docs.djangoproject.com/)
-- [Django REST Framework](https://www.django-rest-framework.org/)
-- [Render Deployment Guide](https://render.com/docs/deploy-django)
-- [WhiteNoise Documentation](http://whitenoise.evans.io/)
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Issue: CORS Errors
-
-**Solution**: Check that `CORS_ALLOWED_ORIGINS` includes your frontend URL with exact protocol match
-
-### Issue: 503 Errors on Recommendation
-
-**Cause**: HuggingFace Space is sleeping
-
-**Solution**: Wait 30 seconds and retry (space is warming up)
-
-### Issue: Static Files Not Loading
-
-**Solution**: 
-```bash
-python manage.py collectstatic --noinput
-```
+| Issue | Cause | Solution |
+|-------|-------|---------|
+| CORS errors | Origin not in allow list | Add frontend URL to `CORS_ALLOWED_ORIGINS` env var |
+| 503 on predict | HF Space sleeping | Wait ~30 s, HF Space will wake |
+| Static files 404 | `collectstatic` not run | `python manage.py collectstatic --noinput` |
+| `ValueError: DJANGO_SECRET_KEY` | Env var missing | Set `DJANGO_SECRET_KEY` in Render env vars |
 
 ---
 
-**Built with Django & Django REST Framework**
+## 🔄 Changelog
 
-*Last Updated: February 2026*
+### V10.0.0 — 2026-03-25 (Current)
+- `views.py` — removed redundant bare `import os / settings / Http404` inside function body (now module-level only)
+- `views.py` — updated docstring from V7 → V10
+- `views.py` — health check now returns `"version": "10.0.0"`
+- `validators.py` — replaced f-string in `logger.warning` with `%s` lazy format
+- `version.py` — new file, `VERSION = "10.0.0"` as single source of truth
+- `settings.py` — `APP_VERSION = "10.0.0"` constant added
+
+### V9.0.0
+- NCS + EMS decision matrix
+- Geocoding moved to backend proxy (security)
+
+### V8.0.0
+- Government schemes service (831 schemes, 22 languages)
+- Weather cascading location API
+
+---
+
+<p align="center">
+  Part of the <strong>Crop Recommendation System</strong> · Built by <strong>Henil Shingala</strong>
+</p>
