@@ -6,7 +6,7 @@
 
 export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  'https://crop-recomandation-system.onrender.com/api'
+  'https://crop-recomandation-system-kcoh.onrender.com/api'
 ).replace(/\/$/, '');
 
 /* ── Request types ────────────────────────────────────────────────── */

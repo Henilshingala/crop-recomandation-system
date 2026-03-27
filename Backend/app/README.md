@@ -23,7 +23,7 @@ The CRS Backend serves as the central API gateway for the Crop Recommendation Sy
 - **Powers the AI chatbot** (Krishi Mitra) with a hybrid FAQ-search + OpenRouter LLM pipeline
 - **Logs all predictions** for analytics and debugging
 
-🔗 **Live:** [crop-recomandation-system.onrender.com](https://crop-recomandation-system.onrender.com/)
+🔗 **Live:** [crop-recomandation-system-kcoh.onrender.com](https://crop-recomandation-system-kcoh.onrender.com/)
 
 ---
 

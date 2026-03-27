@@ -7,7 +7,7 @@
 
 Django REST Framework backend serving as the orchestration layer between the React frontend and the HuggingFace ML engine.
 
-**Production URL**: https://crop-recomandation-system.onrender.com/
+**Production URL**: https://crop-recomandation-system-kcoh.onrender.com/
 
 ---
 
@@ -174,7 +174,7 @@ HF_MODEL_URL=https://shingala-crs.hf.space
 ### Base URL
 ```
 Development:  http://localhost:8000/api/
-Production:   https://crop-recomandation-system.onrender.com/api/
+Production:   https://crop-recomandation-system-kcoh.onrender.com/api/
 ```
 
 | Method | Endpoint | Description |

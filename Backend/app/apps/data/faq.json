@@ -537,11 +537,11 @@
   },
   {
     "question": "What is the API endpoint for crop prediction?",
-    "answer": "The Django API gateway is hosted at https://crop-recomandation-system.onrender.com/. The ML engine inference endpoint is hosted at https://huggingface.co/spaces/shingala/CRS. Developers can POST soil and climate parameters as JSON to the gateway's prediction endpoint."
+    "answer": "The Django API gateway is hosted at https://crop-recomandation-system-kcoh.onrender.com/. The ML engine inference endpoint is hosted at https://huggingface.co/spaces/shingala/CRS. Developers can POST soil and climate parameters as JSON to the gateway's prediction endpoint."
   },
   {
     "question": "Can developers integrate this system?",
-    "answer": "Yes. The system exposes a REST API via the Django gateway at https://crop-recomandation-system.onrender.com/. Developers can send a POST request with N, P, K, temperature, humidity, pH, and rainfall values and receive top-3 crop predictions with confidence scores in JSON format."
+    "answer": "Yes. The system exposes a REST API via the Django gateway at https://crop-recomandation-system-kcoh.onrender.com/. Developers can send a POST request with N, P, K, temperature, humidity, pH, and rainfall values and receive top-3 crop predictions with confidence scores in JSON format."
   },
   {
     "question": "Is there an API documentation available?",
@@ -581,7 +581,7 @@
   },
   {
     "question": "What is the URL to access the system?",
-    "answer": "The web frontend is accessible at https://crop-recomandation-system.vercel.app/. The API gateway is at https://crop-recomandation-system.onrender.com/ and the ML engine at https://huggingface.co/spaces/shingala/CRS."
+    "answer": "The web frontend is accessible at https://crop-recomandation-system.vercel.app/. The API gateway is at https://crop-recomandation-system-kcoh.onrender.com/ and the ML engine at https://huggingface.co/spaces/shingala/CRS."
   },
   {
     "question": "How fast does the system give recommendations?",

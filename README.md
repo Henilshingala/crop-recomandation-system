@@ -22,7 +22,7 @@
 | Service | URL |
 |---------|-----|
 | 🌐 **Frontend** | [crop-recomandation-system.vercel.app](https://crop-recomandation-system.vercel.app/) |
-| ⚙️ **Backend API** | [crop-recomandation-system.onrender.com](https://crop-recomandation-system.onrender.com/) |
+| ⚙️ **Backend API** | [crop-recomandation-system-kcoh.onrender.com](https://crop-recomandation-system-kcoh.onrender.com/) |
 | 🤖 **ML Engine** | [huggingface.co/spaces/shingala/CRS](https://huggingface.co/spaces/shingala/CRS) |
 | 📦 **Source Code** | [github.com/Henilshingala/crop-recomandation-system](https://github.com/Henilshingala/crop-recomandation-system) |
 
