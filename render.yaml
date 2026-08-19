@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: CRS-Backend
+    runtime: python
+    region: oregon
+    rootDir: Backend/app
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate --noinput && python manage.py seed_crops && python manage.py sync_crops && gunicorn app.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile -
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: HF_MODEL_URL
+        value: "https://shingala-crs.hf.space"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SECURE_PROXY_SSL_HEADER
+        value: "HTTP_X_FORWARDED_PROTO,https"
+      - key: USE_X_FORWARDED_HOST
+        value: "True"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://crop-recomandation-system.vercel.app,http://localhost:5173"

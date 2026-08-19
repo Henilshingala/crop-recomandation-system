@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Crop Assistant</title>
+    <!-- Use Inter font for a modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-light: #10b981; /* Emerald 500 */
+            --primary: #059669; /* Emerald 600 */
+            --primary-dark: #047857; /* Emerald 700 */
+            --bg-color: #f3f4f6; /* Gray 100 */
+            --chat-bg: #ffffff;
+            --text-main: #1f2937; /* Gray 800 */
+            --text-muted: #6b7280; /* Gray 500 */
+            --user-msg-bg: #059669;
+            --user-msg-text: #ffffff;
+            --bot-msg-bg: #f8fafc; /* Slate 50 */
+            --bot-msg-border: #e2e8f0; /* Slate 200 */
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, #d1fae5 0%, transparent 40%),
+                              radial-gradient(circle at bottom left, #ecfdf5 0%, transparent 40%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-main);
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 450px;
+            height: 90vh;
+            max-height: 800px;
+            background-color: var(--chat-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- Header --- */
+        .chat-header {
+            background: linear-gradient(135deg, var(--primaryLight), var(--primary-dark));
+            background-color: var(--primary); /* Fallback */
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-text h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .header-text p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #34d399; /* Emerald 400 */
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #34d399;
+        }
+
+        /* --- Settings area (Language) --- */
+        .chat-settings {
+            padding: 10px 20px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .lang-select {
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .lang-select:focus {
+            border-color: var(--primary);
+        }
+
+        /* --- Chat Messages Area --- */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f1f5f9' fill-opacity='0.8' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease-out forwards;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background-color: var(--bot-msg-bg);
+            color: var(--text-main);
+            border: 1px solid var(--bot-msg-border);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--user-msg-bg);
+            color: var(--user-msg-text);
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: #94a3b8;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* --- Input Area --- */
+        .chat-input-container {
+            padding: 16px 20px;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            background-color: #f1f5f9;
+            border-radius: 24px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary-light);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        textarea {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            resize: none;
+            padding: 6px 0;
+            max-height: 120px;
+            outline: none;
+            line-height: 1.4;
+        }
+
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .send-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3);
+        }
+
+        .send-btn:hover {
+            background-color: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Markdown-like formatting support in bot messages */
+        .message.bot strong { font-weight: 600; color: #111827; }
+        .message.bot p { margin-bottom: 8px; }
+        .message.bot p:last-child { margin-bottom: 0; }
+        
+        /* Mobile responsive */
+        @media (max-width: 480px) {
+            .chat-container {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-info">
+                <div class="avatar">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div class="header-text">
+                    <h2>Crop AI Assistant</h2>
+                    <p><span class="status-dot"></span> Online and ready</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Language Settings -->
+        <div class="chat-settings">
+            <span>Ask anything about crops</span>
+            <select class="lang-select" id="langSelect">
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+                <option value="gu">ગુજરાતી</option>
+                <option value="mr">मराठी</option>
+                <option value="ta">தமிழ்</option>
+                <option value="te">తెలుగు</option>
+                <option value="bn">বাংলা</option>
+                <option value="pa">ਪੰਜਾਬੀ</option>
+                <option value="ur">اردو</option>
+            </select>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-messages" id="chatArea">
+            <div class="message bot">
+                <p>Hello! I am your AI Crop Assistant. How can I help you today?</p>
+            </div>
+            <!-- Messages go here -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <textarea id="userInput" rows="1" placeholder="Type your question here..."></textarea>
+            </div>
+            <button class="send-btn" id="sendBtn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatArea = document.getElementById('chatArea');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const langSelect = document.getElementById('langSelect');
+
+        // Initial Greeting translations
+        const greetings = {
+            'en': 'Hello! I am your AI Crop Assistant. How can I help you today?',
+            'hi': 'नमस्ते! मैं आपका एआई फसल सहायक हूँ। आज मैं आपकी कैसे मदद कर सकता हूँ?',
+            'gu': 'નમસ્તે! હું તમારો ક્રોપ આસિસ્ટન્ટ છું. આજે હું તમારી કેવી રીતે મદદ કરી શકું?',
+            'mr': 'नमस्कार! मी तुमचा पीक सहाय्यक आहे. मी आज तुमची कशी मदत करू शकतो?',
+            'bn': 'হ্যালো! আমি আপনার ফসল সহকারী। আজ আমি আপনাকে কীভাবে সাহায্য করতে পারি?'
+        };
+
+        // Update greeting when language changes
+        langSelect.addEventListener('change', (e) => {
+            const lang = e.target.value;
+            const greetingText = greetings[lang] || greetings['en'];
+            
+            // If the chat only has the initial message, update it
+            if (chatArea.children.length === 1 && chatArea.children[0].classList.contains('bot')) {
+                chatArea.children[0].innerHTML = `<p>${greetingText}</p>`;
+            }
+        });
+
+        // Auto-resize textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if (this.value.trim() === '') {
+                sendBtn.disabled = true;
+            } else {
+                sendBtn.disabled = false;
+            }
+        });
+
+        // Allow Enter key to send (Shift+Enter for new line)
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            const lang = langSelect.value;
+
+            // Clear input
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            // Add user message
+            addMessage(text, 'user');
+
+            // Add loading indicator
+            const loadingId = addLoadingIndicator();
+
+            try {
+                // Determine API URL based on current host (handles local & production)
+                // Use relative URL so it works seamlessly inside Django
+                const response = await fetch('/api/ai/chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: text, language: lang })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+                
+                // Remove loading
+                removeMessage(loadingId);
+
+                // Add bot response
+                addMessage(data.answer || "Sorry, I couldn't get an answer.", 'bot');
+                
+            } catch (err) {
+                removeMessage(loadingId);
+                let fallback = "Sorry, I encountered an error connecting to the server.";
+                addMessage(fallback, 'bot');
+                console.error(err);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            
+            // Basic formatting: convert newlines to <br>
+            const formattedText = text.replace(/\ng/g, '<br>');
+            msgDiv.innerHTML = `<p>${formattedText}</p>`;
+            
+            chatArea.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function addLoadingIndicator() {
+            const id = 'loading-' + Date.now();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message bot typing-indicator';
+            msgDiv.id = id;
+            
+            msgDiv.innerHTML = `
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            `;
+            
+            chatArea.appendChild(msgDiv);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function scrollToBottom() {
+            chatArea.scrollTo({
+                top: chatArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

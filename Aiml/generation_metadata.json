@@ -1,0 +1,171 @@
+{
+  "generator_version": "2.2",
+  "generated_at": "2026-02-18T16:07:08.074232+00:00",
+  "total_rows": 22300,
+  "total_classes": 51,
+  "dataset_hash": "df237221e977d507",
+  "output_file": "Crop_recommendation_v2.csv",
+  "sklearn_version": "1.8.0",
+  "numpy_version": "2.4.2",
+  "random_state": 42,
+  "distribution": "Gaussian (np.random.normal)",
+  "noise_level": 0.03,
+  "cross_cluster_noise": "asymmetric 0.05",
+  "soil_feature_added": true,
+  "irrigation_feature_added": true,
+  "sample_distribution": {
+    "high_cultivation": 500,
+    "medium_cultivation": 400,
+    "rare_cultivation": 300
+  },
+  "crop_sample_counts": {
+    "apple": 400,
+    "bajra": 400,
+    "banana": 400,
+    "barley": 400,
+    "ber": 300,
+    "bitter_gourd": 400,
+    "blackgram": 400,
+    "bottle_gourd": 400,
+    "brinjal": 500,
+    "cabbage": 400,
+    "carrot": 400,
+    "castor": 300,
+    "cauliflower": 400,
+    "chickpea": 400,
+    "coconut": 400,
+    "coffee": 400,
+    "cotton": 500,
+    "cucumber": 400,
+    "custard_apple": 300,
+    "date_palm": 300,
+    "grapes": 400,
+    "green_chilli": 400,
+    "groundnut": 400,
+    "guava": 400,
+    "jowar": 400,
+    "jute": 400,
+    "kidneybeans": 300,
+    "lemon": 400,
+    "lentil": 400,
+    "maize": 500,
+    "mango": 400,
+    "mosambi": 400,
+    "mothbeans": 300,
+    "mungbean": 400,
+    "muskmelon": 300,
+    "mustard": 400,
+    "okra": 500,
+    "onion": 500,
+    "orange": 400,
+    "papaya": 400,
+    "pigeonpeas": 400,
+    "pomegranate": 400,
+    "potato": 500,
+    "radish": 400,
+    "ragi": 300,
+    "rice": 500,
+    "ridge_gourd": 400,
+    "sapota": 300,
+    "sesame": 300,
+    "soybean": 400,
+    "spinach": 400,
+    "sugarcane": 500,
+    "tobacco": 300,
+    "tomato": 500,
+    "watermelon": 400,
+    "wheat": 500
+  },
+  "label_merges": {
+    "bottle_gourd": "gourd",
+    "bitter_gourd": "gourd",
+    "ridge_gourd": "gourd",
+    "cabbage": "cole_crop",
+    "cauliflower": "cole_crop",
+    "lemon": "citrus",
+    "mosambi": "citrus",
+    "orange": "citrus"
+  },
+  "ecological_clusters": {
+    "A_tropical_wet": [
+      "rice",
+      "sugarcane",
+      "jute",
+      "banana",
+      "papaya",
+      "coconut"
+    ],
+    "B_cool_rabi": [
+      "wheat",
+      "barley",
+      "mustard",
+      "chickpea",
+      "lentil"
+    ],
+    "C_semiarid_oilseed": [
+      "cotton",
+      "groundnut",
+      "soybean",
+      "castor",
+      "sesame"
+    ],
+    "D_vegetable": [
+      "tomato",
+      "brinjal",
+      "green_chilli",
+      "okra",
+      "onion",
+      "potato",
+      "cabbage",
+      "cauliflower",
+      "carrot",
+      "radish",
+      "spinach",
+      "cucumber"
+    ],
+    "E_tropical_fruit": [
+      "mango",
+      "sapota",
+      "guava",
+      "orange",
+      "lemon",
+      "mosambi"
+    ],
+    "F_semiarid_fruit": [
+      "pomegranate",
+      "date_palm",
+      "ber",
+      "custard_apple",
+      "watermelon",
+      "muskmelon",
+      "grapes"
+    ],
+    "G_plantation": [
+      "coffee",
+      "tobacco"
+    ],
+    "H_kharif_pulse": [
+      "pigeonpeas",
+      "mungbean",
+      "blackgram",
+      "mothbeans"
+    ],
+    "I_gourd": [
+      "bottle_gourd",
+      "bitter_gourd",
+      "ridge_gourd"
+    ],
+    "J_millet": [
+      "maize",
+      "jowar",
+      "bajra",
+      "ragi"
+    ],
+    "K_temperate_fruit": [
+      "apple"
+    ],
+    "L_rabi_pulse": [
+      "kidneybeans"
+    ]
+  }
+}

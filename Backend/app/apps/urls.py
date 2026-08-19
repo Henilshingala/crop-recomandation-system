@@ -1,0 +1,97 @@
+"""
+Crop Recommendation System - URL Routing
+========================================
+API endpoint definitions for the crop recommendation system.
+"""
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
+from .views import (
+    CropPredictionView,
+    CropViewSet,
+    PredictionLogViewSet,
+    health_check,
+    available_crops,
+    model_limits,
+    index,
+    assistant_chat,
+    get_schemes,
+    get_scheme_options,
+    nutrition_debug,
+    geocode_location,
+)
+from .location_views import (
+    location_states,
+    location_districts,
+    location_subdistricts,
+    location_villages,
+)
+
+# DRF Router for ViewSets
+router = DefaultRouter()
+router.register(r'crops', CropViewSet, basename='crop')
+router.register(r'logs', PredictionLogViewSet, basename='prediction-log')
+
+# URL patterns
+urlpatterns = [
+    # Main prediction endpoint (POST)
+    path('predict/', CropPredictionView.as_view(), name='predict'),
+    
+    # Health check endpoint (GET)
+    path('health/', health_check, name='health-check'),
+    
+    # Available crops from ML model (GET)
+    path('crops/available/', available_crops, name='available-crops'),
+
+    # Nutrition debug (GET)
+    path('debug/nutrition/', nutrition_debug, name='nutrition-debug'),
+    
+    # Feature validation ranges (GET) — single source of truth
+    path('model/limits/', model_limits, name='model-limits'),
+    
+    # AI Assistant chat proxy (POST)
+    path('assistant/chat/', assistant_chat, name='assistant-chat'),
+
+    # Index page
+    path('index/', index, name='index'),
+    
+    # Include router URLs (CRUD for crops and logs)
+    path('', include(router.urls)),
+    
+    # Schemes Recommendations
+    path('schemes/', get_schemes, name='get-schemes'),
+    path('schemes/options/', get_scheme_options, name='get-scheme-options'),
+    
+    # Geocoding proxy
+    path('geocode/', geocode_location, name='geocode-location'),
+
+    # Location data (cascading dropdowns)
+    path('locations/states/', location_states, name='location-states'),
+    path('locations/districts/', location_districts, name='location-districts'),
+    path('locations/subdistricts/', location_subdistricts, name='location-subdistricts'),
+    path('locations/villages/', location_villages, name='location-villages'),
+]
+
+"""
+API Endpoints Summary:
+======================
+
+Prediction:
+    POST /api/predict/              - Get crop recommendations
+
+Crops (CRUD):
+    GET  /api/crops/                - List all crops
+    POST /api/crops/                - Create crop (admin)
+    GET  /api/crops/{id}/           - Get specific crop
+    PUT  /api/crops/{id}/           - Update crop (admin)
+    DELETE /api/crops/{id}/         - Delete crop (admin)
+    GET  /api/crops/available/      - List ML model's crop labels
+
+Prediction Logs (Read-only, admin):
+    GET  /api/logs/                 - List all prediction logs
+    GET  /api/logs/{id}/            - Get specific log
+
+Health:
+    GET  /api/health/               - System health check
+"""

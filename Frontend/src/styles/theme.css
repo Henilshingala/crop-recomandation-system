@@ -1,0 +1,364 @@
+/* ═══════════════════════════════════════════════════════════════════
+   AgriMitra Theme — Indian Agricultural Artifact / Soil Health Card
+   ═══════════════════════════════════════════════════════════════════ */
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.mono-data {
+  font-family: var(--font-mono);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--color-clay);
+}
+
+/* ── UI Components ────────────────────────────────────────────────── */
+
+.agri-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border-line);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(43, 32, 24, 0.03), 0 1px 3px rgba(43, 32, 24, 0.02);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Form Inputs ────────────────────────────────────────────────── */
+.agri-input {
+  background-color: var(--color-card) !important;
+  border: 1px solid var(--color-border-line) !important;
+  border-radius: 8px !important;
+  color: var(--color-ink) !important;
+  font-family: var(--font-sans) !important;
+  transition: all 0.2s ease;
+}
+
+.agri-input:focus {
+  border-color: var(--color-agri-green) !important;
+  box-shadow: 0 0 0 2px rgba(76, 100, 68, 0.2) !important;
+  outline: none !important;
+}
+
+.agri-input::placeholder {
+  color: var(--color-ink-soft) !important;
+  opacity: 0.5;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--color-agri-green-deep);
+  color: white;
+  font-family: var(--font-body);
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.2s ease;
+  padding: 0.75rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-agri-green);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-line);
+  font-family: var(--font-body);
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  padding: 0.75rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(43,32,24,0.03);
+  border-color: rgba(43,32,24,0.3);
+}
+
+/* ── Soil Health Card Signature Animation ─────────────────────────── */
+@keyframes scanline {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(300px); opacity: 0; }
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-mustard);
+  box-shadow: 0 0 12px 2px rgba(214, 164, 25, 0.6);
+  animation: scanline 4s linear infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── Stamp ───────────────────────────────────────────────────────── */
+.verified-stamp {
+  border: 2px dashed var(--color-clay);
+  color: var(--color-clay);
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transform: rotate(-12deg);
+  opacity: 0.8;
+  display: inline-block;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+/* ── Progress bars ───────────────────────────────────────────────── */
+.progress-track {
+  background-color: var(--color-paper-deep);
+  border-radius: 9999px;
+  overflow: hidden;
+  height: 6px;
+}
+
+.progress-fill {
+  background-color: var(--color-mustard);
+  border-radius: 9999px;
+  height: 100%;
+  transition: width 1s ease-out;
+}
+
+/* ── Animations ───────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+
+/* ── Glass Card (alias for agri-card with lighter bg) ─────────────── */
+.glass-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border-line);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(43, 32, 24, 0.03), 0 1px 3px rgba(43, 32, 24, 0.02);
+  padding: 1.5rem;
+  position: relative;
+}
+
+/* ── Responsive fixes ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .agri-card { padding: 1rem; }
+  h1 { word-break: break-word; }
+}
+
+/* ── Chat Widget Overrides ───────────────────────────────────────── */
+.chat-widget-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.chat-bubble-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-agri-green-deep);
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(43, 32, 24, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.chat-bubble-btn:hover {
+  transform: scale(1.05);
+}
+
+.chat-bubble-open {
+  background: var(--color-clay);
+}
+
+.chat-panel {
+  width: 360px;
+  height: 480px;
+  background: var(--color-paper);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(43, 32, 24, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border-line);
+}
+
+.chat-header {
+  background: var(--color-agri-green-deep);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-family: var(--font-display);
+}
+
+.chat-header-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.chat-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-message {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.chat-message-user {
+  align-self: flex-end;
+  background: var(--color-paper-deep);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-line);
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message-bot {
+  align-self: flex-start;
+  background: var(--color-card);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-line);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-input-area {
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border-line);
+  display: flex;
+  gap: 8px;
+  background: var(--color-card);
+}
+
+.chat-input {
+  flex: 1;
+  border: 1px solid var(--color-border-line);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: var(--color-paper);
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: var(--color-agri-green);
+}
+
+.chat-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--color-agri-green-deep);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-send-btn:disabled { opacity: 0.5; }
+
+/* ── Print Styles for PDF Generation ──────────────────────────────────────── */
+@media print {
+  body {
+    background-color: white !important;
+  }
+  header, nav, .chat-bubble-container, #soil-form {
+    display: none !important;
+  }
+  .agri-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    break-inside: avoid;
+  }
+}

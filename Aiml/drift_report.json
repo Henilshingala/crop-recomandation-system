@@ -1,0 +1,374 @@
+{
+  "model_version": "2.2",
+  "dataset_hash": "df237221e977d507",
+  "validation_date": "2026-02-18T16:50:33.295608+00:00",
+  "script": "03_real_world_validation.py",
+  "per_feature_drift": {
+    "N": {
+      "train_mean": 66.8352,
+      "external_mean": 66.8352,
+      "mean_shift_pct": 0.0,
+      "train_std": 41.68,
+      "external_std": 41.68,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "P": {
+      "train_mean": 45.663,
+      "external_mean": 45.663,
+      "mean_shift_pct": 0.0,
+      "train_std": 16.423,
+      "external_std": 16.423,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "K": {
+      "train_mean": 55.7186,
+      "external_mean": 55.7186,
+      "mean_shift_pct": 0.0,
+      "train_std": 44.6836,
+      "external_std": 44.6836,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "temperature": {
+      "train_mean": 25.4354,
+      "external_mean": 25.4354,
+      "mean_shift_pct": 0.0,
+      "train_std": 6.779,
+      "external_std": 6.779,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "humidity": {
+      "train_mean": 63.0137,
+      "external_mean": 63.0137,
+      "mean_shift_pct": 0.0,
+      "train_std": 25.6898,
+      "external_std": 25.6898,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "ph": {
+      "train_mean": 6.6157,
+      "external_mean": 6.6157,
+      "mean_shift_pct": 0.0,
+      "train_std": 0.8325,
+      "external_std": 0.8325,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "rainfall": {
+      "train_mean": 771.9386,
+      "external_mean": 771.9386,
+      "mean_shift_pct": 0.0,
+      "train_std": 387.233,
+      "external_std": 387.233,
+      "std_shift_pct": 0.0,
+      "severity": "none",
+      "kl_divergence": 0.0
+    },
+    "season": {
+      "train_mean": 0.574,
+      "external_mean": 0.574,
+      "mean_shift_pct": 0.0,
+      "train_std": 0.7473,
+      "external_std": 0.7473,
+      "std_shift_pct": 0.0,
+      "severity": "none"
+    },
+    "soil_type": {
+      "train_mean": 1.021,
+      "external_mean": 1.021,
+      "mean_shift_pct": 0.0,
+      "train_std": 0.6576,
+      "external_std": 0.6576,
+      "std_shift_pct": 0.0,
+      "severity": "none"
+    },
+    "irrigation": {
+      "train_mean": 0.3717,
+      "external_mean": 0.3717,
+      "mean_shift_pct": 0.0,
+      "train_std": 0.4832,
+      "external_std": 0.4832,
+      "std_shift_pct": 0.0,
+      "severity": "none"
+    }
+  },
+  "class_distribution_mismatch": {
+    "per_class": {
+      "apple": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "bajra": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "banana": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "barley": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "ber": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "blackgram": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "brinjal": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "carrot": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "castor": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "chickpea": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "citrus": {
+        "train_pct": 5.381,
+        "external_pct": 5.381,
+        "diff_pct": 0.0
+      },
+      "coconut": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "coffee": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "cole_crop": {
+        "train_pct": 3.587,
+        "external_pct": 3.587,
+        "diff_pct": 0.0
+      },
+      "cotton": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "cucumber": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "custard_apple": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "date_palm": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "gourd": {
+        "train_pct": 5.381,
+        "external_pct": 5.381,
+        "diff_pct": 0.0
+      },
+      "grapes": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "green_chilli": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "groundnut": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "guava": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "jowar": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "jute": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "kidneybeans": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "lentil": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "maize": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "mango": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "mothbeans": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "mungbean": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "muskmelon": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "mustard": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "okra": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "onion": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "papaya": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "pigeonpeas": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "pomegranate": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "potato": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "radish": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "ragi": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "rice": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "sapota": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "sesame": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "soybean": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "spinach": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "sugarcane": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "tobacco": {
+        "train_pct": 1.345,
+        "external_pct": 1.345,
+        "diff_pct": 0.0
+      },
+      "tomato": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      },
+      "watermelon": {
+        "train_pct": 1.794,
+        "external_pct": 1.794,
+        "diff_pct": 0.0
+      },
+      "wheat": {
+        "train_pct": 2.242,
+        "external_pct": 2.242,
+        "diff_pct": 0.0
+      }
+    },
+    "classes_only_in_train": [],
+    "classes_only_in_external": [],
+    "train_classes": 51,
+    "external_classes": 51
+  },
+  "drift_summary": {
+    "severe": 0,
+    "moderate": 0,
+    "minor": 0,
+    "none": 10
+  }
+}

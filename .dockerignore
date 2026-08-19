@@ -1,0 +1,80 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# Tests
+tests/
+pytest.ini
+
+# Scripts (development only)
+scripts/benchmark.py
+scripts/memory_leak_test.py
+scripts/validate_phase11.py
+scripts/cleanup_legacy.py
+
+# Training artifacts and datasets
+*.csv
+training_artifacts/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Development configs
+environments/staging.env
+.env.local
+.env.development
+
+# Backup files
+Backups/
+*.bak
+*.backup
+
+# Large model files that should be copied separately
+# Uncomment if you have very large model files
+# *.joblib

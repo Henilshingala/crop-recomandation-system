@@ -1,0 +1,51 @@
+{
+  "model_version": "2.2",
+  "dataset_hash": "df237221e977d507",
+  "validation_date": "2026-02-18T16:50:33.295608+00:00",
+  "script": "03_real_world_validation.py",
+  "test_samples": 4460,
+  "clean_metrics": {
+    "top1_accuracy": 90.58,
+    "top3_accuracy": 99.24,
+    "confidence_mean": 87.31,
+    "confidence_std": 13.09,
+    "confidence_median": 93.22
+  },
+  "noisy_metrics": {
+    "top1_accuracy": 86.95,
+    "top3_accuracy": 98.41,
+    "confidence_mean": 85.14,
+    "confidence_std": 15.06,
+    "confidence_median": 92.62
+  },
+  "degradation": {
+    "top1_degradation_pct": 4.01,
+    "top3_degradation_pct": 0.84,
+    "confidence_mean_shift": -2.17,
+    "confidence_std_shift": 1.96
+  },
+  "noise_applied": {
+    "npk_gaussian_noise_std": "10%",
+    "rainfall_uniform_noise": "\u00b15%",
+    "irrigation_flip_rate": "5%",
+    "soil_misclass_rate": "5%"
+  },
+  "individual_impacts": {
+    "npk_10pct_noise": {
+      "top1_accuracy": 87.33,
+      "degradation_pct": 3.59
+    },
+    "rainfall_5pct_noise": {
+      "top1_accuracy": 90.47,
+      "degradation_pct": 0.12
+    },
+    "irrigation_5pct_flip": {
+      "top1_accuracy": 90.4,
+      "degradation_pct": 0.2
+    },
+    "soil_5pct_misclass": {
+      "top1_accuracy": 90.25,
+      "degradation_pct": 0.37
+    }
+  }
+}

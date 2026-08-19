@@ -1,0 +1,20 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+@import 'tw-animate-css';
+
+@theme {
+  --color-paper: #EAE3CF;
+  --color-paper-deep: #DFD4B7;
+  --color-card: #FFFDF7;
+  --color-ink: #2B2018;
+  --color-ink-soft: #5A4E3F;
+  --color-agri-green: #4C6444;
+  --color-agri-green-deep: #37492F;
+  --color-mustard: #D6A419;
+  --color-clay: #A65A34;
+  --color-border-line: rgba(43, 32, 24, 0.14);
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Work Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}

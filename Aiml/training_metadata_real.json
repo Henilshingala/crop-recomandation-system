@@ -1,0 +1,233 @@
+{
+  "model_version": "real_world_1.0",
+  "model_type": "CalibratedClassifierCV(RandomForestClassifier)",
+  "calibration_used": true,
+  "n_estimators": 400,
+  "features": [
+    "n",
+    "p",
+    "k",
+    "temperature",
+    "humidity",
+    "ph",
+    "rainfall",
+    "season",
+    "soil_type",
+    "irrigation",
+    "yield",
+    "area",
+    "production",
+    "state_encoded",
+    "district_encoded",
+    "jun-sep",
+    "oct-dec",
+    "jan-feb",
+    "mar-may",
+    "rain_monsoon",
+    "rain_postmonsoon",
+    "moisture"
+  ],
+  "dataset": "real_world_ml_dataset.csv",
+  "dataset_hash": "2e6261f563631957",
+  "model_file_hash": "c8d78eb4870bdb0d",
+  "top1_accuracy": 0.901845,
+  "top3_accuracy": 0.996835,
+  "base_top1_accuracy": 0.903696,
+  "base_top3_accuracy": 0.996755,
+  "max_confidence_pct": 97.47,
+  "cv_mean": 0.905766,
+  "cv_std": 0.000593,
+  "total_classes": 19,
+  "classes": [
+    "barley",
+    "castor",
+    "chickpea",
+    "cotton",
+    "finger_millet",
+    "groundnut",
+    "linseed",
+    "maize",
+    "mustard",
+    "pearl_millet",
+    "pigeonpea",
+    "rice",
+    "safflower",
+    "sesamum",
+    "sorghum",
+    "soybean",
+    "sugarcane",
+    "sunflower",
+    "wheat"
+  ],
+  "total_samples": 186440,
+  "class_distribution": {
+    "rice": 14978,
+    "maize": 14146,
+    "chickpea": 13849,
+    "wheat": 13731,
+    "sugarcane": 13511,
+    "sesamum": 13240,
+    "pigeonpea": 13017,
+    "groundnut": 12029,
+    "mustard": 11626,
+    "sorghum": 11548,
+    "pearl_millet": 9949,
+    "barley": 7924,
+    "cotton": 7804,
+    "linseed": 6837,
+    "finger_millet": 5867,
+    "castor": 5018,
+    "sunflower": 4896,
+    "soybean": 4069,
+    "safflower": 2401
+  },
+  "feature_importances": {
+    "moisture": 0.130652,
+    "humidity": 0.118511,
+    "ph": 0.111521,
+    "k": 0.099853,
+    "p": 0.099381,
+    "n": 0.095493,
+    "season": 0.084225,
+    "yield": 0.067156,
+    "state_encoded": 0.041009,
+    "area": 0.034674,
+    "production": 0.032796,
+    "district_encoded": 0.024827,
+    "irrigation": 0.012424,
+    "oct-dec": 0.005785,
+    "temperature": 0.005702,
+    "jun-sep": 0.005424,
+    "soil_type": 0.005245,
+    "mar-may": 0.005111,
+    "jan-feb": 0.005108,
+    "rainfall": 0.005067,
+    "rain_postmonsoon": 0.005061,
+    "rain_monsoon": 0.004977
+  },
+  "data_sources": [
+    "ICRISAT-District_Level_Data.csv",
+    "data_core.csv",
+    "temperature.csv",
+    "rainfall.csv",
+    "Crop_recommendation.csv"
+  ],
+  "comparison_with_synthetic_v2_2": {
+    "accuracy_diff": -0.4,
+    "top3_diff": 0.45,
+    "feature_importance_comparison": {
+      "K": {
+        "synthetic": 0.170294,
+        "real": 0.0
+      },
+      "N": {
+        "synthetic": 0.174966,
+        "real": 0.0
+      },
+      "P": {
+        "synthetic": 0.127126,
+        "real": 0.0
+      },
+      "area": {
+        "synthetic": null,
+        "real": 0.034674
+      },
+      "district_encoded": {
+        "synthetic": null,
+        "real": 0.024827
+      },
+      "humidity": {
+        "synthetic": 0.097718,
+        "real": 0.118511
+      },
+      "irrigation": {
+        "synthetic": 0.020988,
+        "real": 0.012424
+      },
+      "jan-feb": {
+        "synthetic": null,
+        "real": 0.005108
+      },
+      "jun-sep": {
+        "synthetic": null,
+        "real": 0.005424
+      },
+      "k": {
+        "synthetic": null,
+        "real": 0.099853
+      },
+      "mar-may": {
+        "synthetic": null,
+        "real": 0.005111
+      },
+      "moisture": {
+        "synthetic": null,
+        "real": 0.130652
+      },
+      "n": {
+        "synthetic": null,
+        "real": 0.095493
+      },
+      "oct-dec": {
+        "synthetic": null,
+        "real": 0.005785
+      },
+      "p": {
+        "synthetic": null,
+        "real": 0.099381
+      },
+      "ph": {
+        "synthetic": 0.079163,
+        "real": 0.111521
+      },
+      "production": {
+        "synthetic": null,
+        "real": 0.032796
+      },
+      "rain_monsoon": {
+        "synthetic": null,
+        "real": 0.004977
+      },
+      "rain_postmonsoon": {
+        "synthetic": null,
+        "real": 0.005061
+      },
+      "rainfall": {
+        "synthetic": 0.11663,
+        "real": 0.005067
+      },
+      "season": {
+        "synthetic": 0.092828,
+        "real": 0.084225
+      },
+      "soil_type": {
+        "synthetic": 0.030822,
+        "real": 0.005245
+      },
+      "state_encoded": {
+        "synthetic": null,
+        "real": 0.041009
+      },
+      "temperature": {
+        "synthetic": 0.089467,
+        "real": 0.005702
+      },
+      "yield": {
+        "synthetic": null,
+        "real": 0.067156
+      }
+    },
+    "class_comparison": {
+      "synthetic_classes": 51,
+      "real_classes": 19,
+      "synthetic_samples": 22300,
+      "real_samples": 186440
+    }
+  },
+  "sklearn_version": "1.8.0",
+  "numpy_version": "2.4.2",
+  "pandas_version": "3.0.0",
+  "timestamp": "2026-02-18T17:17:03.742062+00:00",
+  "random_state": 42,
+  "note": "Real-world model trained on merged district-level agricultural data. ICRISAT crop yield/area/production + national temperature/rainfall + data_core NPK/soil/humidity + Crop_recommendation pH. No synthetic generation used."
+}

@@ -1,0 +1,53 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.tox/
+*.log
+
+# Django
+*.sqlite3
+staticfiles/
+media/
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.production
+
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Large AI/ML model files (served separately)
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# Python scripts used only for dev
+Frontend/src/translate_fast.py
+Frontend/src/translate_missing_keys.py
+Frontend/src/find_missing_translations.py
+Frontend/src/fix_missing_translations.py
+Frontend/src/update_en.py
+Frontend/src/update_en2.py
+Frontend/src/get_langs.py
